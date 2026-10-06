@@ -42,6 +42,7 @@
 .btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px;outline:0}
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}
+.btn.red{background:#fdeced;border-color:#f2c9cc;color:#a32d35}
 .btn.small{padding:4px 7px;font-size:10.5px}
 .stat{padding:15px}.stat .label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:24px;color:var(--navy);font-weight:850;margin-top:3px}.stat small{color:var(--muted)}
 .notice{padding:11px 13px;border:1px solid #c9dfef;background:#eef7fd;border-radius:99px;color:#205b88;font-size:11.5px;line-height:1.4;display:inline-block}
@@ -142,7 +143,7 @@
 <!-- DASHBOARD (SOLO ADMIN) -->
 <section class="page" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores de Desempeño</h2><p>Estadísticas de mantenimiento y calibración, global o por sede.</p></div>
+  <div><h2>Indicadores de Desempeño y Metas</h2><p>Cumplimiento acumulado histórico y filtrado por sede.</p></div>
   <div class="toolbar" style="align-items:center">
    <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
     <option value="">Todas las Sedes (General)</option>
@@ -155,7 +156,7 @@
  <div id="indicators" class="grid g2" style="margin-top:16px"></div>
  
  <div class="card panel" style="margin-top:16px">
-  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas</h3>
+  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas y Vencimientos</h3>
   <div id="alerts"></div>
  </div>
 </section>
@@ -195,6 +196,7 @@
       <th>FECHA INICIO</th>
       <th>CRONOGRAMA MANTENIMIENTO (AÑO ACTUAL)</th>
       <th>CRONOGRAMA CALIBRACIÓN (AÑO ACTUAL)</th>
+      <th>ACCIÓN</th>
      </tr>
     </thead>
     <tbody id="equiposTable"></tbody>
@@ -204,16 +206,17 @@
  </div>
 </section>
 
-<!-- EJECUCIÓN MASIVA CON FIRMAS INGENIERO Y COORDINADOR -->
+<!-- EJECUCIÓN MASIVA CON FECHA DE INSTALACIÓN Y FIRMAS -->
 <section class="page" id="page-masiva">
  <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
- <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede, diligencia el nombre y firma del Ingeniero y Coordinador de Sede para aplicar la firma en lote a los reportes EV-INTER-03.</div>
+ <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede. Puedes generar los mantenimientos de forma retroactiva y masiva desde su fecha de instalación hasta la fecha actual.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
    <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field"><label>Fecha Mantenimiento</label><input id="massDate" type="date"></div>
-   <button class="btn primary" onclick="runMass()">⚡ Generar Mantenimientos Seleccionados</button>
+   <div class="field"><label>Modo Generación</label><select id="massMode"><option value="single">Fecha Específica</option><option value="retro">Masivo Semestral desde Instalación (2023+)</option></select></div>
+   <div class="field"><label>Fecha Mantenimiento (Si es fija)</label><input id="massDate" type="date"></div>
+   <button class="btn primary" onclick="runMass()">⚡ Ejecutar Mantenimientos</button>
   </div>
 
   <div class="formgrid" style="margin:15px 0;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px">
@@ -223,7 +226,7 @@
    <div class="field span2"><label>Firma Coordinador de Sede</label><div class="signature-box"><canvas id="canvasMassRec" width="260" height="60"></canvas><button class="btn small" onclick="clearCanvasMassRec()" style="margin-top:4px">Limpiar Firma Coordinador</button></div></div>
   </div>
 
-  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio / Área</th><th>Actividades Protocolarias</th></tr></thead><tbody id="massTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Fecha Instalación</th><th>Servicio / Área</th></tr></thead><tbody id="massTable"></tbody></table></div>
  </div>
 </section>
 
@@ -269,9 +272,10 @@
    <div class="signature-box" id="sigCfgPrev" style="margin-top:8px">Sin firma guardada</div>
   </div>
   <div class="card panel">
-   <h3>Respaldos</h3>
+   <h3>Respaldos y Limpieza General</h3>
    <button class="btn blue" style="width:100%;margin-bottom:8px" onclick="exportBackup()">Exportar Respaldo JSON</button>
-   <label class="btn" style="width:100%;text-align:center;display:block">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
+   <label class="btn" style="width:100%;text-align:center;display:block;margin-bottom:8px">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
+   <button class="btn red" style="width:100%" onclick="resetDatabase()">Borrar Todo y Empezar de Cero</button>
   </div>
  </div>
 
@@ -290,7 +294,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v19_cendiatra';
+const KEY='gestion_biomedica_v20_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -331,12 +335,7 @@ function login() {
   document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITOR (SOLO CONSULTA)';
   document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Consulta';
   applyPermissions();
-  
-  if (currentUser.role === 'CONSULTA') {
-   go('sedes');
-  } else {
-   go('dashboard');
-  }
+  if (currentUser.role === 'CONSULTA') go('sedes'); else go('dashboard');
  } else document.getElementById('loginError').classList.remove('hidden');
 }
 
@@ -420,7 +419,23 @@ function fillSelects() {
  if (eqS) { const old = eqS.value; eqS.innerHTML = '<option value="">Todos los Servicios / Áreas</option>' + servs.map(s => `<option>${esc(s)}</option>`).join(''); eqS.value = old; }
 }
 
-/* LÓGICA DE INDICADORES EN EL DASHBOARD */
+/* CÁLCULO DE META ACUMULADA HISTÓRICA DE MANTENIMIENTOS */
+function calculateExpectedMaints(eqList) {
+ const now = new Date();
+ let totalExpected = 0;
+ eqList.forEach(e => {
+  if (!e.fechaInicio) return;
+  const start = new Date(e.fechaInicio + 'T12:00:00');
+  let cursor = new Date(start);
+  cursor.setMonth(cursor.getMonth() + 6); // Primer preventivo a los 6 meses
+  while (cursor <= now) {
+   totalExpected++;
+   cursor.setMonth(cursor.getMonth() + 6);
+  }
+ });
+ return Math.max(1, totalExpected);
+}
+
 function renderDashboard() {
  if (!canEdit()) return;
  const todayStr = today();
@@ -429,12 +444,17 @@ function renderDashboard() {
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
  const totalEquipos = eqs.length;
- let mTotal = totalEquipos;
- let mAlDia = 0, cTotal = 0, cAlDia = 0, mVencidos = 0, cVencidos = 0;
+ 
+ // Meta histórica vs Realizados
+ const expectedMaints = calculateExpectedMaints(eqs);
+ const eqIds = new Set(eqs.map(e => e.id));
+ const actualMaints = state.mantenimientos.filter(m => eqIds.has(m.equipoId)).length;
+ 
+ const pctM = Math.min(100, Math.round((actualMaints / expectedMaints) * 100));
 
+ let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
  eqs.forEach(e => {
-  if (nextMaint(e) >= todayStr) mAlDia++; else mVencidos++;
-  
+  if (nextMaint(e) < todayStr) mVencidos++;
   if (norm(e.cal) === 'SI') {
    cTotal++;
    const cs = calState(e)[0];
@@ -442,7 +462,6 @@ function renderDashboard() {
   }
  });
 
- const pctM = mTotal ? Math.round((mAlDia / mTotal) * 100) : 100;
  const pctC = cTotal ? Math.round((cAlDia / cTotal) * 100) : 100;
  const colorM = pctM >= 90 ? 'green' : (pctM >= 70 ? 'yellow' : 'red');
  const colorC = pctC >= 90 ? 'green' : (pctC >= 70 ? 'yellow' : 'red');
@@ -452,23 +471,21 @@ function renderDashboard() {
   return eqSede.some(e => nextMaint(e) < todayStr || calState(e)[0] === 'VENCIDA');
  });
 
- // Render Tarjetas Superiores
  document.getElementById('stats').innerHTML = [
   [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En la sede seleccionada' : 'Inventario global total'],
-  [`${mAlDia} / ${mTotal}`, 'MANTENIMIENTOS AL DÍA', 'Preventivos vigentes'],
+  [`${actualMaints} / ${expectedMaints}`, 'MANTENIMIENTOS ACUMULADOS', 'Ejecutados / Meta Histórica'],
   [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente'],
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
  ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${(String(x[1]).includes('VENCID') && x[0]>0)?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
- // Render Barras de Porcentaje
  document.getElementById('indicators').innerHTML = `
   <div class="card panel">
    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-    <b style="color:var(--navy);font-size:14px">Cumplimiento de Mantenimiento Preventivo</b>
+    <b style="color:var(--navy);font-size:14px">Cumplimiento Histórico de Mantenimiento Preventivo</b>
     <span style="font-weight:850;font-size:16px;color:var(--${colorM})">${pctM}%</span>
    </div>
    <div class="progress-bar-bg"><div class="progress-bar-fill ${colorM}" style="width:${pctM}%"></div></div>
-   <small class="muted" style="margin-top:10px;display:block"><b>${mAlDia}</b> equipos con mantenimiento vigente de <b>${mTotal}</b> registrados.</small>
+   <small class="muted" style="margin-top:10px;display:block"><b>${actualMaints}</b> mantenimientos realizados frente a una meta histórica acumulada de <b>${expectedMaints}</b>.</small>
   </div>
   
   <div class="card panel">
@@ -481,7 +498,6 @@ function renderDashboard() {
   </div>
  `;
 
- // Render Alertas
  let alertHtml = '';
  if (sedesVencidas.length > 0) {
   alertHtml = sedesVencidas.map(s => {
@@ -490,28 +506,46 @@ function renderDashboard() {
    const cV = eqSede.filter(e => calState(e)[0] === 'VENCIDA').length;
    if (mV === 0 && cV === 0) return '';
    return `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">
-    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas en su inventario.
+    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas.
    </div>`;
   }).join('');
- } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día en cronograma.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
+ } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
  document.getElementById('alerts').innerHTML = alertHtml;
 }
 
 function renderSedes() {
  if (!state.sedes.length) {
-  document.getElementById('sedeCards').innerHTML = '<div class="notice span4">No hay sedes creadas. Cargue un archivo Excel para iniciar.</div>';
+  document.getElementById('sedeCards').innerHTML = '<div class="notice span4">No hay sedes creadas. Cargue un archivo Excel o agregue una sede para iniciar.</div>';
   return;
  }
  document.getElementById('sedeCards').innerHTML = state.sedes.map(s => {
   const es = state.equipos.filter(e => e.sedeId === s.id);
-  return `<div class="card panel" style="cursor:pointer" onclick="selectSedeFilter('${s.id}')">
-   <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div><b style="font-size:14px;color:var(--navy)">${esc(s.nombre)}</b><br><small class="muted">${esc(s.direccion || s.ciudad)}</small></div>
-    <span style="font-size:22px;font-weight:850;color:var(--navy)">${es.length}</span>
+  return `<div class="card panel" style="position:relative">
+   <div style="cursor:pointer" onclick="selectSedeFilter('${s.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+     <div><b style="font-size:14px;color:var(--navy)">${esc(s.nombre)}</b><br><small class="muted">${esc(s.direccion || s.ciudad)}</small></div>
+     <span style="font-size:22px;font-weight:850;color:var(--navy)">${es.length}</span>
+    </div>
+    <small class="muted" style="margin-top:6px;display:block">Ver inventario de esta sede</small>
    </div>
-   <small class="muted" style="margin-top:6px;display:block">Ver inventario de esta sede</small>
+   <button class="btn small red" style="margin-top:8px;width:100%" onclick="deleteSede('${s.id}')">🗑 Eliminar Sede</button>
   </div>`;
  }).join('');
+}
+
+function deleteSede(sid) {
+ if (!confirm('¿Está seguro de eliminar esta sede y todo su inventario asociado?')) return;
+ state.sedes = state.sedes.filter(s => s.id !== sid);
+ state.equipos = state.equipos.filter(e => e.sedeId !== sid);
+ save(); refreshAll(); alert('Sede eliminada correctamente.');
+}
+
+function deleteEquipo(eid) {
+ if (!confirm('¿Está seguro de eliminar este equipo del sistema?')) return;
+ state.equipos = state.equipos.filter(e => e.id !== eid);
+ state.mantenimientos = state.mantenimientos.filter(m => m.equipoId !== eid);
+ state.calibraciones = state.calibraciones.filter(c => c.equipoId !== eid);
+ save(); refreshAll(); alert('Equipo eliminado.');
 }
 
 function selectSedeFilter(sid) {
@@ -599,8 +633,11 @@ function renderEquiposPage() {
      <span class="cron-tag" style="${norm(e.cal)==='SI'?'background:#e8f7ef;color:#176e45':''}">${norm(e.cal)==='SI'?(cs?`Vence: ${fmtDate(cs.vencimiento)}`:'Cada 12 Meses'):'N/A'}</span>
     </div>
    </td>
+   <td>
+    <button class="btn small red" onclick="deleteEquipo('${e.id}')">Eliminar</button>
+   </td>
   </tr>`;
- }).join('') : '<tr><td colspan="11"><div class="empty">No hay equipos registrados.</div></td></tr>';
+ }).join('') : '<tr><td colspan="12"><div class="empty">No hay equipos registrados.</div></td></tr>';
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
@@ -685,7 +722,6 @@ function docsTabHtml(e) {
  `;
 }
 
-/* HOJA DE VIDA 100% DINÁMICA - CENDIATRA SAS (CTS-GA-FR-19 v2) */
 function lifeHtmlFormat(e) {
  const r = norm(e.riesgo || 'N/A');
  const calib = norm(e.cal || 'NO') === 'SI';
@@ -750,7 +786,6 @@ function getDocsForEquipment(e) {
  return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
 }
 
-/* REPORTE EV-INTER-03 CENDIATRA SAS CON LISTA DE CHEQUEO AUTOMÁTICA DEL EXCEL */
 let canvasRecCtx = null;
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
@@ -888,7 +923,7 @@ function reportHtmlFormat(r) {
  </div>`;
 }
 
-/* EJECUCIÓN MASIVA CON FIRMAS E INGENIERO/COORDINADOR */
+/* EJECUCIÓN MASIVA CON GENERACIÓN RETROACTIVA DESDE FECHA DE INSTALACIÓN */
 let canvasMassRecCtx = null;
 function renderMass() {
  const sid = document.getElementById('massSede')?.value || '';
@@ -900,8 +935,9 @@ function renderMass() {
  }
 
  document.getElementById('massTable').innerHTML = list.slice(0, 200).map(e => `<tr>
-  <td><input type="checkbox" class="mass-check" value="${e.id}"></td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>${esc(e.servicio)}</td>
-  <td style="font-size:10px">${esc(matFor(e.equipo)?.actividades || 'Mantenimiento Preventivo (Cada 6 Meses)')}</td>
+  <td><input type="checkbox" class="mass-check" value="${e.id}"></td>
+  <td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td>
+  <td><span class="badge blue">${fmtDate(e.fechaInicio)}</span></td><td>${esc(e.servicio)}</td>
  </tr>`).join('');
 
  initCanvasMassRec();
@@ -927,34 +963,64 @@ function runMass() {
  const ids = [...document.querySelectorAll('.mass-check:checked')].map(x => x.value);
  if (!ids.length) return alert('Seleccione al menos un equipo.');
  
- const date = document.getElementById('massDate').value || today();
+ const mode = document.getElementById('massMode').value;
  const type = document.getElementById('massType').value;
  const tecName = document.getElementById('massTecnico').value || state.config.name;
  const recName = document.getElementById('massReceptor').value || 'COORDINADOR DE SEDE';
  const cMassRec = document.getElementById('canvasMassRec');
  const massSigRecUrl = cMassRec ? cMassRec.toDataURL() : '';
+ const fixedDate = document.getElementById('massDate').value || today();
+
+ let generatedCount = 0;
 
  ids.forEach(eid => {
   const e = state.equipos.find(x => x.id === eid);
   const m = matFor(e?.equipo);
-  const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
-  state.mantenimientos.push({
-   id: uid(), numero: no, reporte: no, equipoId: eid, fecha: date, tipo: type,
-   tecnico: tecName, receptor: recName, trabajo: m?.actividades || 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.',
-   sigTech: state.config.sigTech, sigRec: massSigRecUrl
-  });
+  const trabajoDesc = m?.actividades || 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
+
+  if (mode === 'retro' && e.fechaInicio) {
+   let start = new Date(e.fechaInicio + 'T12:00:00');
+   start.setMonth(start.getMonth() + 6);
+   const now = new Date();
+   let cursor = new Date(start);
+
+   while (cursor <= now) {
+    const dateStr = cursor.toISOString().slice(0, 10);
+    const exists = state.mantenimientos.some(maint => maint.equipoId === eid && maint.fecha === dateStr);
+    
+    if (!exists) {
+     const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
+     state.mantenimientos.push({
+      id: uid(), numero: no, reporte: no, equipoId: eid, fecha: dateStr, tipo: type,
+      tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
+      sigTech: state.config.sigTech, sigRec: massSigRecUrl
+     });
+     generatedCount++;
+    }
+    cursor.setMonth(cursor.getMonth() + 6);
+   }
+  } else {
+   const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
+   state.mantenimientos.push({
+    id: uid(), numero: no, reporte: no, equipoId: eid, fecha: fixedDate, tipo: type,
+    tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
+    sigTech: state.config.sigTech, sigRec: massSigRecUrl
+   });
+   generatedCount++;
+  }
  });
- save(); refreshAll(); alert(`Se generaron ${ids.length} reportes EV-INTER-03 firmados por el Ing. ${tecName} y el Coordinador ${recName}.`);
+
+ save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
 }
 
-/* CALIBRACIONES CON CÁLCULO DE AÑO AUTOMÁTICO Y SUBIDA DE PDF/ARCHIVO */
+/* CALIBRACIONES */
 function openCalibrationModal(equipId = '') {
  if (!canEdit()) return;
  const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 300).map(e => `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
  openModal('Registrar Calibración Metrológica', `
   <div class="formgrid">
    <div class="field span2"><label>Equipo</label><select id="cEquipo">${opts}</select></div>
-   <div class="field span2"><label>Fecha Calibración (El vencimiento es automático a 1 año)</label><input id="cFecha" type="date" value="${today()}"></div>
+   <div class="field span2"><label>Fecha Calibración (Vencimiento automático a 1 año)</label><input id="cFecha" type="date" value="${today()}"></div>
    <div class="field span4"><label>Certificado / Archivo PDF</label><input id="cFile" type="file" accept=".pdf,image/*"></div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCalibration()">Guardar Calibración</button>`);
@@ -968,31 +1034,22 @@ function saveCalibration() {
  const d = new Date(fecha + 'T12:00:00');
  d.setFullYear(d.getFullYear() + 1);
  const vence = d.toISOString().slice(0, 10);
-
  const f = document.getElementById('cFile').files[0];
 
  if (f) {
   const r = new FileReader();
   r.onload = () => {
-   state.calibraciones.push({
-    id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence,
-    fileName: f.name, fileData: r.result
-   });
+   state.calibraciones.push({ id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence, fileName: f.name, fileData: r.result });
    finishSaveCalibration();
   };
   r.readAsDataURL(f);
  } else {
-  state.calibraciones.push({
-   id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence,
-   fileName: '', fileData: ''
-  });
+  state.calibraciones.push({ id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence, fileName: '', fileData: '' });
   finishSaveCalibration();
  }
 }
 
-function finishSaveCalibration() {
- save(); closeModal(); refreshAll(); alert('Calibración registrada con éxito.');
-}
+function finishSaveCalibration() { save(); closeModal(); refreshAll(); alert('Calibración registrada con éxito.'); }
 
 function openCalFile(id) {
  const c = state.calibraciones.find(x => x.id === id); 
@@ -1006,7 +1063,6 @@ function renderCalibraciones() {
  document.getElementById('calTable').innerHTML = list.slice(0, 100).map(e => {
   const c = calState(e), d = c[2];
   const btnDoc = d && d.fileData ? `<button class="btn small blue" onclick="openCalFile('${d.id}')">Ver PDF</button>` : '—';
-  
   return `<tr>
    <td><b>${esc(e.equipo)}</b></td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
    <td>${d ? fmtDate(d.fecha) : '—'}</td><td>${d ? fmtDate(d.vencimiento) : '—'}</td><td>${btnDoc}</td>
@@ -1034,11 +1090,7 @@ function saveDoc() {
  const f = document.getElementById('dFile').files[0]; if (!f) return alert('Seleccione un archivo.');
  const r = new FileReader();
  r.onload = () => {
-  state.documentos.push({
-   id: uid(), nombre: document.getElementById('dNombre').value || f.name, tipo: 'MANUAL',
-   sedeId: document.getElementById('dSede').value, tipoEquipo: document.getElementById('dTipoEq').value,
-   marca: document.getElementById('dMarca').value, fecha: today(), data: r.result
-  });
+  state.documentos.push({ id: uid(), nombre: document.getElementById('dNombre').value || f.name, tipo: 'MANUAL', sedeId: document.getElementById('dSede').value, tipoEquipo: document.getElementById('dTipoEq').value, marca: document.getElementById('dMarca').value, fecha: today(), data: r.result });
   save(); closeModal(); renderDocs(); alert('Documento asociado.');
  };
  r.readAsDataURL(f);
@@ -1085,6 +1137,12 @@ function uploadSigTech(input) {
  r.readAsDataURL(f);
 }
 
+function resetDatabase() {
+ if (!confirm('¿ESTÁ SEGURO DE BORRAR TODO? Se eliminarán todas las sedes, equipos y reportes para empezar desde cero.')) return;
+ localStorage.removeItem(KEY);
+ location.reload();
+}
+
 function renderMatrix() {
  document.getElementById('matrixTable').innerHTML = state.matriz.map(m => `<tr>
   <td><b>${esc(m.tipo)}</b></td><td>6 Meses (Semestral)</td><td>${esc(m.voltaje || '110V')} / ${esc(m.amperios || 'N/A')}</td>
@@ -1117,7 +1175,7 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE EXCEL Y LECTURA DE LISTA DE CHEQUEO */
+/* IMPORTACIÓN DESDE EXCEL */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
@@ -1177,7 +1235,6 @@ function doImportExcel() {
   let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
   let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
-  // Lectura directa de las 21 columnas del Excel
   let eqChecklist = [
     { label: "LIMPIEZA GENERAL", keys: ['limpieza gen'] },
     { label: "REV. DEL SISTEMA DE REFRIGERACIÓN", keys: ['refrigeraci'] },
