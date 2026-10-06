@@ -1,1392 +1,330 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión Biomédica - CENDIATRA SAS</title>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- SheetJS para procesamiento de archivos Excel -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- html2pdf.js para exportar Hojas de Vida y Reportes a PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f7ff',
-              100: '#e0effe',
-              500: '#0284c7',
-              700: '#0369a1',
-              900: '#0f172a',
-              sidebar: '#0B192C',
-              card: '#1E293B'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @media print {
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión Biomédica</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (Para importar y exportar Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-  <!-- ================= LOGICAL LOGIN SCREEN ================= -->
-  <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-95 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
-      <div class="bg-brand-sidebar p-6 text-white text-center">
-        <div class="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-          <i class="fa-solid fa-heart-pulse text-2xl text-white"></i>
-        </div>
-        <h2 class="text-2xl font-bold tracking-tight">Gestión Biomédica</h2>
-        <p class="text-xs text-slate-300 mt-1">Control de equipos, mantenimiento, calibración y trazabilidad</p>
-      </div>
-      <form id="login-form" class="p-6 space-y-4" onsubmit="handleLogin(event)">
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Tipo de Usuario</label>
-          <select id="login-role" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 text-sm font-medium">
-            <option value="admin">admin — Administrador (Edición y Control Total)</option>
-            <option value="consulta">consulta — Consulta (Solo Visualización y Descarga)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Contraseña</label>
-          <input type="password" id="login-password" placeholder="Ingrese su contraseña" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none text-sm">
-        </div>
-        <div id="login-error" class="hidden text-red-500 text-xs text-center font-medium"></div>
-        <button type="submit" class="w-full bg-brand-sidebar hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md transition-all text-sm uppercase tracking-wider">
-          Ingresar al sistema
-        </button>
-        <p class="text-[11px] text-slate-500 text-center mt-3">
-          Usuarios iniciales: <b>admin / admin123</b> y <b>consulta / consulta123</b>
-        </p>
-      </form>
-    </div>
-  </div>
-
-  <!-- ================= MAIN LAYOUT ================= -->
-  <div id="app-layout" class="hidden flex-1 flex flex-col md:flex-row min-h-screen">
-    
-    <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-brand-sidebar text-slate-300 flex-shrink-0 flex flex-col justify-between">
-      <div>
-        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-          <div>
-            <h1 class="font-bold text-lg text-white tracking-wide">GESTIÓN BIOMÉDICA</h1>
-            <p class="text-xs text-slate-400">CENDIATRA SAS · Control técnico</p>
-          </div>
-          <span id="role-badge" class="px-2 py-0.5 text-[10px] uppercase font-bold rounded bg-sky-600 text-white">ADMIN</span>
-        </div>
-
-        <nav class="p-4 space-y-6 text-sm">
-          <div>
-            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 transition-colors text-slate-200">
-              <i class="fa-solid fa-house w-5"></i> <span>Inicio</span>
-            </button>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Inventario</p>
-            <div class="space-y-1">
-              <button onclick="switchTab('sedes')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-hospital w-5"></i> <span>Sedes</span>
-              </button>
-              <button onclick="switchTab('equipos')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-laptop-medical w-5"></i> <span>Equipos biomédicos</span>
-              </button>
-              <button onclick="switchTab('hojas-vida')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-file-invoice w-5"></i> <span>Hojas de vida</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Mantenimiento</p>
-            <div class="space-y-1">
-              <button onclick="switchTab('cronograma')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-calendar-check w-5"></i> <span>Cronograma</span>
-              </button>
-              <button onclick="switchTab('reportes')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-screwdriver-wrench w-5"></i> <span>Reportes técnicos</span>
-              </button>
-              <button onclick="switchTab('calibraciones')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-sliders w-5"></i> <span>Calibraciones</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Documentación</p>
-            <div class="space-y-1">
-              <button onclick="switchTab('manuales')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-book-medical w-5"></i> <span>Manuales y documentos</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Sistema</p>
-            <div class="space-y-1">
-              <button onclick="switchTab('configuracion')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-gear w-5"></i> <span>Configuración</span>
-              </button>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      <div class="p-4 border-t border-slate-800">
-        <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-right-from-bracket"></i> <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT CONTAINER -->
-    <main class="flex-1 bg-slate-50 p-6 overflow-y-auto">
-      
-      <!-- TOP USER BAR -->
-      <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-        <div>
-          <h2 id="page-title" class="text-2xl font-bold text-slate-800">Panel Principal</h2>
+    <!-- BARRA SUPERIOR / CONTROL DE ROL -->
+    <header class="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-heart-pulse text-indigo-400 text-2xl"></i>
+            <span class="font-bold text-lg tracking-wide">BioMedical Manager Pro</span>
         </div>
         <div class="flex items-center space-x-4">
-          <div class="text-right">
-            <p id="user-display-name" class="text-sm font-bold text-slate-700">Administrador</p>
-            <p id="user-display-role" class="text-xs text-slate-500">Acceso Total</p>
-          </div>
-          <div id="user-avatar" class="w-10 h-10 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-sm shadow">
-            AD
-          </div>
-        </div>
-      </header>
-
-      <!-- TAB: DASHBOARD -->
-      <section id="tab-dashboard" class="tab-content space-y-6">
-        <!-- KPI METRICS -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p class="text-xs font-bold uppercase text-slate-400">Equipos Registrados</p>
-              <h3 id="dash-total-equipos" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
-              <p class="text-xs text-slate-500 mt-1">En inventario global</p>
-            </div>
-            <div class="w-12 h-12 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-boxes-stacked"></i>
-            </div>
-          </div>
-
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p class="text-xs font-bold uppercase text-slate-400">Sedes Activas</p>
-              <h3 id="dash-total-sedes" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
-              <p class="text-xs text-slate-500 mt-1">Sedes asociadas</p>
-            </div>
-            <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-building"></i>
-            </div>
-          </div>
-
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p class="text-xs font-bold uppercase text-slate-400">Mantenimientos Pendientes</p>
-              <h3 id="dash-maint-pending" class="text-3xl font-extrabold text-amber-600 mt-1">0</h3>
-              <p class="text-xs text-slate-500 mt-1">Próximos 30 días</p>
-            </div>
-            <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-screwdriver-wrench"></i>
-            </div>
-          </div>
-
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p class="text-xs font-bold uppercase text-slate-400">Calibraciones Requeridas</p>
-              <h3 id="dash-calib-pending" class="text-3xl font-extrabold text-rose-600 mt-1">0</h3>
-              <p class="text-xs text-slate-500 mt-1">Sujetos a calibración</p>
-            </div>
-            <div class="w-12 h-12 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-sliders"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- INDICATORS & ALERTS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 flex items-center space-x-2">
-              <i class="fa-solid fa-chart-line text-sky-600"></i>
-              <span>Indicadores de Gestión Biomédica</span>
-            </h4>
-            
-            <div>
-              <div class="flex justify-between text-xs font-bold mb-1">
-                <span class="text-slate-600">Cobertura de Mantenimiento Preventivo</span>
-                <span id="kpi-maint-percent" class="text-sky-600">0%</span>
-              </div>
-              <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                <div id="kpi-maint-bar" class="bg-sky-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-xs font-bold mb-1">
-                <span class="text-slate-600">Cumplimiento de Calibración</span>
-                <span id="kpi-calib-percent" class="text-emerald-600">0%</span>
-              </div>
-              <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                <div id="kpi-calib-bar" class="bg-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <h4 class="font-bold text-slate-800 flex items-center space-x-2">
-              <i class="fa-solid fa-bell text-amber-500"></i>
-              <span>Alertas del Sistema</span>
-            </h4>
-            <div id="alerts-container" class="space-y-2 max-h-48 overflow-y-auto">
-              <!-- Dynamically populated alerts -->
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB: SEDES -->
-      <section id="tab-sedes" class="tab-content hidden space-y-6">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg font-bold text-slate-800">Sedes Registradas</h3>
-          <button onclick="openModal('modal-sede')" class="admin-only bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow flex items-center space-x-2">
-            <i class="fa-solid fa-plus"></i> <span>Nueva Sede</span>
-          </button>
-        </div>
-        <div id="sedes-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Dynamically populated sedes cards -->
-        </div>
-      </section>
-
-      <!-- TAB: EQUIPOS BIOMEDICOS -->
-      <section id="tab-equipos" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-          <div class="flex flex-1 items-center space-x-3 w-full">
-            <input type="text" id="search-equipos" oninput="renderEquiposTable()" placeholder="Buscar equipo por nombre, marca, serie o sede..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
-            <select id="filter-sede-equipos" onchange="renderEquiposTable()" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-white font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none">
-              <option value="ALL">Todas las Sedes</option>
+            <span class="text-xs text-slate-400">Rol actual:</span>
+            <select id="role-selector" onchange="changeRole(this.value)" class="bg-slate-800 text-xs font-semibold px-3 py-1.5 rounded border border-slate-700 focus:outline-none text-indigo-300">
+                <option value="admin">Administrador (Edición)</option>
+                <option value="viewer">Cliente / Sede (Solo Lectura)</option>
             </select>
-          </div>
-          <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-            <label class="admin-only bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow cursor-pointer flex items-center space-x-2">
-              <i class="fa-solid fa-file-excel"></i> <span>Cargar Excel</span>
-              <input type="file" id="excel-import-input" accept=".xlsx, .xls" class="hidden" onchange="importExcelEquipos(event)">
-            </label>
-            <button onclick="openModal('modal-equipo')" class="admin-only bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow flex items-center space-x-2">
-              <i class="fa-solid fa-plus"></i> <span>Nuevo Equipo</span>
-            </button>
-          </div>
         </div>
+    </header>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-bold text-slate-500">
-              <tr>
-                <th class="p-3">ID / Nombre</th>
-                <th class="p-3">Marca / Modelo</th>
-                <th class="p-3">Serie</th>
-                <th class="p-3">Sede / Ubicación</th>
-                <th class="p-3 text-center">Calibración</th>
-                <th class="p-3 text-center">Estado</th>
-                <th class="p-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="equipos-table-body" class="divide-y divide-slate-100">
-              <!-- Dynamically populated equipos rows -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+    <div class="flex min-h-[calc(100vh-52px)]">
+        <!-- NAVEGACIÓN LATERAL -->
+        <aside class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between">
+            <nav class="space-y-1">
+                <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-link w-full text-left px-4 py-3 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-line w-5"></i><span>Dashboard & KPIs</span>
+                </button>
+                <button onclick="navigate('inventario')" id="nav-inventario" class="nav-link w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center space-x-3">
+                    <i class="fa-solid fa-boxes-stacked w-5"></i><span>Inventario por Sedes</span>
+                </button>
+                <button onclick="navigate('repositorio')" id="nav-repositorio" class="nav-link w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center space-x-3">
+                    <i class="fa-solid fa-folder-open w-5"></i><span>Manuales y Documentos</span>
+                </button>
+                <button onclick="navigate('matriz')" id="nav-matriz" class="nav-link w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center space-x-3 admin-only">
+                    <i class="fa-solid fa-list-check w-5"></i><span>Matriz Mantenimiento</span>
+                </button>
+                <button onclick="navigate('configuracion')" id="nav-configuracion" class="nav-link w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center space-x-3 admin-only">
+                    <i class="fa-solid fa-gears w-5"></i><span>Configuración & Firmas</span>
+                </button>
+            </nav>
+        </aside>
 
-      <!-- TAB: HOJAS DE VIDA -->
-      <section id="tab-hojas-vida" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <select id="hv-equipo-select" onchange="renderHojaDeVidaView()" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none">
-            <option value="">-- Seleccionar Equipo para ver Hoja de Vida --</option>
-          </select>
-          <button onclick="downloadHojaDeVidaPDF()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow flex items-center space-x-2 shrink-0">
-            <i class="fa-solid fa-file-pdf"></i> <span>Descargar PDF</span>
-          </button>
-        </div>
+        <!-- ÁREA DE CONTENIDO -->
+        <main class="flex-1 p-8 overflow-y-auto">
 
-        <div id="hoja-vida-printable" class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6 max-w-4xl mx-auto text-slate-800">
-          <p class="text-center text-slate-400 italic">Seleccione un equipo del menú superior para consultar su Hoja de Vida técnica completada con la Matriz de Mantenimiento.</p>
-        </div>
-      </section>
-
-      <!-- TAB: CRONOGRAMA -->
-      <section id="tab-cronograma" class="tab-content hidden space-y-6">
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-lg font-bold text-slate-800">Cronograma General de Mantenimiento Preventivo</h3>
-          <p class="text-xs text-slate-500">Programación automática calculada a partir de las periodicidades establecidas en la Matriz.</p>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm border-collapse border border-slate-200">
-              <thead class="bg-slate-100 text-xs font-bold uppercase text-slate-600">
-                <tr>
-                  <th class="border border-slate-200 p-2">Equipo</th>
-                  <th class="border border-slate-200 p-2">Sede</th>
-                  <th class="border border-slate-200 p-2">Periodicidad</th>
-                  <th class="border border-slate-200 p-2 text-center">Ene-Mar</th>
-                  <th class="border border-slate-200 p-2 text-center">Abr-Jun</th>
-                  <th class="border border-slate-200 p-2 text-center">Jul-Sep</th>
-                  <th class="border border-slate-200 p-2 text-center">Oct-Dic</th>
-                </tr>
-              </thead>
-              <tbody id="cronograma-table-body">
-                <!-- Dynamically populated cronograma rows -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB: REPORTES TECNICOS -->
-      <section id="tab-reportes" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <h3 class="text-lg font-bold text-slate-800">Reportes de Mantenimiento</h3>
-          <button onclick="openModal('modal-reporte')" class="admin-only bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow flex items-center space-x-2">
-            <i class="fa-solid fa-plus"></i> <span>Nuevo Reporte de Mantenimiento</span>
-          </button>
-        </div>
-
-        <div id="reportes-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Dynamically populated maintenance report cards -->
-        </div>
-      </section>
-
-      <!-- TAB: CALIBRACIONES -->
-      <section id="tab-calibraciones" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-          <h3 class="text-lg font-bold text-slate-800">Certificados de Calibración</h3>
-          <button onclick="openModal('modal-calibracion')" class="admin-only bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow flex items-center space-x-2">
-            <i class="fa-solid fa-file-arrow-up"></i> <span>Subir Certificado PDF</span>
-          </button>
-        </div>
-
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-bold text-slate-500">
-              <tr>
-                <th class="p-3">Equipo</th>
-                <th class="p-3">Sede</th>
-                <th class="p-3">Fecha Calibración</th>
-                <th class="p-3">Próxima Calibración</th>
-                <th class="p-3">Certificado</th>
-              </tr>
-            </thead>
-            <tbody id="calibraciones-table-body" class="divide-y divide-slate-100">
-              <!-- Dynamically populated calibraciones rows -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TAB: MANUALES Y DOCUMENTOS -->
-      <section id="tab-manuales" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-          <h3 class="text-lg font-bold text-slate-800">Repositorio Central de Manuales y Documentos</h3>
-          <button onclick="openModal('modal-manual')" class="admin-only bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow flex items-center space-x-2">
-            <i class="fa-solid fa-upload"></i> <span>Cargar Manual / Documento</span>
-          </button>
-        </div>
-
-        <div id="manuales-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Dynamically populated manual cards -->
-        </div>
-      </section>
-
-      <!-- TAB: CONFIGURACION -->
-      <section id="tab-configuracion" class="tab-content hidden space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          <!-- DATOS DEL ÁREA Y FIRMAS POR SEDE -->
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 border-b pb-2">Configuración General y Firmas Digitales</h4>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Responsable Biomédico</label>
-                <input type="text" id="cfg-responsable" value="Yesid Esteban Vergara Cárdenas" class="w-full p-2 border rounded text-sm">
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cargo</label>
-                <input type="text" id="cfg-cargo" value="Ingeniero Biomédico" class="w-full p-2 border rounded text-sm">
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Empresa</label>
-                <input type="text" id="cfg-empresa" value="CENDIATRA SAS" class="w-full p-2 border rounded text-sm">
-              </div>
-              <div class="admin-only pt-2 border-t">
-                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Firma Digital Ingeniero (Imagen PNG)</label>
-                <input type="file" id="cfg-signature-file" accept="image/png, image/jpeg" class="text-xs" onchange="handleSignatureUpload(event)">
-                <div id="signature-preview" class="mt-2 border rounded p-2 text-center bg-slate-50 min-h-[60px] flex items-center justify-center">
-                  <span class="text-xs text-slate-400">Sin firma cargada</span>
+            <!-- 1. DASHBOARD & KPIS -->
+            <section id="sec-dashboard" class="view-section block space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Panel Principal de Control</h2>
+                    <p class="text-sm text-slate-500">Alertas de programación, métricas e indicadores de gestión biomédica.</p>
                 </div>
-              </div>
-            </div>
-            <button onclick="saveGeneralConfig()" class="admin-only w-full bg-slate-800 text-white font-bold text-xs py-2 rounded">Guardar Cambios</button>
-          </div>
 
-          <!-- GESTIÓN DE USUARIOS Y CREDENCIALES -->
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 border-b pb-2">Gestión de Credenciales de Acceso</h4>
-            <div class="space-y-4">
-              <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
-                <p class="font-bold text-xs text-slate-700">Usuario Administrador (admin)</p>
-                <input type="password" id="cfg-pass-admin" placeholder="Nueva Contraseña Administrador" class="w-full p-2 border rounded text-sm">
-              </div>
-              <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-2">
-                <p class="font-bold text-xs text-slate-700">Usuario Consulta (consulta)</p>
-                <input type="password" id="cfg-pass-consulta" placeholder="Nueva Contraseña Consulta" class="w-full p-2 border rounded text-sm">
-              </div>
-              <button onclick="updateUserPasswords()" class="admin-only w-full bg-sky-600 text-white font-bold text-xs py-2 rounded">Actualizar Contraseñas</button>
-            </div>
-          </div>
-        </div>
+                <!-- CARDS DE ALERTAS -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">Mantenimientos Pendientes</div>
+                        <div id="kpi-maint-pending" class="text-3xl font-bold text-slate-800 mt-1">0</div>
+                        <span class="text-xs text-amber-600 font-medium">Revisar cronograma del mes</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">Calibraciones Vencidas</div>
+                        <div id="kpi-calib-pending" class="text-3xl font-bold text-slate-800 mt-1">0</div>
+                        <span class="text-xs text-red-600 font-medium">Requiere gestión laboratorio</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">Cumplimiento Mantenimiento</div>
+                        <div id="kpi-maint-rate" class="text-3xl font-bold text-slate-800 mt-1">100%</div>
+                        <span class="text-xs text-emerald-600 font-medium">Indicador de ejecución</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-indigo-500">
+                        <div class="text-xs font-semibold text-slate-400 uppercase">Total Equipos Registrados</div>
+                        <div id="kpi-total-equip" class="text-3xl font-bold text-slate-800 mt-1">0</div>
+                        <span class="text-xs text-indigo-600 font-medium">Parque instalado activo</span>
+                    </div>
+                </div>
+            </section>
 
-        <!-- MATRIZ DE MANTENIMIENTO PREVENTIVO -->
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex justify-between items-center border-b pb-2">
-            <div>
-              <h4 class="font-bold text-slate-800">Matriz de Mantenimiento Preventivo</h4>
-              <p class="text-xs text-slate-500">Base de conocimiento para autorellenar hojas de vida y reportes de mantenimiento.</p>
-            </div>
-            <button onclick="openModal('modal-matriz')" class="admin-only bg-sky-600 text-white text-xs font-bold px-3 py-1.5 rounded flex items-center space-x-1">
-              <i class="fa-solid fa-plus"></i> <span>+ Tipo de Equipo</span>
-            </button>
-          </div>
+            <!-- 2. INVENTARIO POR SEDES -->
+            <section id="sec-inventario" class="view-section hidden space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Inventario General por Sedes</h2>
+                        <p class="text-sm text-slate-500">Administración de hojas de vida, reportes y certificados metrológicos.</p>
+                    </div>
+                    <div class="flex items-center space-x-3 admin-only">
+                        <label class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-medium cursor-pointer flex items-center space-x-2">
+                            <i class="fa-solid fa-file-excel"></i><span>Cargar Excel</span>
+                            <input type="file" id="excel-input" accept=".xlsx, .xls" class="hidden" onchange="importExcel(event)">
+                        </label>
+                        <button onclick="openModalEquipo()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i><span>Nuevo Equipo</span>
+                        </button>
+                    </div>
+                </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm border-collapse">
-              <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-600">
-                <tr>
-                  <th class="p-3 border">Equipo</th>
-                  <th class="p-3 border">Periodicidad</th>
-                  <th class="p-3 border text-center">Calibración</th>
-                  <th class="p-3 border">Descripción Técnica</th>
-                  <th class="p-3 border">Actividades Estándar</th>
-                  <th class="p-3 border text-right admin-only">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="matriz-table-body">
-                <!-- Dynamically populated matriz rows -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+                <!-- FILTROS -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center space-x-4">
+                    <div class="w-1/3">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Filtrar por Sede:</label>
+                        <select id="filter-sede" onchange="renderInventoryTable()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            <option value="TODAS">Todas las Sedes</option>
+                            <option value="Sede Principal">Sede Principal</option>
+                            <option value="Sede Norte">Sede Norte</option>
+                        </select>
+                    </div>
+                </div>
 
-    </main>
-  </div>
+                <!-- TABLA DE INVENTARIO -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-xs border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4">Placa / Serie</th>
+                                <th class="py-3 px-4">Equipo</th>
+                                <th class="py-3 px-4">Marca / Modelo</th>
+                                <th class="py-3 px-4">Sede</th>
+                                <th class="py-3 px-4">Próx. Mantenimiento</th>
+                                <th class="py-3 px-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-inventario-body" class="divide-y divide-slate-100">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-  <!-- ================= MODALS ================= -->
+            <!-- 3. REPOSITORIO DE MANUALES -->
+            <section id="sec-repositorio" class="view-section hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Repositorio de Manuales y Documentos</h2>
+                    <p class="text-sm text-slate-500">Documentación técnica centralizada por marca y modelo de equipo.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <p class="text-slate-600 text-sm">Los manuales asociados a cada modelo se vinculan automáticamente desde la Hoja de Vida.</p>
+                </div>
+            </section>
 
-  <!-- MODAL: SEDE -->
-  <div id="modal-sede" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-lg text-slate-800">Agregar Nueva Sede</h3>
-      <form onsubmit="saveSede(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Nombre de la Sede</label>
-          <input type="text" id="sede-nombre" required class="w-full p-2 border rounded text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Ciudad / Dirección</label>
-          <input type="text" id="sede-direccion" required class="w-full p-2 border rounded text-sm">
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-sede')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Guardar Sede</button>
-        </div>
-      </form>
+            <!-- 4. MATRIZ DE MANTENIMIENTO -->
+            <section id="sec-matriz" class="view-section hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Matriz Operativa de Mantenimiento</h2>
+                    <p class="text-sm text-slate-500">Parámetros de rutina e inspección utilizados para auto-rellenar los reportes de servicio.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
+                    <h3 class="font-semibold text-slate-800 text-sm">Protocolo Estándar (Ejemplo): Monitores de Signos Vitales</h3>
+                    <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                        <li>Inspección física y limpieza de conectores SpO2/NIBP/ECG.</li>
+                        <li>Prueba de simulación de paciente y verificación de alarmas.</li>
+                        <li>Inspección de seguridad eléctrica (corrientes de fuga).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 5. CONFIGURACIÓN Y FIRMAS -->
+            <section id="sec-configuracion" class="view-section hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Configuración del Sistema y Firmas</h2>
+                    <p class="text-sm text-slate-500">Gestión de firmas digitales para reporte de servicios por sede.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 max-w-lg space-y-4">
+                    <h3 class="font-semibold text-slate-800 text-sm">Carga de Firma Digital (Ingeniero Biomédico)</h3>
+                    <input type="file" accept="image/png" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                    <p class="text-xs text-slate-400">Formatos recomendados: PNG transparente (300x150px).</p>
+                </div>
+            </section>
+
+        </main>
     </div>
-  </div>
 
-  <!-- MODAL: EQUIPO -->
-  <div id="modal-equipo" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <h3 class="font-bold text-lg text-slate-800">Registrar / Editar Equipo Biomédico</h3>
-      <form onsubmit="saveEquipo(event)" class="space-y-3">
-        <input type="hidden" id="equipo-id">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Nombre del Equipo</label>
-            <input type="text" id="eq-nombre" required class="w-full p-2 border rounded text-sm" placeholder="Ej: AGITADOR DE MAZINI">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Marca</label>
-            <input type="text" id="eq-marca" class="w-full p-2 border rounded text-sm">
-          </div>
+    <!-- MODAL NUEVO EQUIPO -->
+    <div id="modal-equipo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-900">Registrar Nuevo Equipo Biomédico</h3>
+            <form onsubmit="saveEquipo(event)" class="space-y-3">
+                <input type="text" id="eq-placa" placeholder="Placa / Serie" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+                <input type="text" id="eq-nombre" placeholder="Nombre del Equipo (Ej: Electrocardiógrafo)" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="eq-marca" placeholder="Marca" required class="border border-slate-300 rounded px-3 py-2 text-sm">
+                    <input type="text" id="eq-modelo" placeholder="Modelo" required class="border border-slate-300 rounded px-3 py-2 text-sm">
+                </div>
+                <select id="eq-sede" class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+                    <option value="Sede Principal">Sede Principal</option>
+                    <option value="Sede Norte">Sede Norte</option>
+                </select>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModalEquipo()" class="px-4 py-2 text-sm border rounded text-slate-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded">Guardar</button>
+                </div>
+            </form>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Modelo</label>
-            <input type="text" id="eq-modelo" class="w-full p-2 border rounded text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Número de Serie</label>
-            <input type="text" id="eq-serie" required class="w-full p-2 border rounded text-sm">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Sede</label>
-            <select id="eq-sede" required class="w-full p-2 border rounded text-sm"></select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Ubicación / Servicio</label>
-            <input type="text" id="eq-ubicacion" placeholder="Ej: LABORATORIO CLINICO" class="w-full p-2 border rounded text-sm">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Clasificación de Riesgo</label>
-            <select id="eq-riesgo" class="w-full p-2 border rounded text-sm">
-              <option value="I">Clase I (Bajo Riesgo)</option>
-              <option value="IIA">Clase IIA (Riesgo Moderado)</option>
-              <option value="IIB">Clase IIB (Alto Riesgo)</option>
-              <option value="III">Clase III (Muy Alto Riesgo)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">¿Requiere Calibración?</label>
-            <select id="eq-calibracion" class="w-full p-2 border rounded text-sm">
-              <option value="SI">SÍ</option>
-              <option value="NO">NO</option>
-            </select>
-          </div>
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-equipo')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Guardar Equipo</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- MODAL: MATRIZ ITEM -->
-  <div id="modal-matriz" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
-      <h3 class="font-bold text-lg text-slate-800">Agregar Tipo a Matriz de Mantenimiento</h3>
-      <form onsubmit="saveMatrizItem(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Nombre del Tipo de Equipo</label>
-          <input type="text" id="mat-nombre" required class="w-full p-2 border rounded text-sm" placeholder="Ej: ALCOHOLIMETRO">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Periodicidad</label>
-            <select id="mat-periodicidad" class="w-full p-2 border rounded text-sm">
-              <option value="TRIMESTRAL">TRIMESTRAL</option>
-              <option value="SEMESTRAL" selected>SEMESTRAL</option>
-              <option value="ANUAL">ANUAL</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">¿Requiere Calibración?</label>
-            <select id="mat-calibracion" class="w-full p-2 border rounded text-sm">
-              <option value="SI">SÍ</option>
-              <option value="NO">NO</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Descripción Técnica</label>
-          <textarea id="mat-descripcion" rows="2" class="w-full p-2 border rounded text-sm"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Actividades Estándar</label>
-          <textarea id="mat-actividades" rows="3" class="w-full p-2 border rounded text-sm"></textarea>
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-matriz')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Guardar en Matriz</button>
-        </div>
-      </form>
-    </div>
-  </div>
+    <script>
+        // ESTADO DE LA APLICACIÓN
+        let currentRole = 'admin';
+        let state = {
+            equipos: [
+                { placa: "BIO-001", nombre: "Monitor de Signos Vitales", marca: "Mindray", modelo: "ePM 12", sede: "Sede Principal", proxMaint: "2026-11-15", calibOk: true },
+                { placa: "BIO-002", nombre: "Electrocardiógrafo", marca: "Bionet", modelo: "CardioCare 2000", sede: "Sede Norte", proxMaint: "2026-10-10", calibOk: false }
+            ]
+        };
 
-  <!-- MODAL: REPORTE -->
-  <div id="modal-reporte" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
-      <h3 class="font-bold text-lg text-slate-800">Generar Reporte de Mantenimiento</h3>
-      <form onsubmit="saveReporte(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Seleccionar Equipo</label>
-          <select id="rep-equipo-id" onchange="autoFillReportActivities()" required class="w-full p-2 border rounded text-sm"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Tipo de Mantenimiento</label>
-            <select id="rep-tipo" class="w-full p-2 border rounded text-sm">
-              <option value="PREVENTIVO">PREVENTIVO</option>
-              <option value="CORRECTIVO">CORRECTIVO</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Fecha de Ejecución</label>
-            <input type="date" id="rep-fecha" required class="w-full p-2 border rounded text-sm">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Actividades Realizadas (Autorellenado por Matriz)</label>
-          <textarea id="rep-actividades" rows="4" required class="w-full p-2 border rounded text-sm"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Observaciones / Recomendaciones</label>
-          <input type="text" id="rep-observaciones" placeholder="EQUIPO OPERATIVO Y FUNCIONAL" class="w-full p-2 border rounded text-sm">
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-reporte')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Generar Reporte</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: CALIBRACIÓN -->
-  <div id="modal-calibracion" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-lg text-slate-800">Cargar Certificado de Calibración</h3>
-      <form onsubmit="saveCalibracion(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Equipo que Calibra</label>
-          <select id="cal-equipo-id" required class="w-full p-2 border rounded text-sm"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Fecha Calibración</label>
-            <input type="date" id="cal-fecha" required class="w-full p-2 border rounded text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600">Próxima Calibración</label>
-            <input type="date" id="cal-fecha-prox" required class="w-full p-2 border rounded text-sm">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Adjuntar Certificado (PDF)</label>
-          <input type="file" id="cal-file" accept=".pdf" class="w-full p-1 border rounded text-xs">
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-calibracion')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Guardar Calibración</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: MANUAL -->
-  <div id="modal-manual" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-lg text-slate-800">Cargar Documento / Manual</h3>
-      <form onsubmit="saveManual(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Título del Documento</label>
-          <input type="text" id="man-titulo" required placeholder="Ej: Manual de Usuario Agitador Vortex" class="w-full p-2 border rounded text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Tipo de Equipo Asociado</label>
-          <input type="text" id="man-tipo" required placeholder="Ej: AGITADOR VORTEX" class="w-full p-2 border rounded text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600">Seleccionar PDF</label>
-          <input type="file" id="man-file" accept=".pdf" class="w-full p-1 border rounded text-xs">
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-manual')" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold bg-sky-600 text-white rounded">Cargar Manual</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ================= APPLICATION JAVASCRIPT LOGIC ================= -->
-  <script>
-    // INITIAL APP STATE & DATA STORAGE SETUP
-    const DEFAULT_DATA = {
-      users: {
-        admin: 'admin123',
-        consulta: 'consulta123'
-      },
-      config: {
-        responsable: 'Yesid Esteban Vergara Cárdenas',
-        cargo: 'Ingeniero Biomédico',
-        empresa: 'CENDIATRA SAS',
-        signature: null
-      },
-      sedes: [
-        { id: 'S1', nombre: 'NORTE 106', direccion: 'BOGOTA D.C. - Calle 106' },
-        { id: 'S2', nombre: 'CENTRO 19', direccion: 'BOGOTA D.C. - Calle 19' }
-      ],
-      matriz: [
-        {
-          equipo: 'AGITADOR DE MAZINI',
-          periodicidad: 'SEMESTRAL',
-          calibracion: 'SI',
-          descripcion: 'EL AGITADOR DE MAZINI ES UN EQUIPO UTILIZADO EN LABORATORIOS PARA MEZCLAR MUESTRAS DE MANERA UNIFORME.',
-          actividades: 'SE REALIZA REVISION FISICA Y FUNCIONAL DEL EQUIPO, SE REALIZA LIMPIEZA SUPERFICIAL, VERIFICACION DE VELOCIDAD DEL ROTOR, LUBRICACION DE PARTES MOVILES, VERIFICACION DE TEMPORIZADOR. EL EQUIPO FUNCIONA CORRECTAMENTE.'
-        },
-        {
-          equipo: 'AGITADOR VORTEX',
-          periodicidad: 'SEMESTRAL',
-          calibracion: 'SI',
-          descripcion: 'MEZCLA O DISUELVE MUESTRAS EN TUBOS O VASOS DE ENSAYO MEDIANTE UN VÓRTEX O REMOLINO.',
-          actividades: 'SE REALIZA REVISION FISICA Y FUNCIONAL, LIMPIEZA SUPERFICIAL, VERIFICACION DE VELOCIDAD DEL ROTOR, LUBRICACION DE PARTES MOVILES.'
-        },
-        {
-          equipo: 'ALCOHOLIMETRO',
-          periodicidad: 'SEMESTRAL',
-          calibracion: 'SI',
-          descripcion: 'MIDE LA CONCENTRACIÓN DE ALCOHOL EN EL AIRE EXHALADO MEDIANTE CELDA DE COMBUSTIÓN.',
-          actividades: 'REVISION FISICA Y FUNCIONAL, REVISION DE CELDA, BATERIAS Y ESTADO ELECTRONICO. SE REALIZA VERIFICACION DE PULSADORES Y SOFTWARE.'
-        }
-      ],
-      equipos: [
-        { id: 'EQ1', nombre: 'AGITADOR DE MAZINI', marca: 'MAZINI', modelo: 'M-100', serie: '13717', sedeId: 'S1', ubicacion: 'LABORATORIO CLINICO', riesgo: 'IIA', calibracion: 'SI', estado: 'ACTIVO' },
-        { id: 'EQ2', nombre: 'ALCOHOLIMETRO', marca: 'ALCOVISOR', modelo: 'MERCURY', serie: '10301514', sedeId: 'S1', ubicacion: 'TOMA DE MUESTRAS', riesgo: 'IIA', calibracion: 'SI', estado: 'ACTIVO' }
-      ],
-      reportes: [],
-      calibraciones: [],
-      manuales: []
-    };
-
-    let currentUser = null;
-    let appData = JSON.parse(localStorage.getItem('GB_APP_DATA')) || DEFAULT_DATA;
-
-    function saveData() {
-      localStorage.setItem('GB_APP_DATA', JSON.stringify(appData));
-    }
-
-    // AUTHENTICATION & LOGIN LOGIC
-    function handleLogin(e) {
-      e.preventDefault();
-      const role = document.getElementById('login-role').value;
-      const pass = document.getElementById('login-password').value;
-      const errorEl = document.getElementById('login-error');
-
-      if (appData.users[role] && appData.users[role] === pass) {
-        currentUser = role;
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-layout').classList.remove('hidden');
-        setupUserInterface();
-        initDashboard();
-      } else {
-        errorEl.textContent = 'Contraseña incorrecta para el usuario seleccionado.';
-        errorEl.classList.remove('hidden');
-      }
-    }
-
-    function logout() {
-      currentUser = null;
-      document.getElementById('app-layout').classList.add('hidden');
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('login-password').value = '';
-    }
-
-    function setupUserInterface() {
-      const isConsult = currentUser === 'consulta';
-      document.getElementById('role-badge').textContent = currentUser.toUpperCase();
-      document.getElementById('user-display-name').textContent = isConsult ? 'Usuario Consulta' : 'Administrador';
-      document.getElementById('user-display-role').textContent = isConsult ? 'Solo Lectura y Descarga' : 'Acceso Total';
-      document.getElementById('user-avatar').textContent = isConsult ? 'CO' : 'AD';
-
-      // Hide/Show Admin Only elements
-      document.querySelectorAll('.admin-only').forEach(el => {
-        if (isConsult) el.classList.add('hidden');
-        else el.classList.remove('hidden');
-      });
-
-      populateSedeDropdowns();
-    }
-
-    // NAVIGATION SYSTEM
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-      
-      const titles = {
-        'dashboard': 'Panel Principal',
-        'sedes': 'Inventario por Sede',
-        'equipos': 'Equipos Biomédicos',
-        'hojas-vida': 'Hojas de Vida Técnicas',
-        'cronograma': 'Cronograma de Mantenimiento',
-        'reportes': 'Reportes de Mantenimiento',
-        'calibraciones': 'Certificados de Calibración',
-        'manuales': 'Manuales y Documentos',
-        'configuracion': 'Configuración y Usuarios'
-      };
-      document.getElementById('page-title').textContent = titles[tabId] || 'Gestión Biomédica';
-
-      if (tabId === 'dashboard') initDashboard();
-      if (tabId === 'sedes') renderSedesGrid();
-      if (tabId === 'equipos') renderEquiposTable();
-      if (tabId === 'hojas-vida') populateHVEquiposSelect();
-      if (tabId === 'cronograma') renderCronograma();
-      if (tabId === 'reportes') renderReportesList();
-      if (tabId === 'calibraciones') renderCalibracionesTable();
-      if (tabId === 'manuales') renderManualesGrid();
-      if (tabId === 'configuracion') loadConfigTab();
-    }
-
-    // DASHBOARD & INDICATORS
-    function initDashboard() {
-      document.getElementById('dash-total-equipos').textContent = appData.equipos.length;
-      document.getElementById('dash-total-sedes').textContent = appData.sedes.length;
-      
-      const calibranCount = appData.equipos.filter(e => e.calibracion === 'SI').length;
-      document.getElementById('dash-calib-pending').textContent = calibranCount;
-
-      const reportesPrev = appData.reportes.filter(r => r.tipo === 'PREVENTIVO').length;
-      document.getElementById('dash-maint-pending').textContent = Math.max(0, appData.equipos.length - reportesPrev);
-
-      // KPIs calculation
-      const covMaint = appData.equipos.length ? Math.min(100, Math.round((reportesPrev / appData.equipos.length) * 100)) : 0;
-      document.getElementById('kpi-maint-percent').textContent = `${covMaint}%`;
-      document.getElementById('kpi-maint-bar').style.width = `${covMaint}%`;
-
-      const calDone = appData.calibraciones.length;
-      const covCal = calibranCount ? Math.min(100, Math.round((calDone / calibranCount) * 100)) : 0;
-      document.getElementById('kpi-calib-percent').textContent = `${covCal}%`;
-      document.getElementById('kpi-calib-bar').style.width = `${covCal}%`;
-
-      // Alerts
-      const alertsContainer = document.getElementById('alerts-container');
-      alertsContainer.innerHTML = '';
-      if (appData.equipos.length === 0) {
-        alertsContainer.innerHTML = `<p class="text-xs text-slate-500 italic">No hay equipos registrados en el inventario.</p>`;
-      } else {
-        alertsContainer.innerHTML = `
-          <div class="p-3 bg-sky-50 border border-sky-200 rounded-lg flex items-center space-x-2 text-xs text-sky-800">
-            <i class="fa-solid fa-circle-info"></i>
-            <span>Sistema funcionando correctamente. Se registran <b>${appData.equipos.length}</b> equipos activos.</span>
-          </div>
-        `;
-      }
-    }
-
-    // SEDES MODULE
-    function renderSedesGrid() {
-      const grid = document.getElementById('sedes-grid');
-      grid.innerHTML = '';
-      appData.sedes.forEach(s => {
-        const count = appData.equipos.filter(e => e.sedeId === s.id).length;
-        grid.innerHTML += `
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="font-bold text-slate-800">${s.nombre}</h4>
-                <p class="text-xs text-slate-500">${s.direccion}</p>
-              </div>
-              <span class="bg-sky-100 text-sky-800 text-xs font-bold px-2 py-0.5 rounded-full">${count} Equipos</span>
-            </div>
-            <div class="pt-3 border-t text-xs text-slate-500 flex justify-between">
-              <span>Mantenimientos al día</span>
-              <button onclick="filterBySede('${s.id}')" class="text-sky-600 font-bold hover:underline">Ver Equipos &rarr;</button>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function saveSede(e) {
-      e.preventDefault();
-      const newSede = {
-        id: 'S' + Date.now(),
-        nombre: document.getElementById('sede-nombre').value,
-        direccion: document.getElementById('sede-direccion').value
-      };
-      appData.sedes.push(newSede);
-      saveData();
-      closeModal('modal-sede');
-      renderSedesGrid();
-      populateSedeDropdowns();
-    }
-
-    function filterBySede(sedeId) {
-      switchTab('equipos');
-      document.getElementById('filter-sede-equipos').value = sedeId;
-      renderEquiposTable();
-    }
-
-    // EQUIPOS & EXCEL IMPORT MODULE
-    function renderEquiposTable() {
-      const search = document.getElementById('search-equipos').value.toLowerCase();
-      const sedeFilter = document.getElementById('filter-sede-equipos').value;
-      const tbody = document.getElementById('equipos-table-body');
-      tbody.innerHTML = '';
-
-      const filtered = appData.equipos.filter(e => {
-        const matchesSearch = e.nombre.toLowerCase().includes(search) || e.serie.toLowerCase().includes(search) || e.marca.toLowerCase().includes(search);
-        const matchesSede = sedeFilter === 'ALL' || e.sedeId === sedeFilter;
-        return matchesSearch && matchesSede;
-      });
-
-      filtered.forEach(e => {
-        const sedeObj = appData.sedes.find(s => s.id === e.sedeId) || { nombre: 'N/A' };
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 font-bold text-slate-800">${e.nombre}</td>
-            <td class="p-3 text-slate-600">${e.marca} / ${e.modelo}</td>
-            <td class="p-3 text-slate-600 font-mono">${e.serie}</td>
-            <td class="p-3 text-slate-600">${sedeObj.nombre} (${e.ubicacion || 'General'})</td>
-            <td class="p-3 text-center">
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded ${e.calibracion === 'SI' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}">${e.calibracion}</span>
-            </td>
-            <td class="p-3 text-center">
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">${e.estado}</span>
-            </td>
-            <td class="p-3 text-right space-x-2">
-              <button onclick="openHVForEquipo('${e.id}')" class="text-sky-600 font-bold hover:underline text-xs">Ficha / HV</button>
-              <button onclick="deleteEquipo('${e.id}')" class="admin-only text-rose-600 hover:text-rose-800 text-xs"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function saveEquipo(e) {
-      e.preventDefault();
-      const id = document.getElementById('equipo-id').value || 'EQ' + Date.now();
-      const newEq = {
-        id: id,
-        nombre: document.getElementById('eq-nombre').value.toUpperCase(),
-        marca: document.getElementById('eq-marca').value,
-        modelo: document.getElementById('eq-modelo').value,
-        serie: document.getElementById('eq-serie').value,
-        sedeId: document.getElementById('eq-sede').value,
-        ubicacion: document.getElementById('eq-ubicacion').value.toUpperCase(),
-        riesgo: document.getElementById('eq-riesgo').value,
-        calibracion: document.getElementById('eq-calibracion').value,
-        estado: 'ACTIVO'
-      };
-
-      const existingIndex = appData.equipos.findIndex(item => item.id === id);
-      if (existingIndex >= 0) appData.equipos[existingIndex] = newEq;
-      else appData.equipos.push(newEq);
-
-      saveData();
-      closeModal('modal-equipo');
-      renderEquiposTable();
-    }
-
-    function deleteEquipo(id) {
-      if (currentUser !== 'admin') return;
-      if (confirm('¿Desea eliminar este equipo del inventario?')) {
-        appData.equipos = appData.equipos.filter(e => e.id !== id);
-        saveData();
-        renderEquiposTable();
-      }
-    }
-
-    function importExcelEquipos(event) {
-      if (currentUser !== 'admin') return;
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet);
-
-        let addedCount = 0;
-        json.forEach(row => {
-          const defaultSede = appData.sedes[0] ? appData.sedes[0].id : 'S1';
-          const newEq = {
-            id: 'EQ' + Date.now() + Math.random().toString(36).substr(2, 4),
-            nombre: (row.EQUIPO || row.Nombre || 'EQUIPO').toUpperCase(),
-            marca: row.MARCA || row.Marca || 'N/R',
-            modelo: row.MODELO || row.Modelo || 'N/R',
-            serie: String(row.SERIE || row.Serie || 'N/R'),
-            sedeId: defaultSede,
-            ubicacion: (row.UBICACION || row.Ubicacion || 'GENERAL').toUpperCase(),
-            riesgo: row.RIESGO || 'IIA',
-            calibracion: (row.CALIBRACION || 'NO').toUpperCase().includes('SI') ? 'SI' : 'NO',
-            estado: 'ACTIVO'
-          };
-          appData.equipos.push(newEq);
-          addedCount++;
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
         });
 
-        saveData();
-        renderEquiposTable();
-        alert(`Se cargaron exitosamente ${addedCount} equipos desde el archivo Excel.`);
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    // AUTO-FILLING HOJA DE VIDA MODULE
-    function populateHVEquiposSelect() {
-      const select = document.getElementById('hv-equipo-select');
-      select.innerHTML = '<option value="">-- Seleccionar Equipo para ver Hoja de Vida --</option>';
-      appData.equipos.forEach(e => {
-        select.innerHTML += `<option value="${e.id}">${e.nombre} - Serie: ${e.serie}</option>`;
-      });
-    }
-
-    function openHVForEquipo(equipoId) {
-      switchTab('hojas-vida');
-      document.getElementById('hv-equipo-select').value = equipoId;
-      renderHojaDeVidaView();
-    }
-
-    function renderHojaDeVidaView() {
-      const equipoId = document.getElementById('hv-equipo-select').value;
-      const container = document.getElementById('hoja-vida-printable');
-
-      if (!equipoId) {
-        container.innerHTML = `<p class="text-center text-slate-400 italic">Seleccione un equipo del menú superior para consultar su Hoja de Vida técnica.</p>`;
-        return;
-      }
-
-      const eq = appData.equipos.find(e => e.id === equipoId);
-      const sedeObj = appData.sedes.find(s => s.id === eq.sedeId) || { nombre: 'N/A' };
-      const matrizInfo = appData.matriz.find(m => m.equipo.toUpperCase() === eq.nombre.toUpperCase()) || {
-        periodicidad: 'SEMESTRAL',
-        descripcion: 'Información técnica estandarizada según protocolo del fabricante.',
-        actividades: 'Inspección física, pruebas funcionales, limpieza general y ajuste de componentes.'
-      };
-
-      container.innerHTML = `
-        <div class="border-2 border-slate-800 p-6 space-y-4 text-xs">
-          <!-- HEADER -->
-          <div class="flex justify-between items-center border-b-2 border-slate-800 pb-4">
-            <div>
-              <h2 class="text-xl font-bold uppercase tracking-wider text-slate-900">${appData.config.empresa}</h2>
-              <p class="font-bold text-slate-600">HOJA DE VIDA DE EQUIPO BIOMÉDICO</p>
-            </div>
-            <div class="text-right">
-              <p><b>Fecha Generación:</b> ${new Date().toLocaleDateString()}</p>
-              <p><b>Responsable:</b> ${appData.config.responsable}</p>
-            </div>
-          </div>
-
-          <!-- EQUIPO DATA -->
-          <div class="bg-slate-50 p-3 rounded border border-slate-200">
-            <h4 class="font-bold text-slate-800 uppercase mb-2">1. Identificación del Equipo</h4>
-            <div class="grid grid-cols-2 gap-2">
-              <p><b>Nombre del Equipo:</b> ${eq.nombre}</p>
-              <p><b>Marca:</b> ${eq.marca}</p>
-              <p><b>Modelo:</b> ${eq.modelo}</p>
-              <p><b>Número de Serie:</b> ${eq.serie}</p>
-              <p><b>Sede:</b> ${sedeObj.nombre}</p>
-              <p><b>Ubicación Interna:</b> ${eq.ubicacion}</p>
-              <p><b>Clasificación de Riesgo:</b> ${eq.riesgo}</p>
-              <p><b>Requiere Calibración:</b> ${eq.calibracion}</p>
-            </div>
-          </div>
-
-          <!-- MATRIZ AUTO-FILLED DATA -->
-          <div class="bg-slate-50 p-3 rounded border border-slate-200">
-            <h4 class="font-bold text-slate-800 uppercase mb-2">2. Especificaciones y Rutina de Mantenimiento (Matriz)</h4>
-            <p class="mb-1"><b>Periodicidad de Mantenimiento:</b> ${matrizInfo.periodicidad}</p>
-            <p class="mb-2"><b>Descripción Técnica:</b> ${matrizInfo.descripcion}</p>
-            <p><b>Actividades Estándar Recomendadas:</b> ${matrizInfo.actividades}</p>
-          </div>
-
-          <!-- SIGNATURE SECTION -->
-          <div class="pt-8 flex justify-between items-end">
-            <div class="text-center w-48">
-              ${appData.config.signature ? `<img src="${appData.config.signature}" class="h-12 mx-auto mb-1">` : '<div class="h-12 border-b border-slate-400 mb-1"></div>'}
-              <p class="font-bold text-slate-800">${appData.config.responsable}</p>
-              <p class="text-[10px] text-slate-500">${appData.config.cargo}</p>
-            </div>
-            <div class="text-center w-48">
-              <div class="h-12 border-b border-slate-400 mb-1"></div>
-              <p class="font-bold text-slate-800">Recibe Sede (${sedeObj.nombre})</p>
-              <p class="text-[10px] text-slate-500">Firma y Sello</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function downloadHojaDeVidaPDF() {
-      const element = document.getElementById('hoja-vida-printable');
-      const opt = {
-        margin: 0.5,
-        filename: 'Hoja_de_Vida_Biomedica.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opt).from(element).save();
-    }
-
-    // CRONOGRAMA & REPORTES
-    function renderCronograma() {
-      const tbody = document.getElementById('cronograma-table-body');
-      tbody.innerHTML = '';
-      appData.equipos.forEach(e => {
-        const sedeObj = appData.sedes.find(s => s.id === e.sedeId) || { nombre: 'N/A' };
-        const matriz = appData.matriz.find(m => m.equipo.toUpperCase() === e.nombre.toUpperCase()) || { periodicidad: 'SEMESTRAL' };
-        
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-50">
-            <td class="border p-2 font-bold">${e.nombre} (${e.serie})</td>
-            <td class="border p-2">${sedeObj.nombre}</td>
-            <td class="border p-2 text-xs">${matriz.periodicidad}</td>
-            <td class="border p-2 text-center text-emerald-600 font-bold"><i class="fa-solid fa-check"></i> Programado</td>
-            <td class="border p-2 text-center text-slate-400">-</td>
-            <td class="border p-2 text-center text-emerald-600 font-bold"><i class="fa-solid fa-check"></i> Programado</td>
-            <td class="border p-2 text-center text-slate-400">-</td>
-          </tr>
-        `;
-      });
-    }
-
-    function renderReportesList() {
-      const container = document.getElementById('reportes-list');
-      container.innerHTML = '';
-      if (appData.reportes.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 italic">No hay reportes de mantenimiento registrados.</p>';
-        return;
-      }
-      appData.reportes.forEach(r => {
-        const eq = appData.equipos.find(e => e.id === r.equipoId) || { nombre: 'N/A', serie: 'N/A' };
-        container.innerHTML += `
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="font-bold text-slate-800">${eq.nombre}</h4>
-                <p class="text-xs text-slate-500">Serie: ${eq.serie} · Fecha: ${r.fecha}</p>
-              </div>
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-100 text-sky-800">${r.tipo}</span>
-            </div>
-            <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded">${r.actividades}</p>
-          </div>
-        `;
-      });
-    }
-
-    function autoFillReportActivities() {
-      const eqId = document.getElementById('rep-equipo-id').value;
-      const eq = appData.equipos.find(e => e.id === eqId);
-      if (eq) {
-        const matriz = appData.matriz.find(m => m.equipo.toUpperCase() === eq.nombre.toUpperCase());
-        if (matriz) {
-          document.getElementById('rep-actividades').value = matriz.actividades;
+        // CAMBIO DE ROL
+        function changeRole(role) {
+            currentRole = role;
+            const adminElements = document.querySelectorAll('.admin-only');
+            adminElements.forEach(el => {
+                if (currentRole === 'admin') {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            renderInventoryTable();
         }
-      }
-    }
 
-    function saveReporte(e) {
-      e.preventDefault();
-      const newRep = {
-        id: 'REP' + Date.now(),
-        equipoId: document.getElementById('rep-equipo-id').value,
-        tipo: document.getElementById('rep-tipo').value,
-        fecha: document.getElementById('rep-fecha').value,
-        actividades: document.getElementById('rep-actividades').value,
-        observaciones: document.getElementById('rep-observaciones').value
-      };
-      appData.reportes.push(newRep);
-      saveData();
-      closeModal('modal-reporte');
-      renderReportesList();
-    }
+        // NAVEGACIÓN SPA
+        function navigate(sectionId) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('bg-indigo-50', 'text-indigo-700'));
+            
+            document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+            document.getElementById(`nav-${sectionId}`).classList.add('bg-indigo-50', 'text-indigo-700');
+        }
 
-    // CALIBRACIONES MODULE
-    function renderCalibracionesTable() {
-      const tbody = document.getElementById('calibraciones-table-body');
-      tbody.innerHTML = '';
-      if (appData.calibraciones.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Sin certificados cargados.</td></tr>';
-        return;
-      }
-      appData.calibraciones.forEach(c => {
-        const eq = appData.equipos.find(e => e.id === c.equipoId) || { nombre: 'N/A', serie: 'N/A' };
-        tbody.innerHTML += `
-          <tr>
-            <td class="p-3 font-bold">${eq.nombre} (${eq.serie})</td>
-            <td class="p-3 text-slate-600">Sede Principal</td>
-            <td class="p-3 text-slate-600">${c.fecha}</td>
-            <td class="p-3 text-slate-600">${c.fechaProx}</td>
-            <td class="p-3"><span class="text-xs text-sky-600 font-bold"><i class="fa-solid fa-file-pdf"></i> Adjunto</span></td>
-          </tr>
-        `;
-      });
-    }
+        // CONTROL DE MODAL
+        function openModalEquipo() { document.getElementById('modal-equipo').classList.remove('hidden'); }
+        function closeModalEquipo() { document.getElementById('modal-equipo').classList.add('hidden'); }
 
-    function saveCalibracion(e) {
-      e.preventDefault();
-      const newCal = {
-        id: 'CAL' + Date.now(),
-        equipoId: document.getElementById('cal-equipo-id').value,
-        fecha: document.getElementById('cal-fecha').value,
-        fechaProx: document.getElementById('cal-fecha-prox').value
-      };
-      appData.calibraciones.push(newCal);
-      saveData();
-      closeModal('modal-calibracion');
-      renderCalibracionesTable();
-    }
+        function saveEquipo(e) {
+            e.preventDefault();
+            const newEq = {
+                placa: document.getElementById('eq-placa').value,
+                nombre: document.getElementById('eq-nombre').value,
+                marca: document.getElementById('eq-marca').value,
+                modelo: document.getElementById('eq-modelo').value,
+                sede: document.getElementById('eq-sede').value,
+                proxMaint: "2026-12-01",
+                calibOk: true
+            };
+            state.equipos.push(newEq);
+            closeModalEquipo();
+            updateUI();
+        }
 
-    // MANUALES MODULE
-    function renderManualesGrid() {
-      const grid = document.getElementById('manuales-grid');
-      grid.innerHTML = '';
-      if (appData.manuales.length === 0) {
-        grid.innerHTML = '<p class="text-xs text-slate-400 italic col-span-3">No hay manuales cargados en el repositorio.</p>';
-        return;
-      }
-      appData.manuales.forEach(m => {
-        grid.innerHTML += `
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
-            <div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center font-bold">
-              <i class="fa-solid fa-file-pdf text-xl"></i>
-            </div>
-            <h4 class="font-bold text-slate-800 text-sm">${m.titulo}</h4>
-            <p class="text-xs text-slate-500">Asociado a: ${m.tipo}</p>
-          </div>
-        `;
-      });
-    }
+        // CARGA MASIVA DESDE EXCEL
+        function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-    function saveManual(e) {
-      e.preventDefault();
-      const newMan = {
-        id: 'MAN' + Date.now(),
-        titulo: document.getElementById('man-titulo').value,
-        tipo: document.getElementById('man-tipo').value.toUpperCase()
-      };
-      appData.manuales.push(newMan);
-      saveData();
-      closeModal('modal-manual');
-      renderManualesGrid();
-    }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
 
-    // CONFIGURATION & MATRIZ MODULE
-    function loadConfigTab() {
-      document.getElementById('cfg-responsable').value = appData.config.responsable;
-      document.getElementById('cfg-cargo').value = appData.config.cargo;
-      document.getElementById('cfg-empresa').value = appData.config.empresa;
-      renderMatrizTable();
-    }
+                // Mapeo de columnas de Excel
+                jsonData.forEach(row => {
+                    state.equipos.push({
+                        placa: row.PLACA || row.SERIE || `EQ-${Math.floor(Math.random()*1000)}`,
+                        nombre: row.EQUIPO || row.NOMBRE || 'Equipo Médico',
+                        marca: row.MARCA || 'N/A',
+                        modelo: row.MODELO || 'N/A',
+                        sede: row.SEDE || 'Sede Principal',
+                        proxMaint: '2026-12-31',
+                        calibOk: true
+                    });
+                });
 
-    function saveGeneralConfig() {
-      if (currentUser !== 'admin') return;
-      appData.config.responsable = document.getElementById('cfg-responsable').value;
-      appData.config.cargo = document.getElementById('cfg-cargo').value;
-      appData.config.empresa = document.getElementById('cfg-empresa').value;
-      saveData();
-      alert('Configuración guardada.');
-    }
+                updateUI();
+                alert(`Se importaron ${jsonData.length} equipos exitosamente.`);
+            };
+            reader.readAsArrayBuffer(file);
+        }
 
-    function handleSignatureUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        appData.config.signature = evt.target.result;
-        saveData();
-        document.getElementById('signature-preview').innerHTML = `<img src="${evt.target.result}" class="h-12 mx-auto">`;
-      };
-      reader.readAsDataURL(file);
-    }
+        // RENDERIZADO Y KPIS
+        function updateUI() {
+            renderKPIs();
+            renderInventoryTable();
+        }
 
-    function updateUserPasswords() {
-      if (currentUser !== 'admin') return;
-      const passAdmin = document.getElementById('cfg-pass-admin').value;
-      const passConsult = document.getElementById('cfg-pass-consulta').value;
-      if (passAdmin) appData.users.admin = passAdmin;
-      if (passConsult) appData.users.consulta = passConsult;
-      saveData();
-      alert('Contraseñas actualizadas con éxito.');
-    }
+        function renderKPIs() {
+            document.getElementById('kpi-total-equip').innerText = state.equipos.length;
+            document.getElementById('kpi-maint-pending').innerText = state.equipos.filter(e => new Date(e.proxMaint) <= new Date('2026-10-31')).length;
+            document.getElementById('kpi-calib-pending').innerText = state.equipos.filter(e => !e.calibOk).length;
+        }
 
-    function renderMatrizTable() {
-      const tbody = document.getElementById('matriz-table-body');
-      tbody.innerHTML = '';
-      appData.matriz.forEach(m => {
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-50 text-xs">
-            <td class="p-3 font-bold text-slate-800 border">${m.equipo}</td>
-            <td class="p-3 border">${m.periodicidad}</td>
-            <td class="p-3 border text-center">${m.calibracion}</td>
-            <td class="p-3 border text-slate-600">${m.descripcion}</td>
-            <td class="p-3 border text-slate-600">${m.actividades}</td>
-            <td class="p-3 border text-right admin-only">
-              <button onclick="deleteMatrizItem('${m.equipo}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          </tr>
-        `;
-      });
-    }
+        function renderInventoryTable() {
+            const tbody = document.getElementById('tbl-inventario-body');
+            const filterSede = document.getElementById('filter-sede').value;
+            tbody.innerHTML = '';
 
-    function saveMatrizItem(e) {
-      e.preventDefault();
-      const newItem = {
-        equipo: document.getElementById('mat-nombre').value.toUpperCase(),
-        periodicidad: document.getElementById('mat-periodicidad').value,
-        calibracion: document.getElementById('mat-calibracion').value,
-        descripcion: document.getElementById('mat-descripcion').value,
-        actividades: document.getElementById('mat-actividades').value
-      };
-      appData.matriz.push(newItem);
-      saveData();
-      closeModal('modal-matriz');
-      renderMatrizTable();
-    }
+            const items = state.equipos.filter(e => filterSede === 'TODAS' || e.sede === filterSede);
 
-    function deleteMatrizItem(equipoName) {
-      if (currentUser !== 'admin') return;
-      if (confirm(`¿Eliminar ${equipoName} de la matriz?`)) {
-        appData.matriz = appData.matriz.filter(m => m.equipo !== equipoName);
-        saveData();
-        renderMatrizTable();
-      }
-    }
-
-    // HELPERS & DROPDOWNS
-    function populateSedeDropdowns() {
-      const eqSedeSelect = document.getElementById('eq-sede');
-      const filterSedeSelect = document.getElementById('filter-sede-equipos');
-      const repEquipoSelect = document.getElementById('rep-equipo-id');
-      const calEquipoSelect = document.getElementById('cal-equipo-id');
-
-      if (eqSedeSelect) {
-        eqSedeSelect.innerHTML = '';
-        appData.sedes.forEach(s => eqSedeSelect.innerHTML += `<option value="${s.id}">${s.nombre}</option>`);
-      }
-
-      if (filterSedeSelect) {
-        filterSedeSelect.innerHTML = '<option value="ALL">Todas las Sedes</option>';
-        appData.sedes.forEach(s => filterSedeSelect.innerHTML += `<option value="${s.id}">${s.nombre}</option>`);
-      }
-
-      if (repEquipoSelect) {
-        repEquipoSelect.innerHTML = '';
-        appData.equipos.forEach(e => repEquipoSelect.innerHTML += `<option value="${e.id}">${e.nombre} (${e.serie})</option>`);
-      }
-
-      if (calEquipoSelect) {
-        calEquipoSelect.innerHTML = '';
-        appData.equipos.filter(e => e.calibracion === 'SI').forEach(e => calEquipoSelect.innerHTML += `<option value="${e.id}">${e.nombre} (${e.serie})</option>`);
-      }
-    }
-
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-  </script>
+            items.forEach(eq => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-semibold text-slate-700">${eq.placa}</td>
+                    <td class="py-3 px-4 font-medium text-slate-900">${eq.nombre}</td>
+                    <td class="py-3 px-4 text-slate-600">${eq.marca} / ${eq.modelo}</td>
+                    <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-medium">${eq.sede}</span></td>
+                    <td class="py-3 px-4 text-xs font-semibold text-slate-600">${eq.proxMaint}</td>
+                    <td class="py-3 px-4 text-center space-x-2">
+                        <button title="Descargar Hoja de Vida" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-file-pdf"></i> HV</button>
+                        <button title="Ver Reportes" class="text-slate-600 hover:text-slate-800"><i class="fa-solid fa-clipboard-list"></i> Rep</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
 </body>
 </html>
