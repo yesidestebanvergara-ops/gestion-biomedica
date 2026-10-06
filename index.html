@@ -86,8 +86,11 @@
 .fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}
 .fmt-header{text-align:center;font-weight:bold;font-size:13px}
 .fmt-title{font-weight:bold;background:#eef4f8;padding:4px;border:1px solid #000;margin-top:8px;font-size:10px;text-transform:uppercase}
+
+/* CUADRICULA LISTA DE CHEQUEO */
 .chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}
-.chk-item{background:#fff;padding:3px 5px;font-size:9px;display:flex;justify-content:space-between;align-items:center}
+.chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}
+.chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}
 
 @media print{.sidebar,.topbar,.btn,.filters,.pagination,.no-print{display:none!important}.main{margin:0}.content{padding:0}.card{box-shadow:none;border:0}.page{display:none!important}.modal-head,.modal-foot{display:none!important}.modal{box-shadow:none;border:0;width:100%}}
 @media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.main{margin-left:0}.app{display:block}.g4,.g3,.g2{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
@@ -202,7 +205,6 @@
    <button class="btn primary" onclick="runMass()">⚡ Generar Mantenimientos Seleccionados</button>
   </div>
 
-  <!-- SECCIÓN DE FIRMAS Y DATOS MASIVOS -->
   <div class="formgrid" style="margin:15px 0;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px">
    <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe a Conformidad</label><input id="massReceptor" placeholder="Nombre del Coordinador de Sede"></div>
@@ -277,7 +279,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v16_cendiatra';
+const KEY='gestion_biomedica_v17_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -491,40 +493,23 @@ function renderEquiposPage() {
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
   
-  // Mantenimientos del año actual en curso
   const eqMaintsCurrentYear = state.mantenimientos.filter(m => {
    if (m.equipoId !== e.id || !m.fecha) return false;
-   const d = new Date(m.fecha + 'T12:00:00');
-   return d.getFullYear() === currentYear;
+   return new Date(m.fecha + 'T12:00:00').getFullYear() === currentYear;
   });
 
-  let startMonthIdx = 11; // Diciembre por defecto
-  if (e.fechaInicio) {
-   startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
-  }
+  let startMonthIdx = 11;
+  if (e.fechaInicio) startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
   const secondMonthIdx = (startMonthIdx + 6) % 12;
 
-  // Lógica Semáforo Mantenimiento Año Actual
   let cronMaintHtml = months.map((m, idx) => {
    let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
-
-   // Buscar si existe reporte en ESTE AÑO ACTUAL para este mes específico
    let hasReportInMonth = eqMaintsCurrentYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
-   
-   let cls = 'cron-cell';
-   if (hasReportInMonth) {
-    cls = 'cron-cell done'; // 🟢 VERDE: Ya se ejecutó en este año actual
-   } else if (idx < currentMonthIdx) {
-    cls = 'cron-cell overdue'; // 🔴 ROJO: Mes pasado del año actual sin reporte
-   } else {
-    cls = 'cron-cell pending'; // 🟡 AMARILLO: Mes actual o futuro pendiente del año actual
-   }
-
+   let cls = hasReportInMonth ? 'cron-cell done' : (idx < currentMonthIdx ? 'cron-cell overdue' : 'cron-cell pending');
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
-  // Lógica Semáforo Calibración Año Actual
   const cState = calState(e);
   const cs = cState[2];
   let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : startMonthIdx;
@@ -532,18 +517,8 @@ function renderEquiposPage() {
   let cronCalHtml = months.map((m, idx) => {
    let isScheduled = (norm(e.cal) === 'SI' && idx === calMonthIdx);
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
-
    let isCalInCurrentYear = cs && new Date((cs.fecha || cs.vencimiento) + 'T12:00:00').getFullYear() === currentYear;
-
-   let cls = 'cron-cell';
-   if (isCalInCurrentYear && cState[0] === 'VIGENTE') {
-    cls = 'cron-cell done'; // 🟢 VERDE
-   } else if (idx < currentMonthIdx || cState[0] === 'VENCIDA') {
-    cls = 'cron-cell overdue'; // 🔴 ROJO
-   } else {
-    cls = 'cron-cell pending'; // 🟡 AMARILLO
-   }
-
+   let cls = (isCalInCurrentYear && cState[0] === 'VIGENTE') ? 'cron-cell done' : ((idx < currentMonthIdx || cState[0] === 'VENCIDA') ? 'cron-cell overdue' : 'cron-cell pending');
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
@@ -720,7 +695,7 @@ function getDocsForEquipment(e) {
  return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
 }
 
-/* REPORTE EV-INTER-03 CENDIATRA SAS CON LISTA DE CHEQUEO AUTOMÁTICA POR TIPO DE EQUIPO */
+/* REPORTE EV-INTER-03 CENDIATRA SAS CON LISTA DE CHEQUEO AUTOMÁTICA DEL EXCEL */
 let canvasRecCtx = null;
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
@@ -776,51 +751,20 @@ function openReport(id) {
  openModal(`Reporte de Mantenimiento N° ${r.reporte}`, reportHtmlFormat(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtmlFormat(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_${r.reporte}')">🖨 Imprimir EV-INTER-03</button>`);
 }
 
-/* LÓGICA DE LISTA DE CHEQUEO DINÁMICA SEGÚN EL TIPO DE EQUIPO BIOMÉDICO */
 function getDynamicChecklist(eq) {
- const name = norm(eq?.equipo || '');
- const custom = norm(eq?.customChecklist || '');
-
- const allItems = [
-  "REVISION DE CARCASA", "REVISION CABLE DE PACIENTE", "REVISION DE OTOSCOPIO",
-  "REVISION DE INDICADORES LUMINOSOS", "REVISION DE PALAS Y PARCHES", "REVISION DE OFTALMOSCOPIO",
-  "REVISION DE PARTES MOVILES", "REVISION DE BATERIAS", "REVISION DE VASO SECRETOR",
-  "REVISION DE CABLE DE PODER", "REVISION DE TAPA BATERIAS", "REVISION FILTRO HIDROFOBICO",
-  "CHEQUEO DE FUNCIONAMINETO", "REVISION DE MANGUERAS", "REVISION DE FILTROS",
-  "REVISION DE FUGAS", "REVISION DE SENSORES", "REVISION DE PANTALLA",
-  "REVISION DE VALVULA", "REVISION DE ELECTRODOS", "REVISION DE TRANSDUCTOR",
-  "REVISION DE BRAZALETE", "REVISION DE ACCESORIOS", "REVISION DE OCULARES",
-  "REVISION DE TUBERIA", "REVISION DE CONTRA PESAS", "REVISION DE PULSADORES",
-  "VERIFICCION Y AJUSTE DE BANDAS", "REVISION DE TERMOSTATO", "REVISION DE RUEDAS",
-  "REVISION DE EMPAQUES", "REVISION DE SISTEMA NEUMATICO", "REVISION DE MOTOR",
-  "REVISION MANOMETRO", "REVISION DE RESORTES", "REVISION DE PEDAL",
-  "REVISION DE OLIVAS", "REVISION DE CONECTORES", "REVISION DE SOPORTES",
-  "REVISION ARCO METALICO", "REVISION DE PUERTA", "REVISION DE BOCINA",
-  "REVISION DE SISTEMA ELECTRICO", "REVISION DE TURBINA", "REVISION DE LENTES",
-  "REVISION DE SISTEMA ELECTRONICO", "REVISION DE SISTEMA MECANICO", "LUBRICACION DE PARTES",
-  "REVISION DE CABEZAL ULTRASONICO", "REVISION DE PANEL DE CONTROL", "LIMPIEZA GENERAL"
+ if (eq && eq.checklist && eq.checklist.length === 21) {
+  return eq.checklist;
+ }
+ const defaultItems = [
+  "LIMPIEZA GENERAL", "REV. DEL SISTEMA DE REFRIGERACIÓN", "REVISIÓN DE MÓDULOS",
+  "REVISIÓN DE PARTES FÍSICAS", "REV. DE TEMPERATURA Y HUMEDAD", "REVISIÓN DE EMPAQUES",
+  "REVISIÓN DE SISTEMA ELECTRÓNICO", "VERIFICACIÓN DE VOLTAJE", "VERIFICACIÓN DE ALARMAS",
+  "REVISIÓN DE SISTEMA ELÉCTRICO", "VERIFICACIÓN DE CORRIENTE", "REVISIÓN DE SOFTWARE",
+  "REVISIÓN DE SISTEMA NEUMÁTICO", "VERIFICACIÓN DE PRESIÓN", "CONFIGURACIÓN DEL EQUIPO",
+  "REVISIÓN DE SISTEMA HIDRÁULICO", "REV. DEL SISTEMA ÓPTICO", "VERIFICACIÓN DE VELOCIDAD",
+  "REVISIÓN DEL SISTEMA MECÁNICO", "REV. DE LUCES E INDICADORES", "OTROS"
  ];
-
- return allItems.map(item => {
-  let isChecked = false;
-  const nItem = norm(item);
-
-  if (custom) {
-   isChecked = custom.includes(nItem) || custom.split(',').some(c => nItem.includes(norm(c)));
-  } else if (name.includes('AUDIOMETRO')) {
-   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE PANTALLA", "REVISION DE PULSADORES", "REVISION DE CONECTORES", "REVISION DE PANEL DE CONTROL", "LIMPIEZA GENERAL"].includes(item);
-  } else if (name.includes('ESPIROMETRO')) {
-   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE MANGUERAS", "REVISION DE SENSORES", "REVISION DE TURBINA", "LIMPIEZA GENERAL"].includes(item);
-  } else if (name.includes('ELECTROCARDIOGRAFO') || name.includes('ECG')) {
-   isChecked = ["REVISION DE CARCASA", "REVISION CABLE DE PACIENTE", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE PANTALLA", "REVISION DE ELECTRODOS", "LIMPIEZA GENERAL"].includes(item);
-  } else if (name.includes('FONENDO') || name.includes('TENSOMETRO')) {
-   isChecked = ["REVISION DE BRAZALETE", "REVISION MANOMETRO", "REVISION DE OLIVAS", "REVISION DE TUBERIA", "LIMPIEZA GENERAL"].includes(item);
-  } else {
-   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE SISTEMA ELECTRICO", "LIMPIEZA GENERAL"].includes(item);
-  }
-
-  return { label: item, checked: isChecked };
- });
+ return defaultItems.map(item => ({ label: item, checked: false }));
 }
 
 function reportHtmlFormat(r) {
@@ -851,12 +795,12 @@ function reportHtmlFormat(r) {
    <tr><th>SERIE</th><td>${esc(e.serie)}</td><th>ACTIVO</th><td>${esc(e.activo || 'N/A')}</td></tr>
   </table>
 
-  <div class="fmt-title">LISTA DE CHEQUEO (DINÁMICA POR EQUIPO)</div>
+  <div class="fmt-title">LISTA DE CHEQUEO PROTOCOLARIA</div>
   <div class="chk-grid">
    ${chkList.map(item => `
     <div class="chk-item">
+     <div class="chk-box">${item.checked ? 'X' : '&nbsp;'}</div>
      <span>${item.label}</span>
-     <b>${item.checked ? 'X' : ' '}</b>
     </div>
    `).join('')}
   </div>
@@ -867,17 +811,22 @@ function reportHtmlFormat(r) {
   </div>
 
   <table class="fmt-table" style="margin-top:12px">
-   <tr><th style="width:50%">INGENIERO RESPONSABLE BIOMÉDICO</th><th style="width:50%">COORDINADOR DE SEDE (RECIBE A CONFORMIDAD)</th></tr>
    <tr>
-    <td style="height:55px;vertical-align:bottom">
-     <b>NOMBRE:</b> ${esc(r.tecnico)}<br>
-     ${r.sigTech ? `<img src="${r.sigTech}" style="max-height:35px"><br>` : ''}
-     <b>FIRMA:</b> ___________________________
+    <th style="width:50%;text-align:center">INGENIERO RESPONSABLE BIOMÉDICO</th>
+    <th style="width:50%;text-align:center">COORDINADOR DE SEDE (RECIBE A CONFORMIDAD)</th>
+   </tr>
+   <tr>
+    <td style="height:90px;text-align:center;vertical-align:bottom;padding-bottom:10px">
+     ${r.sigTech ? `<img src="${r.sigTech}" style="max-height:50px;margin-bottom:5px"><br>` : '<div style="height:50px"></div>'}
+     _____________________________________<br>
+     <b>FIRMA</b><br>
+     <b>NOMBRE:</b> ${esc(r.tecnico)}
     </td>
-    <td style="height:55px;vertical-align:bottom">
-     <b>NOMBRE:</b> ${esc(r.receptor || 'COORDINADOR DE SEDE')}<br>
-     ${r.sigRec ? `<img src="${r.sigRec}" style="max-height:35px"><br>` : ''}
-     <b>FIRMA:</b> ___________________________
+    <td style="height:90px;text-align:center;vertical-align:bottom;padding-bottom:10px">
+     ${r.sigRec ? `<img src="${r.sigRec}" style="max-height:50px;margin-bottom:5px"><br>` : '<div style="height:50px"></div>'}
+     _____________________________________<br>
+     <b>FIRMA</b><br>
+     <b>NOMBRE:</b> ${esc(r.receptor || 'COORDINADOR DE SEDE')}
     </td>
    </tr>
   </table>
@@ -909,7 +858,7 @@ function initCanvasMassRec() {
   canvasMassRecCtx = c.getContext('2d');
   let draw = false;
   c.onmousedown = e => { draw = true; canvasMassRecCtx.beginPath(); canvasMassRecCtx.moveTo(e.offsetX, e.offsetY); };
-  c.onmousemove = e => { if (draw) { canvasMassMassRecCtx.lineTo(e.offsetX, e.offsetY); canvasMassRecCtx.stroke(); } };
+  c.onmousemove = e => { if (draw) { canvasMassRecCtx.lineTo(e.offsetX, e.offsetY); canvasMassRecCtx.stroke(); } };
   c.onmouseup = () => draw = false;
  }, 150);
 }
@@ -1016,12 +965,6 @@ function renderDocs() {
  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">No hay documentos cargados.</div></td></tr>';
 }
 
-function openDoc(id) {
- const d = state.documentos.find(x => x.id === id); if (!d) return;
- const w = window.open();
- if (d.data) w.document.write(`<iframe src="${d.data}" style="width:100%;height:100vh;border:0"></iframe>`);
-}
-
 function fillConfig() {
  document.getElementById('cfgName').value = state.config.name || '';
  document.getElementById('cfgRole').value = state.config.role || '';
@@ -1080,7 +1023,7 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE EXCEL */
+/* IMPORTACIÓN DESDE EXCEL Y LECTURA DE LISTA DE CHEQUEO */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
@@ -1140,6 +1083,43 @@ function doImportExcel() {
   let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
   let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
+  // Lectura directa de las 21 columnas del Excel
+  let eqChecklist = [
+    { label: "LIMPIEZA GENERAL", keys: ['limpieza gen'] },
+    { label: "REV. DEL SISTEMA DE REFRIGERACIÓN", keys: ['refrigeraci'] },
+    { label: "REVISIÓN DE MÓDULOS", keys: ['modulos', 'módulos'] },
+    { label: "REVISIÓN DE PARTES FÍSICAS", keys: ['partes fisicas', 'partes físicas'] },
+    { label: "REV. DE TEMPERATURA Y HUMEDAD", keys: ['temperatura y humedad', 'temperatura'] },
+    { label: "REVISIÓN DE EMPAQUES", keys: ['empaques'] },
+    { label: "REVISIÓN DE SISTEMA ELECTRÓNICO", keys: ['sistema electronico', 'sistema electrónico'] },
+    { label: "VERIFICACIÓN DE VOLTAJE", keys: ['verificacion de voltaje', 'verificación de voltaje'] },
+    { label: "VERIFICACIÓN DE ALARMAS", keys: ['alarmas'] },
+    { label: "REVISIÓN DE SISTEMA ELÉCTRICO", keys: ['sistema electrico', 'sistema eléctrico'] },
+    { label: "VERIFICACIÓN DE CORRIENTE", keys: ['verificacion de corriente', 'verificación de corriente'] },
+    { label: "REVISIÓN DE SOFTWARE", keys: ['software'] },
+    { label: "REVISIÓN DE SISTEMA NEUMÁTICO", keys: ['sistema neumatico', 'sistema neumático'] },
+    { label: "VERIFICACIÓN DE PRESIÓN", keys: ['verificacion de presion', 'verificación de presión'] },
+    { label: "CONFIGURACIÓN DEL EQUIPO", keys: ['configuracion del', 'configuración del'] },
+    { label: "REVISIÓN DE SISTEMA HIDRÁULICO", keys: ['sistema hidraulico', 'sistema hidráulico'] },
+    { label: "REV. DEL SISTEMA ÓPTICO", keys: ['sistema optico', 'sistema óptico'] },
+    { label: "VERIFICACIÓN DE VELOCIDAD", keys: ['verificacion de velocidad', 'verificación de velocidad'] },
+    { label: "REVISIÓN DEL SISTEMA MECÁNICO", keys: ['sistema mecanico', 'sistema mecánico'] },
+    { label: "REV. DE LUCES E INDICADORES", keys: ['luces', 'indicacores', 'indicadores'] },
+    { label: "OTROS", keys: ['otros'] }
+  ].map(item => {
+    let checked = false;
+    for (let k of Object.keys(r)) {
+      let nk = norm(k);
+      for (let sk of item.keys) {
+        if (nk.includes(norm(sk))) {
+          let v = norm(String(r[k]));
+          if (v === 'X' || v === 'SI' || v === 'V') checked = true;
+        }
+      }
+    }
+    return { label: item.label, checked };
+  });
+
   state.equipos.push({
    id: uid(), 
    equipo: eqName,
@@ -1159,7 +1139,7 @@ function doImportExcel() {
    manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
    guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
    info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
-   customChecklist: String(getVal(r, ['LISTA DE CHEQUEO', 'CHECKLIST']) || '').trim(),
+   checklist: eqChecklist,
    fechaInicio: parseExcelDate(rawDate),
    estado: 'ACTIVO'
   });
@@ -1214,7 +1194,7 @@ function closeModal() { document.getElementById('modalBg').classList.remove('ope
 
 function printHtmlDoc(inner, title) {
  const w = window.open('', '_blank'); if (!w) return;
- w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:8mm}body{font-family:Segoe UI,Arial,sans-serif;color:#000;margin:0;padding:0}.fmt-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px}.fmt-table td,.fmt-table th{border:1px solid #000;padding:4px;vertical-align:middle}.fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}.fmt-header{text-align:center;font-weight:bold;font-size:12px}.fmt-title{font-weight:bold;background:#eef4f8;padding:3px;border:1px solid #000;margin-top:6px;font-size:9.5px;text-transform:uppercase}.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}.chk-item{background:#fff;padding:2px 4px;font-size:8.5px;display:flex;justify-content:space-between;align-items:center}</style></head><body>${inner}</body></html>`);
+ w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:8mm}body{font-family:Segoe UI,Arial,sans-serif;color:#000;margin:0;padding:0}.fmt-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px}.fmt-table td,.fmt-table th{border:1px solid #000;padding:4px;vertical-align:middle}.fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}.fmt-header{text-align:center;font-weight:bold;font-size:12px}.fmt-title{font-weight:bold;background:#eef4f8;padding:3px;border:1px solid #000;margin-top:6px;font-size:9.5px;text-transform:uppercase}.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}.chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}.chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}</style></head><body>${inner}</body></html>`);
  w.document.close();
  setTimeout(() => w.print(), 300);
 }
