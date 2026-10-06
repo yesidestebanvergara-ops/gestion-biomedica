@@ -6,7 +6,7 @@
 <title>Gestión Biomédica | CENDIATRA SAS</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#b78100;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:14px}
+:root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#d99b00;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:14px}
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:12.5px}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 
 /* LOGIN */
@@ -21,7 +21,7 @@
 .brand{padding:10px 8px 16px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:17px;margin:0 0 4px;color:#fff}.brand small{opacity:.65}
 .role-chip{display:inline-flex;margin-top:8px;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.12);font-size:10px;font-weight:700}
 .nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 10px 5px}
-.nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:99px;text-align:left;font-size:12px;font-weight:600}
+.nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:9px;text-align:left;font-size:12px;font-weight:600}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
 .logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;font-weight:700}
 
@@ -50,7 +50,7 @@
 
 /* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
-.table{width:100%;border-collapse:collapse;min-width:1100px}.table th,.table td{padding:9px 9px;border-bottom:1px solid #eef2f6;text-align:left;font-size:11.5px}
+.table{width:100%;border-collapse:collapse;min-width:1200px}.table th,.table td{padding:9px 8px;border-bottom:1px solid #eef2f6;text-align:left;font-size:11.5px}
 .table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:9.5px;text-transform:uppercase;font-weight:800}
 .table tr:hover td{background:#fbfdff}
 .eq-link{color:var(--blue);font-weight:750;cursor:pointer;text-decoration:none}.eq-link:hover{text-decoration:underline}
@@ -59,13 +59,13 @@
 .empty{padding:30px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-size:11.5px;color:var(--muted)}
 
-/* CRONOGRAMAS DESDE FECHA DE INICIO */
+/* CRONOGRAMAS SEMÁFORO (VERDE / ROJO / AMARILLO) */
 .cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
 .cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
 .cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
-.cron-cell.maint{background:var(--cyan);color:#fff;border-color:var(--cyan)}
-.cron-cell.calib{background:#168457;color:#fff;border-color:#168457}
-.cron-cell.overdue{background:var(--red);color:#fff;border-color:var(--red)}
+.cron-cell.done{background:#168457;color:#fff;border-color:#168457} /* VERDE: REALIZADO */
+.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43} /* ROJO: NO REALIZADO EN MES PASADO */
+.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100} /* AMARILLO: PROGRAMADO FUTURO / MES ACTUAL */
 .cron-tag{font-size:8px;font-weight:800;color:var(--navy);background:#e6f2fb;padding:2px 5px;border-radius:4px;display:inline-block;text-align:center}
 
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px}
@@ -149,7 +149,7 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page active" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar el inventario y cronograma calculados desde la fecha de inicio.</p></div>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar el inventario. Leyenda Cronograma: 🟢 Realizado | 🟡 Programado | 🔴 Vencido/No Realizado</p></div>
   <div class="toolbar admin-only">
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
    <button class="btn primary" onclick="openSedeModal()">+ Agregar Sede</button>
@@ -166,7 +166,26 @@
    <div class="field"><label>Servicio / Área</label><select id="eqService" onchange="filterEquipos()"></select></div>
    <button class="btn" onclick="clearEqFilters()">Limpiar Filtros</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Fecha Inicio</th><th>Sede / Área</th><th>Riesgo</th><th>Cronograma Mantenimiento (6 Meses)</th><th>Cronograma Calibración (12 Meses)</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
+  <div class="table-wrap">
+   <table class="table">
+    <thead>
+     <tr>
+      <th>NOMBRE</th>
+      <th>MARCA</th>
+      <th>MODELO</th>
+      <th>SERIE</th>
+      <th>RIESGO</th>
+      <th>INVIMA</th>
+      <th>SERVICIO</th>
+      <th>ACTIVO</th>
+      <th>FECHA INICIO</th>
+      <th>CRONOGRAMA MANTENIMIENTO</th>
+      <th>CRONOGRAMA CALIBRACIÓN</th>
+     </tr>
+    </thead>
+    <tbody id="equiposTable"></tbody>
+   </table>
+  </div>
   <div class="pagination"><span id="eqPagInfo">Mostrando 0 de 0</span><div style="display:flex;gap:6px;align-items:center"><button class="btn small" onclick="changeEqPage(-1)">‹ Anterior</button><span id="eqPageNum" style="font-weight:800">1</span><button class="btn small" onclick="changeEqPage(1)">Siguiente ›</button></div></div>
  </div>
 </section>
@@ -249,7 +268,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v13_cendiatra';
+const KEY='gestion_biomedica_v14_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -321,7 +340,6 @@ function matFor(tipoName) {
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
-/* PROXIMO MANTENIMIENTO CALCULADO DESDE LA FECHA DE INICIO */
 function nextMaint(e) {
  const l = lastMaint(e.id);
  if (l) {
@@ -443,59 +461,85 @@ function filterEquipos() {
  filteredEquiposCache = state.equipos.filter(e =>
   (!sid || e.sedeId === sid) &&
   (!serv || norm(e.servicio) === serv) &&
-  (!q || [e.equipo, e.marca, e.modelo, e.serie, e.codigo, e.invima, e.activo].some(v => norm(v).includes(q)))
+  (!q || [e.equipo, e.marca, e.modelo, e.serie, e.activo, e.invima, e.riesgo].some(v => norm(v).includes(q)))
  );
  eqCurrentPage = 1;
  renderEquiposPage();
 }
 
-/* TABLA PRINCIPAL Y CRONOGRAMAS CALCULADOS DESDE FECHA DE INICIO */
+/* TABLA PRINCIPAL Y LÓGICA DE COLORES SEMÁFORO DEL CRONOGRAMA */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
  const end = Math.min(start + PAGE_SIZE, total);
  const pageItems = filteredEquiposCache.slice(start, end);
  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
+ const currentMonthIdx = new Date().getMonth();
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
-  
-  // Cálculo de los dos meses del ciclo semestral partiendo de fechaInicio
+  const eqMaints = state.mantenimientos.filter(m => m.equipoId === e.id);
+
   let startMonthIdx = 11; // Diciembre por defecto
   if (e.fechaInicio) {
    startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
   }
   const secondMonthIdx = (startMonthIdx + 6) % 12;
 
-  const nxtM = nextMaint(e);
-  const isOverM = nxtM < today();
-
+  // Lógica Semáforo Mantenimiento: Verde = Realizado | Amarillo = Programado Futuro/Actual | Rojo = Vencido
   let cronMaintHtml = months.map((m, idx) => {
-   let act = (idx === startMonthIdx || idx === secondMonthIdx);
-   let cls = act ? (isOverM ? 'cron-cell overdue' : 'cron-cell maint') : 'cron-cell';
+   let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
+   if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
+
+   let hasReportInMonth = eqMaints.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
+   
+   let cls = 'cron-cell';
+   if (hasReportInMonth) {
+    cls = 'cron-cell done'; // 🟢 VERDE: Se realizó el reporte en ese mes
+   } else if (idx < currentMonthIdx) {
+    cls = 'cron-cell overdue'; // 🔴 ROJO: El mes ya pasó y no hay reporte
+   } else {
+    cls = 'cron-cell pending'; // 🟡 AMARILLO: Mes actual o futuro pendiente
+   }
+
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
+  // Lógica Semáforo Calibración
   const cState = calState(e);
   const cs = cState[2];
   let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : startMonthIdx;
 
   let cronCalHtml = months.map((m, idx) => {
-   let act = (norm(e.cal) === 'SI' && idx === calMonthIdx);
-   let cls = act ? (cState[0] === 'VENCIDA' ? 'cron-cell overdue' : 'cron-cell calib') : 'cron-cell';
+   let isScheduled = (norm(e.cal) === 'SI' && idx === calMonthIdx);
+   if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
+
+   let cls = 'cron-cell';
+   if (cs && cState[0] === 'VIGENTE') {
+    cls = 'cron-cell done'; // 🟢 VERDE
+   } else if (idx < currentMonthIdx || cState[0] === 'VENCIDA') {
+    cls = 'cron-cell overdue'; // 🔴 ROJO
+   } else {
+    cls = 'cron-cell pending'; // 🟡 AMARILLO
+   }
+
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
   return `<tr>
    <td><a class="eq-link" onclick="openEquipmentProfile('${e.id}')">${esc(e.equipo)}</a></td>
-   <td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td>
-   <td><span class="badge blue">${fmtDate(e.fechaInicio)}</span></td>
-   <td>${esc(sedeName(e.sedeId))}<br><small class="muted">${esc(e.servicio)}</small></td>
-   <td>${esc(e.riesgo)}</td>
+   <td>${esc(e.marca)}</td>
+   <td>${esc(e.modelo)}</td>
+   <td class="mono"><b>${esc(e.serie)}</b></td>
+   <td><span class="badge gray">${esc(e.riesgo)}</span></td>
+   <td>${esc(e.invima || 'N/A')}</td>
+   <td>${esc(e.servicio)}</td>
+   <td><span class="badge blue">${esc(e.activo || 'SA1564')}</span></td>
+   <td><small class="muted">${fmtDate(e.fechaInicio)}</small></td>
    <td>
     <div class="cron-box">
      <div class="cron-row">${cronMaintHtml}</div>
-     <span class="cron-tag">${lm ? `Rep. N° ${lm.reporte}` : 'Cada 6 Meses desde ' + fmtDate(e.fechaInicio)}</span>
+     <span class="cron-tag">${lm ? `Último Rep. N° ${lm.reporte}` : 'Cada 6 Meses desde ' + fmtDate(e.fechaInicio)}</span>
     </div>
    </td>
    <td>
@@ -505,7 +549,7 @@ function renderEquiposPage() {
     </div>
    </td>
   </tr>`;
- }).join('') : '<tr><td colspan="9"><div class="empty">No hay equipos registrados.</div></td></tr>';
+ }).join('') : '<tr><td colspan="11"><div class="empty">No hay equipos registrados.</div></td></tr>';
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
@@ -665,7 +709,7 @@ function openMaintenanceModal(equipId = '') {
  openModal('Registrar Mantenimiento · EV-INTER-03', `
   <div class="formgrid">
    <div class="field span2"><label>Equipo</label><select id="mEquipo">${opts}</select></div>
-   <div class="field"><label>Fecha</label><input id="mFecha" type="date" value="${today()}"></div>
+   <div class="field"><label>Fecha Mantenimiento</label><input id="mFecha" type="date" value="${today()}"></div>
    <div class="field"><label>Tipo Mantenimiento</label><select id="mTipo"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
    <div class="field span2"><label>Técnico Responsable</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe</label><input id="mReceptor" placeholder="Nombre del coordinador de sede"></div>
@@ -958,7 +1002,7 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE TU EXCEL (Mapeo Inteligente de Libro1.xlsx) */
+/* IMPORTACIÓN DESDE EXCEL CON MAPEO DE COLUMNAS SOLICITADAS */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
