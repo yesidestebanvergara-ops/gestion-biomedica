@@ -49,12 +49,17 @@
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
 .field{display:flex;flex-direction:column;gap:4px}.field label{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1}
 
-/* PROGRESS BARS */
+/* PROGRESS BARS & CHARTS */
 .progress-bar-bg{width:100%;height:14px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}
 .progress-bar-fill{height:100%;transition:width 0.4s ease}
 .progress-bar-fill.green{background:var(--green)}
 .progress-bar-fill.yellow{background:var(--yellow)}
 .progress-bar-fill.red{background:var(--red)}
+
+.month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
+.month-card{border:1px solid var(--line);background:#fbfdff;border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s}
+.month-card:hover{border-color:var(--blue);background:#f2f8fc}
+.month-card.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 
 /* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
@@ -143,7 +148,7 @@
 <!-- DASHBOARD (SOLO ADMIN) -->
 <section class="page" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores de Desempeño y Metas</h2><p>Cumplimiento acumulado histórico y filtrado por sede.</p></div>
+  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas y gestión de desviaciones mes a mes.</p></div>
   <div class="toolbar" style="align-items:center">
    <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
     <option value="">Todas las Sedes (General)</option>
@@ -154,6 +159,13 @@
  
  <div id="stats" class="grid g4" style="margin-top:16px"></div>
  <div id="indicators" class="grid g2" style="margin-top:16px"></div>
+
+ <div class="card panel" style="margin-top:16px">
+  <h3 style="color:var(--navy);margin-bottom:8px">Indicadores y Análisis por Mes (Año Actual)</h3>
+  <p class="muted">Seleccione un mes para registrar qué pasó, análisis de causas y planes de acción:</p>
+  <div id="monthGrid" class="month-grid"></div>
+  <div id="monthAnalysisContainer" style="margin-top:14px"></div>
+ </div>
  
  <div class="card panel" style="margin-top:16px">
   <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas y Vencimientos</h3>
@@ -206,16 +218,16 @@
  </div>
 </section>
 
-<!-- EJECUCIÓN MASIVA CON FECHA DE INSTALACIÓN Y FIRMAS -->
+<!-- EJECUCIÓN MASIVA -->
 <section class="page" id="page-masiva">
  <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
- <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede. Puedes generar los mantenimientos de forma retroactiva y masiva desde su fecha de instalación hasta la fecha actual.</div>
+ <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede y genera los mantenimientos de forma retroactiva desde su fecha de instalación hasta la fecha actual con un solo clic.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
    <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field"><label>Modo Generación</label><select id="massMode"><option value="single">Fecha Específica</option><option value="retro">Masivo Semestral desde Instalación (2023+)</option></select></div>
-   <div class="field"><label>Fecha Mantenimiento (Si es fija)</label><input id="massDate" type="date"></div>
+   <div class="field"><label>Modo Generación</label><select id="massMode"><option value="single">Fecha Específica</option><option value="retro">Masivo Semestral desde Instalación</option></select></div>
+   <div class="field"><label>Fecha Mantenimiento</label><input id="massDate" type="date"></div>
    <button class="btn primary" onclick="runMass()">⚡ Ejecutar Mantenimientos</button>
   </div>
 
@@ -230,7 +242,7 @@
  </div>
 </section>
 
-<!-- CALIBRACIONES (ADMIN) -->
+<!-- CALIBRACIONES -->
 <section class="page" id="page-calibraciones">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Control Metrológico y Calibraciones</h3><button class="btn primary" onclick="openCalibrationModal()">+ Registrar Calibración</button></div>
  <div class="card panel">
@@ -244,7 +256,7 @@
  </div>
 </section>
 
-<!-- MANUALES Y DOCUMENTOS -->
+<!-- MANUALES -->
 <section class="page" id="page-documentos">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Manuales de Usuario y Documentos por Sede</h3><button class="btn primary admin-only" onclick="openDocModal()">+ Cargar Manual por Tipo/Marca</button></div>
  <div class="card panel">
@@ -255,7 +267,7 @@
  </div>
 </section>
 
-<!-- CONFIGURACIÓN Y MATRIZ (ADMIN) -->
+<!-- CONFIGURACIÓN -->
 <section class="page" id="page-config">
  <h3>Configuración de Datos, Firma y Matriz Biomédica</h3>
  <div class="grid g3" style="margin-top:14px">
@@ -294,10 +306,10 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v20_cendiatra';
+const KEY='gestion_biomedica_v21_cendiatra';
 
 let state = {
- sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
+ sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
  config: { name: 'ESTEBAN VERGARA', role: 'Ingeniero Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
  users: { admin: { password: 'admin123', role: 'ADMIN' }, consulta: { password: 'consulta123', role: 'CONSULTA' } }
 };
@@ -306,6 +318,7 @@ let currentUser = null;
 let filteredEquiposCache = [];
 let eqCurrentPage = 1;
 const PAGE_SIZE = 50;
+let selectedMonthIdx = new Date().getMonth();
 
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -322,7 +335,7 @@ function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
 function load() {
  try {
   let x = JSON.parse(localStorage.getItem(KEY));
-  if (x) state = { ...state, ...x, config: { ...state.config, company: 'CENDIATRA SAS', ...(x.config || {}) } };
+  if (x) state = { ...state, ...x, analyses: x.analyses || {}, config: { ...state.config, company: 'CENDIATRA SAS', ...(x.config || {}) } };
  } catch (e) {}
 }
 
@@ -419,7 +432,6 @@ function fillSelects() {
  if (eqS) { const old = eqS.value; eqS.innerHTML = '<option value="">Todos los Servicios / Áreas</option>' + servs.map(s => `<option>${esc(s)}</option>`).join(''); eqS.value = old; }
 }
 
-/* CÁLCULO DE META ACUMULADA HISTÓRICA DE MANTENIMIENTOS */
 function calculateExpectedMaints(eqList) {
  const now = new Date();
  let totalExpected = 0;
@@ -427,7 +439,7 @@ function calculateExpectedMaints(eqList) {
   if (!e.fechaInicio) return;
   const start = new Date(e.fechaInicio + 'T12:00:00');
   let cursor = new Date(start);
-  cursor.setMonth(cursor.getMonth() + 6); // Primer preventivo a los 6 meses
+  cursor.setMonth(cursor.getMonth() + 6);
   while (cursor <= now) {
    totalExpected++;
    cursor.setMonth(cursor.getMonth() + 6);
@@ -444,12 +456,9 @@ function renderDashboard() {
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
  const totalEquipos = eqs.length;
- 
- // Meta histórica vs Realizados
  const expectedMaints = calculateExpectedMaints(eqs);
  const eqIds = new Set(eqs.map(e => e.id));
  const actualMaints = state.mantenimientos.filter(m => eqIds.has(m.equipoId)).length;
- 
  const pctM = Math.min(100, Math.round((actualMaints / expectedMaints) * 100));
 
  let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
@@ -472,7 +481,7 @@ function renderDashboard() {
  });
 
  document.getElementById('stats').innerHTML = [
-  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En la sede seleccionada' : 'Inventario global total'],
+  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En sede seleccionada' : 'Inventario global total'],
   [`${actualMaints} / ${expectedMaints}`, 'MANTENIMIENTOS ACUMULADOS', 'Ejecutados / Meta Histórica'],
   [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente'],
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
@@ -485,7 +494,7 @@ function renderDashboard() {
     <span style="font-weight:850;font-size:16px;color:var(--${colorM})">${pctM}%</span>
    </div>
    <div class="progress-bar-bg"><div class="progress-bar-fill ${colorM}" style="width:${pctM}%"></div></div>
-   <small class="muted" style="margin-top:10px;display:block"><b>${actualMaints}</b> mantenimientos realizados frente a una meta histórica acumulada de <b>${expectedMaints}</b>.</small>
+   <small class="muted" style="margin-top:10px;display:block"><b>${actualMaints}</b> mantenimientos realizados frente a meta acumulada de <b>${expectedMaints}</b>.</small>
   </div>
   
   <div class="card panel">
@@ -497,6 +506,8 @@ function renderDashboard() {
    <small class="muted" style="margin-top:10px;display:block"><b>${cAlDia}</b> equipos calibrados de <b>${cTotal}</b> que requieren metrología.</small>
   </div>
  `;
+
+ renderMonthGrid();
 
  let alertHtml = '';
  if (sedesVencidas.length > 0) {
@@ -511,6 +522,76 @@ function renderDashboard() {
   }).join('');
  } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
  document.getElementById('alerts').innerHTML = alertHtml;
+}
+
+const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+function renderMonthGrid() {
+ const currentYear = new Date().getFullYear();
+ document.getElementById('monthGrid').innerHTML = monthNames.map((m, idx) => {
+  const maintsMonth = state.mantenimientos.filter(item => {
+   if (!item.fecha) return false;
+   const d = new Date(item.fecha + 'T12:00:00');
+   return d.getFullYear() === currentYear && d.getMonth() === idx;
+  }).length;
+
+  return `<div class="month-card ${selectedMonthIdx === idx ? 'active' : ''}" onclick="selectMonth(${idx})">
+   <div style="font-weight:800;font-size:13px">${m}</div>
+   <div style="font-size:11px;margin-top:4px">${maintsMonth} Mantenimientos</div>
+  </div>`;
+ }).join('');
+
+ renderMonthAnalysis();
+}
+
+function selectMonth(idx) {
+ selectedMonthIdx = idx;
+ renderMonthGrid();
+}
+
+function renderMonthAnalysis() {
+ const currentYear = new Date().getFullYear();
+ const mKey = `${currentYear}-${selectedMonthIdx}`;
+ const analysis = state.analyses[mKey] || { whatHappened: '', whatWasDone: '', analist: state.config.name };
+
+ const maintsThisMonth = state.mantenimientos.filter(item => {
+  if (!item.fecha) return false;
+  const d = new Date(item.fecha + 'T12:00:00');
+  return d.getFullYear() === currentYear && d.getMonth() === selectedMonthIdx;
+ });
+
+ document.getElementById('monthAnalysisContainer').innerHTML = `
+  <div style="background:#f8fafc;border:1px solid var(--line);padding:14px;border-radius:10px">
+   <h4 style="color:var(--navy);margin-bottom:8px">Análisis Gerencial para el mes de ${monthNames[selectedMonthIdx]} ${currentYear}</h4>
+   <p class="muted" style="margin-bottom:10px">Total de mantenimientos ejecutados en este mes: <b>${maintsThisMonth.length}</b></p>
+   
+   <div class="formgrid">
+    <div class="field span2">
+     <label>¿Qué pasó / Análisis de Desviaciones o Causas?</label>
+     <textarea id="anWhat" rows="3" placeholder="Ej. Retraso en programación por disponibilidad de equipos en la sede o cumplimiento al 100%..." oninput="saveMonthAnalysis()">${esc(analysis.whatHappened)}</textarea>
+    </div>
+    <div class="field span2">
+     <label>¿Qué se hizo / Plan de Acción y Acciones Correctivas?</label>
+     <textarea id="anDone" rows="3" placeholder="Ej. Se programaron jornadas dobles de fin de semana para ponerse al día..." oninput="saveMonthAnalysis()">${esc(analysis.whatWasDone)}</textarea>
+    </div>
+   </div>
+   <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+    <small class="muted">Responsable del Análisis: <b>${esc(analysis.analist)}</b></small>
+    <span class="badge green">Datos Guardados Automáticamente</span>
+   </div>
+  </div>
+ `;
+}
+
+function saveMonthAnalysis() {
+ const currentYear = new Date().getFullYear();
+ const mKey = `${currentYear}-${selectedMonthIdx}`;
+ state.analyses[mKey] = {
+  whatHappened: document.getElementById('anWhat')?.value || '',
+  whatWasDone: document.getElementById('anDone')?.value || '',
+  analist: state.config.name
+ };
+ save();
 }
 
 function renderSedes() {
@@ -567,7 +648,6 @@ function filterEquipos() {
  renderEquiposPage();
 }
 
-/* TABLA PRINCIPAL Y LÓGICA DE CRONOGRAMA FILTRADO POR EL AÑO ACTUAL EN CURSO */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
@@ -655,7 +735,6 @@ function clearEqFilters() {
  filterEquipos();
 }
 
-/* PERFIL DE EQUIPO CON PESTAÑAS Y HOJA DE VIDA AUTOMÁTICA */
 function openEquipmentProfile(id) {
  const e = state.equipos.find(x => x.id === id); if (!e) return;
  openModal(`Perfil de Equipo · ${e.equipo}`, `
@@ -790,7 +869,7 @@ let canvasRecCtx = null;
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
  const e = state.equipos.find(x => x.id === equipId) || state.equipos[0];
- const opts = state.equipos.slice(0, 300).map(x => `<option value="${x.id}" ${x.id === e?.id ? 'selected' : ''}>${esc(x.equipo)} - ${esc(x.serie)} (${esc(sedeName(x.sedeId))})</option>`).join('');
+ const opts = state.equipos.slice(0, 500).map(x => `<option value="${x.id}" ${x.id === e?.id ? 'selected' : ''}>${esc(x.equipo)} - ${esc(x.serie)} (${esc(sedeName(x.sedeId))})</option>`).join('');
 
  openModal('Registrar Mantenimiento · EV-INTER-03', `
   <div class="formgrid">
@@ -923,7 +1002,6 @@ function reportHtmlFormat(r) {
  </div>`;
 }
 
-/* EJECUCIÓN MASIVA CON GENERACIÓN RETROACTIVA DESDE FECHA DE INSTALACIÓN */
 let canvasMassRecCtx = null;
 function renderMass() {
  const sid = document.getElementById('massSede')?.value || '';
@@ -934,7 +1012,7 @@ function renderMass() {
   document.getElementById('massSigTechBox').innerHTML = `<img src="${state.config.sigTech}" style="max-height:50px">`;
  }
 
- document.getElementById('massTable').innerHTML = list.slice(0, 200).map(e => `<tr>
+ document.getElementById('massTable').innerHTML = list.slice(0, 500).map(e => `<tr>
   <td><input type="checkbox" class="mass-check" value="${e.id}"></td>
   <td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td>
   <td><span class="badge blue">${fmtDate(e.fechaInicio)}</span></td><td>${esc(e.servicio)}</td>
@@ -1013,10 +1091,9 @@ function runMass() {
  save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
 }
 
-/* CALIBRACIONES */
 function openCalibrationModal(equipId = '') {
  if (!canEdit()) return;
- const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 300).map(e => `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
+ const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 500).map(e => `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
  openModal('Registrar Calibración Metrológica', `
   <div class="formgrid">
    <div class="field span2"><label>Equipo</label><select id="cEquipo">${opts}</select></div>
@@ -1060,7 +1137,7 @@ function openCalFile(id) {
 
 function renderCalibraciones() {
  const list = state.equipos.filter(e => norm(e.cal) === 'SI');
- document.getElementById('calTable').innerHTML = list.slice(0, 100).map(e => {
+ document.getElementById('calTable').innerHTML = list.slice(0, 200).map(e => {
   const c = calState(e), d = c[2];
   const btnDoc = d && d.fileData ? `<button class="btn small blue" onclick="openCalFile('${d.id}')">Ver PDF</button>` : '—';
   return `<tr>
@@ -1175,7 +1252,6 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE EXCEL */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
