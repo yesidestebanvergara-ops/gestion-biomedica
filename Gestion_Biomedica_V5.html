@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CENDIATRA SAS - Gestión Biomédica</title>
+  <style>
+    :root {
+      --primary: #0b2f52;
+      --secondary: #16263a;
+      --accent: #2563eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #dbe5ef;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+    .tab-btn { padding: 10px 20px; background: transparent; border: none; font-weight: bold; cursor: pointer; color: var(--muted); border-radius: 6px 6px 0 0; }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    .tab-content { display: none; background: var(--card); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .tab-content.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f1f5f9; color: var(--primary); }
+
+    .btn { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 13px; }
+    .btn.primary { background: var(--accent); color: white; }
+    .btn.secondary { background: var(--secondary); color: white; }
+    .btn.outline { border: 1px solid var(--border); background: transparent; }
+
+    /* Estilos del Modal */
+    .modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
+    .modal-box { background: white; width: 90%; max-width: 850px; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 20px; }
+    .modal-head { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
+
+    /* ESTILOS DE IMPRESIÓN (Hojas de Vida y Reportes) */
+    .doc-print-container { font-family: Arial, sans-serif; color: #16263a; background: #fff; padding: 20px; }
+    .doc-header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .doc-header-table td { border: 1px solid #0b2f52; padding: 8px; text-align: center; vertical-align: middle; }
+    .doc-title-main { font-size: 15px; font-weight: bold; color: #0b2f52; text-transform: uppercase; }
+    .doc-section-title { background: #0b2f52; color: #fff; font-size: 11px; font-weight: bold; padding: 5px 8px; text-transform: uppercase; margin-top: 15px; margin-bottom: 5px; }
+    .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; }
+    .doc-table th, .doc-table td { border: 1px solid #dbe5ef; padding: 5px 8px; text-align: left; }
+    .doc-table th { background: #f4f7fb; color: #0b2f52; font-weight: bold; }
+    .doc-signatures { display: flex; justify-content: space-between; margin-top: 40px; gap: 20px; }
+    .doc-sign-box { flex: 1; border-top: 1px solid #16263a; padding-top: 5px; text-align: center; font-size: 10px; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #modalBg, #modalBg * { visibility: visible; }
+      #modalBg { position: absolute; left: 0; top: 0; width: 100%; background: #fff; }
+      .modal-head, .modal-foot, .btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>CENDIATRA S.A.S.</h1>
+      <small>Sistema de Gestión Biomédica & Control Metrológico</small>
+    </div>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('equipos')">Inventario de Equipos</button>
+    <button class="tab-btn" onclick="switchTab('mantenimientos')">Reportes de Mantenimiento</button>
+  </div>
+
+  <!-- TAB: INVENTARIO -->
+  <div id="tab-equipos" class="tab-content active">
+    <h3>Inventario Biomédico</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>REF-B</th>
+          <th>Equipo</th>
+          <th>Marca</th>
+          <th>Serie</th>
+          <th>Sede</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-equipos"></tbody>
+    </table>
+  </div>
+
+  <!-- TAB: MANTENIMIENTOS -->
+  <div id="tab-mantenimientos" class="tab-content">
+    <h3>Mantenimientos Ejecutados</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>N° Reporte</th>
+          <th>Fecha</th>
+          <th>REF-B</th>
+          <th>Equipo</th>
+          <th>Tipo</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-mantenimientos"></tbody>
+    </table>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modalBg" class="modal-bg">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="modalTitle">Vista Previa Documento</h3>
+        <button class="btn outline" onclick="closeModal()">✕ Cerrar</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal-foot" id="modalFoot" style="margin-top:15px; text-align:right;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Estado inicial de datos de prueba
+    const state = {
+      equipos: [
+        { "REF-B": "EQ-001", EQUIPO: "Electrocardiógrafo", MARCA: "Bionet", MODELO: "CardioCare 2000", SERIE: "ECG99281", SEDE: "Principal", SERVICIO: "Consulta Externa", INVIMA: "2018DM-0012345", "RIESGO BIOMEDICO": "IIB", "CÓDIGO INTERNO": "INT-01" },
+        { "REF-B": "EQ-002", EQUIPO: "Monitoreo de Presión (MAPA)", MARCA: "Schiller", MODELO: "BR-102", SERIE: "MAP88123", SEDE: "Norte", SERVICIO: "Cardiología", INVIMA: "2019DM-0019876", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "INT-02" }
+      ],
+      mantenimientos: [
+        { id: 1, reporte: "R-2026-001", fecha: "2026-02-10", refB: "EQ-001", equipo: "Electrocardiógrafo", serie: "ECG99281", sede: "Principal", tipo: "Preventivo", estado: "OPERATIVO", tecnico: "Ing. Esteban Vergara", observaciones: "Limpieza general, calibración de señal y pruebas de aislamiento eléctrico satisfactorias." }
+      ],
+      calibraciones: [
+        { refB: "EQ-001", certificado: "CERT-2026-88", fecha: "2026-01-15", vencimiento: "2027-01-15", proveedor: "Metrología Biomed S.A.S.", estado: "VIGENTE" }
+      ],
+      matriz: [
+        { EQUIPO: "Electrocardiógrafo", VOLTAJE: "110V 60Hz", POTENCIA: "50W", ALIMENTACION: "Red Eléctrica / Batería", REPORTE: "Inspección visual, ajuste de cables de paciente, verificación de trazado e impresión.", OBSERVACION: "Equipo cumple con parámetros de fábrica." }
+      ]
+    };
+
+    // Renderizar Tablas
+    function renderTables() {
+      // Equipos
+      const tbodyEq = document.getElementById('tbl-equipos');
+      tbodyEq.innerHTML = state.equipos.map(e => `
+        <tr>
+          <td><b>${e["REF-B"]}</b></td>
+          <td>${e.EQUIPO}</td>
+          <td>${e.MARCA}</td>
+          <td>${e.SERIE}</td>
+          <td>${e.SEDE}</td>
+          <td><button class="btn primary" onclick="printHojaVida('${e["REF-B"]}')">📄 Ver Hoja de Vida</button></td>
+        </tr>
+      `).join('');
+
+      // Mantenimientos
+      const tbodyMaint = document.getElementById('tbl-mantenimientos');
+      tbodyMaint.innerHTML = state.mantenimientos.map(m => `
+        <tr>
+          <td><b>${m.reporte}</b></td>
+          <td>${m.fecha}</td>
+          <td>${m.refB}</td>
+          <td>${m.equipo}</td>
+          <td>${m.tipo}</td>
+          <td><button class="btn secondary" onclick="printReporteMantenimiento(${m.id})">🖨 Ver Reporte</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // Cambiar de Pestaña
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // Modal Control
+    function showModal(title, bodyHtml, footHtml = '') {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalBody').innerHTML = bodyHtml;
+      document.getElementById('modalFoot').innerHTML = footHtml;
+      document.getElementById('modalBg').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalBg').style.display = 'none';
+    }
+
+    // GENERAR HOJA DE VIDA AUTOMÁTICA
+    function printHojaVida(refB) {
+      const eq = state.equipos.find(e => e["REF-B"] == refB);
+      if (!eq) return;
+
+      const maints = state.mantenimientos.filter(m => m.refB == refB);
+      const cals = state.calibraciones.filter(c => c.refB == refB);
+      const mat = state.matriz.find(m => m.EQUIPO.toUpperCase() === eq.EQUIPO.toUpperCase()) || {};
+
+      const html = `
+        <div class="doc-print-container">
+          <table class="doc-header-table">
+            <tr>
+              <td style="width:25%"><b>CENDIATRA S.A.S.</b><br><small>Gestión Biomédica</small></td>
+              <td style="width:50%"><span class="doc-title-main">HOJA DE VIDA DE EQUIPO BIOMÉDICO</span></td>
+              <td style="width:25%"><b>CÓDIGO:</b> HV-${eq["REF-B"]}<br><b>FECHA:</b> ${new Date().toLocaleDateString('es-CO')}</td>
+            </tr>
+          </table>
+
+          <div class="doc-section-title">1. Identificación del Equipo</div>
+          <table class="doc-table">
+            <tr>
+              <th>Nombre del Equipo:</th> <td><b>${eq.EQUIPO || 'N/R'}</b></td>
+              <th>CÓDIGO REF-B:</th> <td><b>${eq["REF-B"]}</b></td>
+            </tr>
+            <tr>
+              <th>Marca:</th> <td>${eq.MARCA || 'N/R'}</td>
+              <th>Modelo:</th> <td>${eq.MODELO || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Serie:</th> <td>${eq.SERIE || 'N/R'}</td>
+              <th>Código Interno:</th> <td>${eq["CÓDIGO INTERNO"] || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Sede:</th> <td>${eq.SEDE || 'N/R'}</td>
+              <th>Servicio:</th> <td>${eq.SERVICIO || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Registro INVIMA:</th> <td>${eq.INVIMA || 'N/R'}</td>
+              <th>Clasificación de Riesgo:</th> <td>${eq["RIESGO BIOMEDICO"] || 'N/R'}</td>
+            </tr>
+          </table>
+
+          <div class="doc-section-title">2. Especificaciones Técnicas</div>
+          <table class="doc-table">
+            <tr>
+              <th>Voltaje:</th> <td>${mat.VOLTAJE || '110V'}</td>
+              <th>Potencia:</th> <td>${mat.POTENCIA || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Alimentación:</th> <td>${mat.ALIMENTACION || 'Eléctrica'}</td>
+              <th>Estado General:</th> <td>OPERATIVO</td>
+            </tr>
+          </table>
+
+          <div class="doc-section-title">3. Historial de Mantenimientos</div>
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Reporte</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Técnico</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${maints.length ? maints.map(m => `
+                <tr>
+                  <td>${m.reporte}</td>
+                  <td>${m.fecha}</td>
+                  <td>${m.tipo}</td>
+                  <td>${m.tecnico}</td>
+                  <td>${m.estado}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="5" style="text-align:center">Sin mantenimientos registrados.</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="doc-section-title">4. Historial de Control Metrológico / Calibración</div>
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Certificado</th>
+                <th>Fecha</th>
+                <th>Vencimiento</th>
+                <th>Proveedor</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cals.length ? cals.map(c => `
+                <tr>
+                  <td>${c.certificado}</td>
+                  <td>${c.fecha}</td>
+                  <td>${c.vencimiento}</td>
+                  <td>${c.proveedor}</td>
+                  <td>${c.estado}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="5" style="text-align:center">Sin calibraciones registradas.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      showModal("Hoja de Vida Biomédica", html, `<button class="btn primary" onclick="window.print()">🖨 Imprimir / Guardar en PDF</button>`);
+    }
+
+    // GENERAR REPORTE DE MANTENIMIENTO AUTOMÁTICO
+    function printReporteMantenimiento(maintId) {
+      const m = state.mantenimientos.find(i => i.id == maintId);
+      if (!m) return;
+
+      const eq = state.equipos.find(e => e["REF-B"] == m.refB) || {};
+      const mat = state.matriz.find(mt => mt.EQUIPO.toUpperCase() === (eq.EQUIPO || '').toUpperCase()) || {};
+
+      const html = `
+        <div class="doc-print-container">
+          <table class="doc-header-table">
+            <tr>
+              <td style="width:25%"><b>CENDIATRA S.A.S.</b><br><small>Servicio Técnico Biomédico</small></td>
+              <td style="width:50%"><span class="doc-title-main">REPORTE DE MANTENIMIENTO BIOMÉDICO</span></td>
+              <td style="width:25%"><b>REPORTE N°:</b> ${m.reporte}<br><b>FECHA:</b> ${m.fecha}</td>
+            </tr>
+          </table>
+
+          <div class="doc-section-title">1. Información del Equipo</div>
+          <table class="doc-table">
+            <tr>
+              <th>Equipo:</th> <td><b>${m.equipo}</b></td>
+              <th>REF-B:</th> <td>${m.refB || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Marca:</th> <td>${eq.MARCA || 'N/R'}</td>
+              <th>Modelo:</th> <td>${eq.MODELO || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Serie:</th> <td>${m.serie || 'N/R'}</td>
+              <th>Sede / Servicio:</th> <td>${m.sede} / ${eq.SERVICIO || 'N/R'}</td>
+            </tr>
+            <tr>
+              <th>Tipo Mantenimiento:</th> <td><b>${m.tipo}</b></td>
+              <th>Estado Equipo:</th> <td><b>${m.estado}</b></td>
+            </tr>
+          </table>
+
+          <div class="doc-section-title">2. Actividades Realizadas</div>
+          <p style="font-size:11px; margin: 8px 0;">${mat.REPORTE || 'Inspección física, chequeo eléctrico y pruebas de funcionamiento operacional.'}</p>
+
+          <div class="doc-section-title">3. Observaciones y Diagnóstico</div>
+          <p style="font-size:11px; margin: 8px 0;">${m.observaciones}</p>
+
+          <div class="doc-signatures">
+            <div class="doc-sign-box">
+              <br><b>${m.tecnico}</b><br>
+              Ingeniero / Técnico Biomédico<br>
+              CENDIATRA SAS
+            </div>
+            <div class="doc-sign-box">
+              <br><b>Firma Recibido Conforme</b><br>
+              Responsable de Servicio / Sede<br>
+              CENDIATRA SAS
+            </div>
+          </div>
+        </div>
+      `;
+
+      showModal("Reporte de Mantenimiento", html, `<button class="btn primary" onclick="window.print()">🖨 Imprimir / Guardar en PDF</button>`);
+    }
+
+    // Inicializar al cargar la página
+    window.onload = renderTables;
+  </script>
+</body>
+</html>
