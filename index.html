@@ -29,6 +29,7 @@
 .topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:15}
 .topbar h1{font-size:18px;margin:0;color:var(--navy)}.top-user{display:flex;align-items:center;gap:10px}
 .avatar{width:34px;height:34px;border-radius:50%;background:#e6f2fb;display:grid;place-items:center;color:var(--navy);font-weight:800}
+.year-select{border:1px solid var(--line);background:#f4f7fb;color:var(--navy);font-weight:800;border-radius:8px;padding:6px 10px;outline:0;font-size:12px;cursor:pointer}
 
 .content{padding:22px}
 .page{display:none}.page.active{display:block}
@@ -143,14 +144,20 @@
 </aside>
 
 <main class="main">
-<header class="topbar"><h1 id="pageTitle">Panel de Indicadores</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div></div></header>
+<header class="topbar">
+ <h1 id="pageTitle">Panel de Indicadores</h1>
+ <div class="top-user">
+  <select id="globalYear" class="year-select" onchange="changeGlobalYear()"></select>
+  <span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div>
+ </div>
+</header>
 
 <div class="content">
 
-<!-- DASHBOARD (VISIBLE PARA ADMIN Y CONSULTA) -->
+<!-- DASHBOARD -->
 <section class="page" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas visuales y gestión de desviaciones mes a mes.</p></div>
+  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas visuales evaluadas según el año seleccionado.</p></div>
   <div class="toolbar" style="align-items:center">
    <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
     <option value="">Todas las Sedes (General)</option>
@@ -163,8 +170,11 @@
  <div id="indicators" class="grid g2" style="margin-top:16px"></div>
 
  <div class="card panel" style="margin-top:16px">
-  <h3 style="color:var(--navy);margin-bottom:8px">Análisis e Indicador Mensual (Año Actual)</h3>
-  <p class="muted">Seleccione un mes para ver su indicador específico y documentar planes de acción:</p>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+   <h3 style="color:var(--navy)">Análisis e Indicador Mensual</h3>
+   <span class="badge blue" id="lblMonthYear"></span>
+  </div>
+  <p class="muted">Seleccione un mes para ver su indicador específico y documentar planes de acción en el año elegido:</p>
   <div id="monthGrid" class="month-grid"></div>
   <div id="monthAnalysisContainer" style="margin-top:14px"></div>
  </div>
@@ -178,7 +188,7 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page active" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Anual en Curso: 🟢 Realizado este año | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Evaluado: 🟢 Realizado | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
   <div class="toolbar admin-only">
    <button class="btn green" onclick="exportCronogramaExcel()">📊 Exportar Cronograma a Excel</button>
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
@@ -209,8 +219,8 @@
       <th>SERVICIO</th>
       <th>ACTIVO</th>
       <th>FECHA INICIO</th>
-      <th>CRONOGRAMA MANTENIMIENTO (AÑO ACTUAL)</th>
-      <th>CRONOGRAMA CALIBRACIÓN (AÑO ACTUAL)</th>
+      <th id="thMaint">CRONOGRAMA MANTENIMIENTO</th>
+      <th id="thCal">CRONOGRAMA CALIBRACIÓN</th>
       <th class="admin-only">ACCIÓN</th>
      </tr>
     </thead>
@@ -301,7 +311,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v22_cendiatra';
+const KEY='gestion_biomedica_v23_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -313,6 +323,9 @@ let currentUser = null;
 let filteredEquiposCache = [];
 let eqCurrentPage = 1;
 const PAGE_SIZE = 50;
+
+// GESTIÓN DE AÑO Y MES SELECCIONADO
+let contextYear = new Date().getFullYear();
 let selectedMonthIdx = new Date().getMonth();
 
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -334,6 +347,20 @@ function load() {
  } catch (e) {}
 }
 
+function fillYearSelect() {
+ const y = new Date().getFullYear();
+ let html = '';
+ for(let i = 2023; i <= y + 5; i++) {
+  html += `<option value="${i}" ${i === contextYear ? 'selected' : ''}>🗓 Año ${i}</option>`;
+ }
+ document.getElementById('globalYear').innerHTML = html;
+}
+
+function changeGlobalYear() {
+ contextYear = parseInt(document.getElementById('globalYear').value);
+ refreshAll();
+}
+
 function login() {
  const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
  if (state.users[u]?.password === p) {
@@ -343,7 +370,7 @@ function login() {
   document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITORÍA (CONSULTA)';
   document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Auditor';
   applyPermissions();
-  go('dashboard'); // Dashboard es visible para todos ahora
+  go('dashboard');
  } else document.getElementById('loginError').classList.remove('hidden');
 }
 
@@ -417,20 +444,21 @@ function fillSelects() {
  if (eqS) { const old = eqS.value; eqS.innerHTML = '<option value="">Todos los Servicios / Áreas</option>' + servs.map(s => `<option>${esc(s)}</option>`).join(''); eqS.value = old; }
 }
 
-function calculateExpectedMaints(eqList) {
- const now = new Date();
- let totalExpected = 0;
+function calculateExpectedMaintsForYear(eqList, year) {
+ let total = 0;
  eqList.forEach(e => {
   if (!e.fechaInicio) return;
-  const start = new Date(e.fechaInicio + 'T12:00:00');
-  let cursor = new Date(start);
-  cursor.setMonth(cursor.getMonth() + 6);
-  while (cursor <= now) {
-   totalExpected++;
-   cursor.setMonth(cursor.getMonth() + 6);
-  }
+  const d = new Date(e.fechaInicio + 'T12:00:00');
+  const m1 = d.getMonth();
+  const m2 = (m1 + 6) % 12;
+  
+  const eval1 = new Date(year, m1, 28);
+  if (eval1 > d) total++;
+  
+  const eval2 = new Date(year, m2, 28);
+  if (eval2 > d) total++;
  });
- return Math.max(1, totalExpected);
+ return total;
 }
 
 /* GENERADOR DE GAUGE SVG */
@@ -453,10 +481,14 @@ function renderDashboard() {
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
  const totalEquipos = eqs.length;
- const expectedMaints = calculateExpectedMaints(eqs);
+ const expectedMaints = calculateExpectedMaintsForYear(eqs, contextYear);
  const eqIds = new Set(eqs.map(e => e.id));
- const actualMaints = state.mantenimientos.filter(m => eqIds.has(m.equipoId)).length;
- const pctM = Math.min(100, Math.round((actualMaints / expectedMaints) * 100)) || 0;
+ const actualMaints = state.mantenimientos.filter(m => {
+  if (!m.fecha || !eqIds.has(m.equipoId)) return false;
+  return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
+ }).length;
+
+ const pctM = expectedMaints ? Math.min(100, Math.round((actualMaints / expectedMaints) * 100)) : (actualMaints > 0 ? 100 : 0);
 
  let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
  eqs.forEach(e => {
@@ -479,18 +511,17 @@ function renderDashboard() {
 
  document.getElementById('stats').innerHTML = [
   [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En sede seleccionada' : 'Inventario global total'],
-  [`${actualMaints} / ${expectedMaints}`, 'MANTENIMIENTOS ACUMULADOS', 'Ejecutados / Meta Histórica'],
-  [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente'],
+  [`${actualMaints} / ${expectedMaints}`, `MANTENIMIENTOS EN ${contextYear}`, 'Ejecutados / Programados'],
+  [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente (General)'],
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
  ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${(String(x[1]).includes('VENCID') && x[0]>0)?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
- // Renderización de los Gauge Circulares
  document.getElementById('indicators').innerHTML = `
   <div class="card panel gauge-wrap">
    ${getGaugeSvg(pctM, colorM)}
    <div class="gauge-info">
-    <b style="color:var(--navy);font-size:14px;display:block">Cumplimiento Acumulado de Mantenimiento Preventivo</b>
-    <small class="muted" style="margin-top:8px;display:block"><b>${actualMaints}</b> mantenimientos ejecutados frente a una meta acumulada desde la fecha de instalación de <b>${expectedMaints}</b> reportes.</small>
+    <b style="color:var(--navy);font-size:14px;display:block">Cumplimiento Preventivo (${contextYear})</b>
+    <small class="muted" style="margin-top:8px;display:block"><b>${actualMaints}</b> mantenimientos ejecutados en ${contextYear} frente a una meta para el año de <b>${expectedMaints}</b> reportes.</small>
    </div>
   </div>
   
@@ -503,6 +534,7 @@ function renderDashboard() {
   </div>
  `;
 
+ document.getElementById('lblMonthYear').textContent = `Año Evaluado: ${contextYear}`;
  renderMonthGrid();
 
  let alertHtml = '';
@@ -513,7 +545,7 @@ function renderDashboard() {
    const cV = eqSede.filter(e => calState(e)[0] === 'VENCIDA').length;
    if (mV === 0 && cV === 0) return '';
    return `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">
-    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas.
+    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas en estado actual.
    </div>`;
   }).join('');
  } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
@@ -523,12 +555,11 @@ function renderDashboard() {
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 function renderMonthGrid() {
- const currentYear = new Date().getFullYear();
  document.getElementById('monthGrid').innerHTML = monthNames.map((m, idx) => {
   const maintsMonth = state.mantenimientos.filter(item => {
    if (!item.fecha) return false;
    const d = new Date(item.fecha + 'T12:00:00');
-   return d.getFullYear() === currentYear && d.getMonth() === idx;
+   return d.getFullYear() === contextYear && d.getMonth() === idx;
   }).length;
 
   return `<div class="month-card ${selectedMonthIdx === idx ? 'active' : ''}" onclick="selectMonth(${idx})">
@@ -546,15 +577,13 @@ function selectMonth(idx) {
 }
 
 function renderMonthAnalysis() {
- const currentYear = new Date().getFullYear();
- const mKey = `${currentYear}-${selectedMonthIdx}`;
+ const mKey = `${contextYear}-${selectedMonthIdx}`;
  const analysis = state.analyses[mKey] || { whatHappened: '', whatWasDone: '', analist: state.config.name };
  const readOnlyProp = canEdit() ? '' : 'readonly';
 
  const sid = document.getElementById('dashSedeFilter')?.value || '';
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
- // Cálculo estricto para el mes seleccionado
  let expThisMonth = 0;
  let actThisMonth = 0;
  
@@ -562,13 +591,14 @@ function renderMonthAnalysis() {
   if(!e.fechaInicio) return;
   const sDate = new Date(e.fechaInicio + 'T12:00:00');
   const sMonth = sDate.getMonth();
-  const sYear = sDate.getFullYear();
   
-  // Si en el año actual, el mes seleccionado es el mismo del inicio o 6 meses después, toca mantenimiento
-  if (currentYear >= sYear && (selectedMonthIdx === sMonth || selectedMonthIdx === (sMonth + 6) % 12)) {
-   expThisMonth++;
-   const isDone = state.mantenimientos.some(m => m.equipoId === e.id && new Date(m.fecha+'T12:00:00').getFullYear() === currentYear && new Date(m.fecha+'T12:00:00').getMonth() === selectedMonthIdx);
-   if (isDone) actThisMonth++;
+  if (selectedMonthIdx === sMonth || selectedMonthIdx === (sMonth + 6) % 12) {
+   const evalD = new Date(contextYear, selectedMonthIdx, 28);
+   if (evalD > sDate) {
+    expThisMonth++;
+    const isDone = state.mantenimientos.some(m => m.equipoId === e.id && new Date(m.fecha+'T12:00:00').getFullYear() === contextYear && new Date(m.fecha+'T12:00:00').getMonth() === selectedMonthIdx);
+    if (isDone) actThisMonth++;
+   }
   }
  });
 
@@ -585,7 +615,7 @@ function renderMonthAnalysis() {
    </div>
 
    <div style="flex:1;min-width:300px">
-    <h4 style="color:var(--navy);margin-bottom:8px">Análisis Gerencial · ${monthNames[selectedMonthIdx]} ${currentYear}</h4>
+    <h4 style="color:var(--navy);margin-bottom:8px">Análisis Gerencial · ${monthNames[selectedMonthIdx]} ${contextYear}</h4>
     <div class="formgrid">
      <div class="field span2">
       <label>¿Qué pasó / Causas de Desviación?</label>
@@ -607,8 +637,7 @@ function renderMonthAnalysis() {
 
 function saveMonthAnalysis() {
  if (!canEdit()) return;
- const currentYear = new Date().getFullYear();
- const mKey = `${currentYear}-${selectedMonthIdx}`;
+ const mKey = `${contextYear}-${selectedMonthIdx}`;
  state.analyses[mKey] = {
   whatHappened: document.getElementById('anWhat')?.value || '',
   whatWasDone: document.getElementById('anDone')?.value || '',
@@ -673,6 +702,9 @@ function filterEquipos() {
 }
 
 function renderEquiposPage() {
+ document.getElementById('thMaint').textContent = `CRONOGRAMA MANTENIMIENTO (${contextYear})`;
+ document.getElementById('thCal').textContent = `CRONOGRAMA CALIBRACIÓN (${contextYear})`;
+
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
  const end = Math.min(start + PAGE_SIZE, total);
@@ -680,26 +712,39 @@ function renderEquiposPage() {
  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
  
  const now = new Date();
- const currentYear = now.getFullYear();
- const currentMonthIdx = now.getMonth();
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
   
-  const eqMaintsCurrentYear = state.mantenimientos.filter(m => {
+  const eqMaintsThisYear = state.mantenimientos.filter(m => {
    if (m.equipoId !== e.id || !m.fecha) return false;
-   return new Date(m.fecha + 'T12:00:00').getFullYear() === currentYear;
+   return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
   });
 
   let startMonthIdx = 11;
   if (e.fechaInicio) startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
   const secondMonthIdx = (startMonthIdx + 6) % 12;
+  const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
 
   let cronMaintHtml = months.map((m, idx) => {
    let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
+   if (isScheduled) {
+       const evalDate = new Date(contextYear, idx, 28);
+       if (evalDate <= initD) isScheduled = false; // No programado si es antes de que se instale
+   }
+
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
-   let hasReportInMonth = eqMaintsCurrentYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
-   let cls = hasReportInMonth ? 'cron-cell done' : (idx < currentMonthIdx ? 'cron-cell overdue' : 'cron-cell pending');
+   
+   let hasReportInMonth = eqMaintsThisYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
+   let cls = 'cron-cell pending';
+   
+   if (hasReportInMonth) {
+       cls = 'cron-cell done';
+   } else {
+       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth())) {
+           cls = 'cron-cell overdue';
+       }
+   }
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
@@ -709,9 +754,23 @@ function renderEquiposPage() {
 
   let cronCalHtml = months.map((m, idx) => {
    let isScheduled = (norm(e.cal) === 'SI' && idx === calMonthIdx);
+   if (isScheduled) {
+       const evalDate = new Date(contextYear, idx, 28);
+       if (evalDate <= initD) isScheduled = false;
+   }
+
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
-   let isCalInCurrentYear = cs && new Date((cs.fecha || cs.vencimiento) + 'T12:00:00').getFullYear() === currentYear;
-   let cls = (isCalInCurrentYear && cState[0] === 'VIGENTE') ? 'cron-cell done' : ((idx < currentMonthIdx || cState[0] === 'VENCIDA') ? 'cron-cell overdue' : 'cron-cell pending');
+   
+   let isCalInCurrentYear = cs && new Date((cs.fecha || cs.vencimiento) + 'T12:00:00').getFullYear() === contextYear;
+   let cls = 'cron-cell pending';
+
+   if (isCalInCurrentYear && cState[0] === 'VIGENTE') {
+       cls = 'cron-cell done';
+   } else {
+       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth()) || cState[0] === 'VENCIDA') {
+           cls = 'cron-cell overdue';
+       }
+   }
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
@@ -728,7 +787,7 @@ function renderEquiposPage() {
    <td>
     <div class="cron-box">
      <div class="cron-row">${cronMaintHtml}</div>
-     <span class="cron-tag">${lm ? `Último Rep. N° ${lm.reporte}` : 'Cada 6 Meses desde ' + fmtDate(e.fechaInicio)}</span>
+     <span class="cron-tag">${lm ? `Último Rep. N° ${lm.reporte}` : 'Cada 6 Meses'}</span>
     </div>
    </td>
    <td>
@@ -760,10 +819,10 @@ function clearEqFilters() {
  filterEquipos();
 }
 
-/* EXPORTAR CRONOGRAMA A EXCEL */
+/* EXPORTAR CRONOGRAMA A EXCEL BASADO EN EL AÑO SELECCIONADO */
 function exportCronogramaExcel() {
- const currentYear = new Date().getFullYear();
  const monthsArr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+ const now = new Date();
  
  const rows = state.equipos.map(e => {
   let row = {
@@ -776,21 +835,35 @@ function exportCronogramaExcel() {
    "FECHA INICIO": e.fechaInicio,
   };
 
-  const eqMaintsCurrentYear = state.mantenimientos.filter(m => {
+  const eqMaintsThisYear = state.mantenimientos.filter(m => {
    if (m.equipoId !== e.id || !m.fecha) return false;
-   return new Date(m.fecha + 'T12:00:00').getFullYear() === currentYear;
+   return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
   });
 
   let startMonthIdx = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00').getMonth() : 11;
   const secondMonthIdx = (startMonthIdx + 6) % 12;
+  const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
 
   monthsArr.forEach((mName, idx) => {
    let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
+   if (isScheduled) {
+       const evalDate = new Date(contextYear, idx, 28);
+       if (evalDate <= initD) isScheduled = false;
+   }
+
    if (!isScheduled) {
     row[mName] = ''; 
    } else {
-    let hasReport = eqMaintsCurrentYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
-    row[mName] = hasReport ? 'OK (REALIZADO)' : (idx < new Date().getMonth() ? 'VENCIDO' : 'PROGRAMADO');
+    let hasReport = eqMaintsThisYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
+    if (hasReport) {
+        row[mName] = 'OK (REALIZADO)';
+    } else {
+        if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth())) {
+            row[mName] = 'VENCIDO';
+        } else {
+            row[mName] = 'PROGRAMADO';
+        }
+    }
    }
   });
   
@@ -799,8 +872,8 @@ function exportCronogramaExcel() {
 
  const ws = XLSX.utils.json_to_sheet(rows);
  const wb = XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb, ws, "Cronograma " + currentYear);
- XLSX.writeFile(wb, `Cronograma_General_${currentYear}_CENDIATRA.xlsx`);
+ XLSX.utils.book_append_sheet(wb, ws, "Cronograma " + contextYear);
+ XLSX.writeFile(wb, `Cronograma_General_${contextYear}_CENDIATRA.xlsx`);
 }
 
 function openEquipmentProfile(id) {
@@ -926,11 +999,6 @@ function lifeHtmlFormat(e) {
    <tr><th>FRECUENCIA MANTENIMIENTO PREVENTIVO</th><td><b>6 MESES (SEMESTRAL)</b></td><th>FRECUENCIA CALIBRACIÓN METROLÓGICA</th><td><b>12 MESES (ANUAL)</b></td></tr>
   </table>
  </div>`;
-}
-
-function getDocsForEquipment(e) {
- const sid = document.getElementById('docSedeFilter')?.value || '';
- return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
 }
 
 let canvasRecCtx = null;
@@ -1121,7 +1189,7 @@ function runMass() {
 
  ids.forEach(eid => {
   const e = state.equipos.find(x => x.id === eid);
-  const trabajoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.'; // Simplificado, sin matriz
+  const trabajoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
 
   if (mode === 'retro' && e.fechaInicio) {
    let start = new Date(e.fechaInicio + 'T12:00:00');
@@ -1476,6 +1544,7 @@ async function importBackup(file) {
 
 function init() {
  load();
+ fillYearSelect();
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
  document.getElementById('massDate').value = today();
  filterEquipos();
