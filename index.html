@@ -11,23 +11,23 @@
 
 /* LOGIN */
 .login{position:fixed;inset:0;background:linear-gradient(135deg,#082640,#123f68 55%,#eaf3fa);display:flex;align-items:center;justify-content:center;padding:22px;z-index:200}
-.login-card{width:min(460px,100%);background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.2);overflow:hidden}
-.login-head{padding:30px;background:linear-gradient(135deg,#0d3558,#1d6b9f);color:#fff}.login-head h1{margin:0;font-size:24px}.login-head p{margin:7px 0 0;opacity:.8;font-size:13px}
-.login-body{padding:26px}.login-actions{display:grid;gap:10px;margin-top:15px}.hint{font-size:11px;color:var(--muted);margin-top:13px}
+.login-card{width:min(420px,100%);background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.2);overflow:hidden}
+.login-head{padding:28px;background:linear-gradient(135deg,#0d3558,#1d6b9f);color:#fff}.login-head h1{margin:0;font-size:22px}.login-head p{margin:6px 0 0;opacity:.8;font-size:12px}
+.login-body{padding:24px}.login-actions{display:grid;gap:10px;margin-top:15px}
 
 /* APP LAYOUT */
 .app{display:flex;min-height:100vh}
 .sidebar{width:255px;background:linear-gradient(180deg,#0b2945,#0e3d63);color:#fff;padding:18px 13px;position:fixed;height:100vh;left:0;top:0;z-index:20;display:flex;flex-direction:column}
 .brand{padding:10px 10px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:18px;margin:0 0 4px;color:#fff}.brand small{opacity:.65}
-.role-chip{display:inline-flex;margin-top:9px;padding:5px 8px;border-radius:99px;background:rgba(255,255,255,.1);font-size:10px;font-weight:700}
+.role-chip{display:inline-flex;margin-top:8px;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.1);font-size:10px;font-weight:700}
 .nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 11px 6px}
 .nav button{display:flex;gap:11px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:11px 11px;border-radius:10px;text-align:left;font-size:12.5px;font-weight:600}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.11);color:#fff}
 .logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-weight:700}
 
 .main{margin-left:255px;flex:1;min-width:0}
-.topbar{height:74px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:15}
-.topbar h1{font-size:20px;margin:0;color:var(--navy)}.top-user{display:flex;align-items:center;gap:10px}
+.topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:15}
+.topbar h1{font-size:19px;margin:0;color:var(--navy)}.top-user{display:flex;align-items:center;gap:10px}
 .avatar{width:35px;height:35px;border-radius:50%;background:#e6f2fb;display:grid;place-items:center;color:var(--navy);font-weight:800}
 
 .content{padding:24px}
@@ -35,24 +35,23 @@
 .grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 .panel{padding:18px}
-.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.hero h2{font-size:25px;margin:0;color:var(--navy)}.hero p{margin:7px 0 0;color:var(--muted)}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.hero h2{font-size:24px;margin:0;color:var(--navy)}.hero p{margin:6px 0 0;color:var(--muted)}
 
 /* COMPONENTS */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:10px;padding:9px 13px;font-weight:750;font-size:12px;display:inline-flex;align-items:center;gap:6px}
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}
-.btn.danger{background:#fdeced;border-color:#f2c9cc;color:var(--red)}
-.btn.small{padding:6px 9px;font-size:11px}
-.stat{padding:17px}.stat .label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:28px;color:var(--navy);font-weight:850;margin-top:4px}.stat small{color:var(--muted)}
+.btn.small{padding:5px 8px;font-size:11px}
+.stat{padding:16px}.stat .label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:26px;color:var(--navy);font-weight:850;margin-top:4px}.stat small{color:var(--muted)}
 .notice{padding:12px 14px;border:1px solid #c9dfef;background:#eef7fd;border-radius:11px;color:#205b88;font-size:12px;line-height:1.4}
 .filters{display:grid;grid-template-columns:2.2fr 1fr 1fr auto;gap:9px;margin-bottom:13px;align-items:end}
-.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 12px;outline:0}.field select,.field textarea{border-radius:9px}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
+.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1}
 
 /* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
 .table{width:100%;border-collapse:collapse;min-width:1000px}.table th,.table td{padding:10px 10px;border-bottom:1px solid #eef2f6;text-align:left;font-size:12px}
-.table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+.table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:10px;text-transform:uppercase;font-weight:800}
 .table tr:hover td{background:#fbfdff}
 .eq-link{color:var(--blue);font-weight:750;cursor:pointer;text-decoration:none}.eq-link:hover{text-decoration:underline}
 .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850}
@@ -60,7 +59,6 @@
 .empty{padding:35px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:12px;color:var(--muted)}
 
-/* CRONOGRAMA MINI GRID */
 .cron-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;width:180px;text-align:center;font-size:9px}
 .cron-m{padding:3px 0;background:#eef2f6;border-radius:3px;color:#64748b;font-weight:700}.cron-m.active{background:var(--cyan);color:#fff}.cron-m.over{background:var(--red);color:#fff}
 
@@ -93,7 +91,7 @@
 <!-- LOGIN -->
 <div id="login" class="login">
  <div class="login-card">
-  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de Control por Sedes y Mantenimiento</p></div>
+  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de Control por Sedes e Inventario</p></div>
   <div class="login-body">
    <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Auditoría</option></select></div>
    <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="loginPass" type="password" value="admin123" onkeydown="if(event.key==='Enter')login()"></div>
@@ -103,7 +101,7 @@
  </div>
 </div>
 
-<!-- APP -->
+<!-- APP MAIN -->
 <div class="app" id="app" style="display:none">
 <aside class="sidebar">
  <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS</small><br><div id="roleChip" class="role-chip"></div></div>
@@ -129,7 +127,7 @@
 <!-- DASHBOARD -->
 <section class="page active" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores de Gestión Biomédica</h2><p>Resumen general de equipos, mantenimientos vencidos y calibraciones.</p></div>
+  <div><h2>Indicadores de Gestión Biomédica</h2><p>Resumen global del estado de la plataforma.</p></div>
   <div class="toolbar">
    <div class="field" style="margin:0"><select id="dashSedeFilter" onchange="renderDashboard()"><option value="">Todas las Sedes</option></select></div>
    <button class="btn blue" onclick="exportBackup()">Respaldo JSON</button>
@@ -145,7 +143,7 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar o agregue nuevas sedes de las 32 proyectadas.</p></div>
+  <div><h3>Control por Sedes e Inventario</h3><p class="muted">Cargue su archivo Excel para comenzar o administre las sedes.</p></div>
   <div class="toolbar">
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel</button>
    <button class="btn primary admin-only" onclick="openSedeModal()">+ Agregar Sede</button>
@@ -157,7 +155,7 @@
 
  <div class="card panel">
   <div class="filters">
-   <div class="field"><label>Buscar (Nombre, Marca, Serie, Código...)</label><input id="eqSearch" placeholder="Buscar..." oninput="filterEquipos()"></div>
+   <div class="field"><label>Buscar Equipo (Nombre, Marca, Serie, Código...)</label><input id="eqSearch" placeholder="Buscar..." oninput="filterEquipos()"></div>
    <div class="field"><label>Sede Seleccionada</label><select id="eqSede" onchange="filterEquipos()"></select></div>
    <div class="field"><label>Servicio</label><select id="eqService" onchange="filterEquipos()"></select></div>
    <button class="btn" onclick="clearEqFilters()">Limpiar Filtros</button>
@@ -170,7 +168,7 @@
 <!-- EJECUCIÓN MASIVA -->
 <section class="page" id="page-masiva">
  <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
- <div class="notice" style="margin:12px 0">Selecciona la sede y marca los equipos a los que deseas generar reporte preventivo automático con firma guardada.</div>
+ <div class="notice" style="margin:12px 0">Selecciona la sede y los equipos a los cuales generar el mantenimiento preventivo con tu firma digital automáticamente.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
@@ -242,17 +240,9 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v8_final';
+const KEY='gestion_biomedica_v9_clean';
 
-// BASE DE DATOS
-const SEED_INV = [{"REF-B": "1", "EQUIPO": "AGITADOR DE MAZINI", "MARCA": "WINCOM", "MODELO": "KJ-201BS", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-050", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "ACTA N°7 DEL 2009", "CALIBRACION": "SI"}, {"REF-B": "2", "EQUIPO": "AIRE ACONDICIONADO", "MARCA": "MIDEA", "MODELO": "MSABB-12CRND1-MP0W", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "VACUNACION", "INVIMA": "N/R", "CALIBRACION": "NO"}, {"REF-B": "3", "EQUIPO": "ALCOHOLIMETRO", "MARCA": "ALCOVISOR", "MODELO": "MERCURY", "SERIE": "10301514", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SA-000000250", "SERVICIO": "TOMA DE MUESTRAS", "INVIMA": "N/R", "CALIBRACION": "SI"}, {"REF-B": "4", "EQUIPO": "ANALIZADOR DE QUIMICA", "MARCA": "BIOSYSTEMS", "MODELO": "A15", "SERIE": "831054832", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-051", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "2016DM-0014508", "CALIBRACION": "NO"}, {"REF-B": "5", "EQUIPO": "AUDIOMETRO", "MARCA": "RESONANCE", "MODELO": "R07A", "SERIE": "R07A24B000797", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 9", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "6", "EQUIPO": "AUDIOMETRO", "MARCA": "AMPLIVOX", "MODELO": "116", "SERIE": "26205", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-017", "SERVICIO": "CONSULTORIO 5", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "33", "EQUIPO": "ELECTROCARDIOGRAFO", "MARCA": "MINDRAY", "MODELO": "BENEHEARTR3", "SERIE": "FK-09024320", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 14", "INVIMA": "2018DM-0003378-R1", "CALIBRACION": "SI"}, {"REF-B": "39", "EQUIPO": "ESPIROMETRO", "MARCA": "MIR", "MODELO": "SPIROBANKII", "SERIE": "A23-0Y.11888", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIB", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 7 ESPIROMETRIA", "INVIMA": "2017EBC-0017101", "CALIBRACION": "SI"}, {"REF-B": "90", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160603871LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-106-06", "SERVICIO": "CONSULTORIO 10", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}];
-
-const SEED_MAT = [
- {"EQUIPO": "TENSIOMETRO DIGITAL", "VIDA": "EQUIPO UTILIZADO PARA MEDIR LA PRESIÓN ARTERIAL.", "REPORTE": "REVISION DE VALVULA, BOMBA DE MEMBRANA Y SENSOR. PRUEBAS DE PRESION SUPERADAS.", "VOLTAJE": "6V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"},
- {"EQUIPO": "AUDIOMETRO", "VIDA": "INSTRUMENTO UTILIZADO PARA MEDIR LA AUDICIÓN.", "REPORTE": "REVISION DE FUNCIONES Y BOTONES. LIMPIEZA DE AURICULARES Y CABLES.", "VOLTAJE": "5V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "ANUAL"},
- {"EQUIPO": "ELECTROCARDIOGRAFO", "VIDA": "REGISTRO GRÁFICO DE LA ACTIVIDAD ELÉCTRICA DEL CORAZÓN.", "REPORTE": "REVISION DE CABLE PACIENTE Y ELECTRODOS. LIMPIEZA INTERNA.", "VOLTAJE": "110V", "POTENCIA": "1W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"}
-];
-
+// BASE DE DATOS LIMPIA SIN DUMMIES
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
  config: { name: 'Ingeniero Biomédico', role: 'Coordinador Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
@@ -276,18 +266,6 @@ function load() {
   let x = JSON.parse(localStorage.getItem(KEY));
   if (x) state = { ...state, ...x, config: { ...state.config, ...(x.config || {}) } };
  } catch (e) {}
- if (!state.equipos.length) seed();
-}
-
-function seed() {
- const sedeNames = [...new Set(SEED_INV.map(x => x['SEDE'] || 'NORTE 106'))];
- state.sedes = sedeNames.map(n => ({ id: uid(), nombre: n, ciudad: 'BOGOTA D.C.' }));
- state.matriz = SEED_MAT.map(m => ({ id: uid(), tipo: m.EQUIPO, descripcion: m.VIDA, actividades: m.REPORTE, voltaje: m.VOLTAJE, potencia: m.POTENCIA, riesgo: m.CLASIFICACION, alimentacion: m.ALIMENTACION, calibracion: m.CALIBRACION, periodicidad: m.PERIODICIDAD }));
- state.equipos = SEED_INV.map(x => {
-  const s = state.sedes.find(z => norm(z.nombre) === norm(x['SEDE'])) || state.sedes[0];
-  return { id: uid(), ref_b: String(x['REF-B'] || ''), equipo: String(x['EQUIPO'] || ''), marca: String(x['MARCA'] || ''), modelo: String(x['MODELO'] || ''), serie: String(x['SERIE'] || ''), sedeId: s.id, servicio: String(x['SERVICIO'] || ''), riesgo: String(x['RIESGO BIOMEDICO'] || 'IIA'), codigo: String(x['CÓDIGO INTERNO'] || ''), invima: String(x['INVIMA'] || ''), cal: String(x['CALIBRACION'] || 'SI'), estado: 'ACTIVO' };
- });
- save();
 }
 
 function login() {
@@ -381,6 +359,10 @@ function renderDashboard() {
 }
 
 function renderSedes() {
+ if (!state.sedes.length) {
+  document.getElementById('sedeCards').innerHTML = '<div class="notice span4">No hay sedes registradas. Puede agregar sedes manualmente o al cargar su archivo Excel.</div>';
+  return;
+ }
  document.getElementById('sedeCards').innerHTML = state.sedes.map(s => {
   const es = state.equipos.filter(e => e.sedeId === s.id);
   return `<div class="card panel" style="cursor:pointer" onclick="selectSedeFilter('${s.id}')">
@@ -412,13 +394,12 @@ function filterEquipos() {
  renderEquiposPage();
 }
 
-/* RENDERING CON CRONOGRAMA MENSUAL 1-12 */
+/* TABLA PRINCIPAL CON CRONOGRAMA 1-12 */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
  const end = Math.min(start + PAGE_SIZE, total);
  const pageItems = filteredEquiposCache.slice(start, end);
-
  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
@@ -440,7 +421,7 @@ function renderEquiposPage() {
    <td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.invima)}</td><td>${esc(e.riesgo)}</td>
    <td><div class="cron-grid">${cronHtml}</div></td>
   </tr>`;
- }).join('') : '<tr><td colspan="9"><div class="empty">No hay equipos registrados en esta sede.</div></td></tr>';
+ }).join('') : '<tr><td colspan="9"><div class="empty">No hay equipos. Cargue un archivo Excel.</div></td></tr>';
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
@@ -458,7 +439,7 @@ function clearEqFilters() {
  filterEquipos();
 }
 
-/* PROFILE UNIFICADO AL CLIC EN NOMBRE */
+/* PERFIL DE EQUIPO CON PESTAÑAS UNIFICADAS */
 function openEquipmentProfile(id) {
  const e = state.equipos.find(x => x.id === id); if (!e) return;
  openModal(`Perfil de Equipo · ${e.equipo}`, `
@@ -799,8 +780,9 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
+/* IMPORTACIÓN DESDE EXCEL */
 function openImport() {
- openModal('Importar Inventario Excel', `
+ openModal('Importar Inventario Excel (Carga Masiva)', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
    <p style="margin-bottom:8px"><b>Seleccione su archivo Excel (.xlsx / .xls)</b></p>
    <input id="importExcel" type="file" accept=".xlsx,.xls" onchange="previewExcel(this.files[0])">
@@ -822,7 +804,7 @@ async function previewExcel(file) {
 function doImportExcel() {
  if (!importData.length) return alert('Seleccione un Excel válido.');
  importData.forEach(r => {
-  let sName = String(r['SEDE'] || r['Sede'] || 'NORTE 106').trim();
+  let sName = String(r['SEDE'] || r['Sede'] || 'SEDE PRINCIPAL').trim();
   let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
   if (!s) { s = { id: uid(), nombre: sName, ciudad: 'BOGOTA D.C.' }; state.sedes.push(s); }
 
@@ -833,11 +815,11 @@ function doImportExcel() {
    codigo: String(r['CODIGO'] || '').trim(), invima: String(r['INVIMA'] || '').trim(), cal: String(r['CALIBRACION'] || 'NO').trim(), estado: 'ACTIVO'
   });
  });
- save(); closeModal(); refreshAll(); alert(`Se añadieron ${importData.length} equipos.`);
+ save(); closeModal(); refreshAll(); alert(`¡Carga exitosa! Se importaron ${importData.length} equipos.`);
 }
 
 function openSedeModal() {
- openModal('Agregar Nueva Sede (Hasta 32 Sedes)', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
+ openModal('Agregar Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
 }
 function saveSede() {
  const n = document.getElementById('sNombre').value; if (!n) return;
