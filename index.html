@@ -15,7 +15,7 @@
 .login-head{padding:30px;background:linear-gradient(135deg,#0d3558,#1d6b9f);color:#fff}.login-head h1{margin:0;font-size:24px}.login-head p{margin:7px 0 0;opacity:.8;font-size:13px}
 .login-body{padding:26px}.login-actions{display:grid;gap:10px;margin-top:15px}.hint{font-size:11px;color:var(--muted);margin-top:13px}
 
-/* APP STRUCTURE */
+/* APP LAYOUT */
 .app{display:flex;min-height:100vh}
 .sidebar{width:255px;background:linear-gradient(180deg,#0b2945,#0e3d63);color:#fff;padding:18px 13px;position:fixed;height:100vh;left:0;top:0;z-index:20;display:flex;flex-direction:column}
 .brand{padding:10px 10px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:18px;margin:0 0 4px;color:#fff}.brand small{opacity:.65}
@@ -46,22 +46,31 @@
 .btn.small{padding:6px 9px;font-size:11px}
 .stat{padding:17px}.stat .label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:28px;color:var(--navy);font-weight:850;margin-top:4px}.stat small{color:var(--muted)}
 .notice{padding:12px 14px;border:1px solid #c9dfef;background:#eef7fd;border-radius:11px;color:#205b88;font-size:12px;line-height:1.4}
-.filters{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr auto;gap:9px;margin-bottom:13px;align-items:end}
-.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 10px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
+.filters{display:grid;grid-template-columns:2.2fr 1fr 1fr auto;gap:9px;margin-bottom:13px;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 12px;outline:0}.field select,.field textarea{border-radius:9px}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
 
-/* TABLES */
+/* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-.table{width:100%;border-collapse:collapse;min-width:950px}.table th,.table td{padding:10px 10px;border-bottom:1px solid #eef2f6;text-align:left;font-size:12px}
+.table{width:100%;border-collapse:collapse;min-width:1000px}.table th,.table td{padding:10px 10px;border-bottom:1px solid #eef2f6;text-align:left;font-size:12px}
 .table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:800}
 .table tr:hover td{background:#fbfdff}
+.eq-link{color:var(--blue);font-weight:750;cursor:pointer;text-decoration:none}.eq-link:hover{text-decoration:underline}
 .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850}
 .badge.green{background:#e8f7ef;color:#176e45}.badge.yellow{background:#fff4da;color:#8d6500}.badge.red{background:#fdeced;color:#a32d35}.badge.blue{background:#e9f3fb;color:#1d5f91}.badge.gray{background:#eef2f6;color:#526273}
 .empty{padding:35px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:12px;color:var(--muted)}
 
+/* CRONOGRAMA MINI GRID */
+.cron-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;width:180px;text-align:center;font-size:9px}
+.cron-m{padding:3px 0;background:#eef2f6;border-radius:3px;color:#64748b;font-weight:700}.cron-m.active{background:var(--cyan);color:#fff}.cron-m.over{background:var(--red);color:#fff}
+
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tab-btn{border:0;background:transparent;padding:10px 14px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}
+
 /* MODALS & PRINT */
 .modal-bg{position:fixed;inset:0;background:rgba(7,22,36,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal-bg.open{display:flex}
-.modal{width:min(1000px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.23)}
+.modal{width:min(1050px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.23)}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;color:var(--navy)}
 .modal-body{padding:18px}.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--line)}
 .formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:1/-1}
@@ -84,34 +93,28 @@
 <!-- LOGIN -->
 <div id="login" class="login">
  <div class="login-card">
-  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de control de equipos, mantenimiento y calibración</p></div>
+  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de Control por Sedes y Mantenimiento</p></div>
   <div class="login-body">
-   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Solo consulta / Auditoría</option></select></div>
+   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Auditoría</option></select></div>
    <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="loginPass" type="password" value="admin123" onkeydown="if(event.key==='Enter')login()"></div>
    <div id="loginError" class="badge red hidden" style="margin-top:11px">Usuario o contraseña incorrectos</div>
-   <div class="login-actions"><button class="btn primary" onclick="login()">Ingresar al sistema</button></div>
-   <div class="hint">Credenciales: <b>admin / admin123</b> o <b>consulta / consulta123</b>.</div>
+   <div class="login-actions"><button class="btn primary" onclick="login()">Ingresar al Sistema</button></div>
   </div>
  </div>
 </div>
 
-<!-- MAIN APPLICATION -->
+<!-- APP -->
 <div class="app" id="app" style="display:none">
 <aside class="sidebar">
- <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS · Control técnico</small><div id="roleChip" class="role-chip"></div></div>
+ <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS</small><br><div id="roleChip" class="role-chip"></div></div>
  <div class="nav" id="nav">
   <button class="active" data-page="dashboard">⌂ <span>Inicio / Indicadores</span></button>
-  <div class="nav-group">Inventario</div>
-  <button data-page="sedes">▦ <span>Sedes</span></button>
-  <button data-page="equipos">◫ <span>Equipos biomédicos</span></button>
-  <button data-page="hojas">▤ <span>Hojas de vida (PDF)</span></button>
+  <button data-page="sedes">▦ <span>Sedes e Inventario</span></button>
   <div class="nav-group">Mantenimiento</div>
-  <button data-page="mantenimientos">🛠 <span>Mantenimientos</span></button>
   <button data-page="masiva">⚡ <span>Ejecución masiva</span></button>
   <button data-page="calibraciones">◌ <span>Calibraciones</span></button>
   <div class="nav-group">Documentación</div>
   <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
-  <button data-page="trazabilidad">⌁ <span>Trazabilidad</span></button>
   <div class="nav-group">Configuración</div>
   <button data-page="config">⚙ <span>Matriz y Firma</span></button>
  </div>
@@ -119,136 +122,86 @@
 </aside>
 
 <main class="main">
-<header class="topbar"><h1 id="pageTitle">Panel principal</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div></div></header>
+<header class="topbar"><h1 id="pageTitle">Inicio / Indicadores</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div></div></header>
 
 <div class="content">
 
-<!-- DASHBOARD PAGE -->
+<!-- DASHBOARD -->
 <section class="page active" id="page-dashboard">
  <div class="hero">
-  <div><h2>Panel de Gestión Biomédica</h2><p>Indicadores de mantenimiento, vencimiento de calibraciones y cobertura por sede.</p></div>
+  <div><h2>Indicadores de Gestión Biomédica</h2><p>Resumen general de equipos, mantenimientos vencidos y calibraciones.</p></div>
   <div class="toolbar">
    <div class="field" style="margin:0"><select id="dashSedeFilter" onchange="renderDashboard()"><option value="">Todas las Sedes</option></select></div>
    <button class="btn blue" onclick="exportBackup()">Respaldo JSON</button>
-   <button class="btn primary" onclick="go('equipos')">Ver equipos</button>
   </div>
  </div>
  <div id="stats" class="grid g4" style="margin-top:18px"></div>
- <div class="grid g2" style="margin-top:16px">
-  <div class="card panel"><div class="section-title"><h3>Alertas de Vencimiento</h3></div><div id="alerts" style="margin-top:10px"></div></div>
-  <div class="card panel"><div class="section-title"><h3>Cobertura de Mantenimiento Preventivo</h3></div><div id="programStatus" style="margin-top:10px"></div></div>
+ <div class="card panel" style="margin-top:16px">
+  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas Prioritarias</h3>
+  <div id="alerts"></div>
  </div>
 </section>
 
-<!-- SEDES PAGE -->
+<!-- SEDES E INVENTARIO -->
 <section class="page" id="page-sedes">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Inventario por Sede</h3><button class="btn primary admin-only" onclick="openSedeModal()">+ Nueva sede</button></div>
- <div class="notice" style="margin-bottom:14px">Muestra el resumen de equipos, preventivos y calibraciones asignados de manera independiente a cada sede.</div>
- <div id="sedeCards" class="grid g3"></div>
-</section>
-
-<!-- EQUIPOS PAGE (PAGINADA PARA ALTO VOLUMEN) -->
-<section class="page" id="page-equipos">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <h3>Equipos Biomédicos</h3>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar o agregue nuevas sedes de las 32 proyectadas.</p></div>
   <div class="toolbar">
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel</button>
-   <button class="btn primary admin-only" onclick="openEquipoModal()">+ Nuevo equipo</button>
+   <button class="btn primary admin-only" onclick="openSedeModal()">+ Agregar Sede</button>
+   <button class="btn primary admin-only" onclick="openEquipoModal()">+ Nuevo Equipo</button>
   </div>
  </div>
+
+ <div id="sedeCards" class="grid g4" style="margin-bottom:18px"></div>
+
  <div class="card panel">
   <div class="filters">
-   <div class="field"><label>Buscar (Nombre, Marca, Modelo, Serie, Código...)</label><input id="eqSearch" placeholder="Buscar..." oninput="filterEquipos()"></div>
-   <div class="field"><label>Sede</label><select id="eqSede" onchange="filterEquipos()"></select></div>
+   <div class="field"><label>Buscar (Nombre, Marca, Serie, Código...)</label><input id="eqSearch" placeholder="Buscar..." oninput="filterEquipos()"></div>
+   <div class="field"><label>Sede Seleccionada</label><select id="eqSede" onchange="filterEquipos()"></select></div>
    <div class="field"><label>Servicio</label><select id="eqService" onchange="filterEquipos()"></select></div>
-   <div class="field"><label>Calibración</label><select id="eqCal" onchange="filterEquipos()"><option value="">Todos</option><option value="SI">SI Calibra</option><option value="NO">NO Calibra</option></select></div>
-   <button class="btn" onclick="clearEqFilters()">Limpiar</button>
+   <button class="btn" onclick="clearEqFilters()">Limpiar Filtros</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>REF-B</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Sede</th><th>Servicio</th><th>Riesgo</th><th>Cal.</th><th>Acciones</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
-  <div class="pagination">
-   <span id="eqPagInfo">Mostrando 0 de 0</span>
-   <div style="display:flex;gap:6px;align-items:center">
-    <button class="btn small" onclick="changeEqPage(-1)">‹ Anterior</button>
-    <span id="eqPageNum" style="font-weight:800">1</span>
-    <button class="btn small" onclick="changeEqPage(1)">Siguiente ›</button>
-   </div>
-  </div>
- </div>
-</section>
-
-<!-- HOJAS DE VIDA -->
-<section class="page" id="page-hojas">
- <h3>Hojas de Vida Biomédicas (BM-FT-02)</h3>
- <div class="card panel" style="margin-top:14px">
-  <div class="filters">
-   <div class="field"><label>Buscar equipo</label><input id="hvSearch" placeholder="Equipo, marca, serie..." oninput="renderHojas()"></div>
-   <div class="field"><label>Sede</label><select id="hvSede" onchange="renderHojas()"></select></div>
-   <div></div><div></div><button class="btn" onclick="document.getElementById('hvSearch').value='';renderHojas()">Limpiar</button>
-  </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>REF-B</th><th>Equipo</th><th>Marca / Modelo</th><th>Serie</th><th>Sede</th><th>Último Preventivo</th><th>Calibración</th><th>Acción</th></tr></thead><tbody id="hvTable"></tbody></table></div>
- </div>
-</section>
-
-<!-- MANTENIMIENTOS -->
-<section class="page" id="page-mantenimientos">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Mantenimientos Biomédicos (BM-FT-04)</h3><button class="btn primary admin-only" onclick="openMaintenanceModal()">+ Nuevo mantenimiento</button></div>
- <div class="card panel">
-  <div class="filters">
-   <div class="field"><label>Buscar (Reporte, Equipo, Serie, Técnico)</label><input id="mtSearch" oninput="renderMaintenances()" placeholder="Buscar..."></div>
-   <div class="field"><label>Tipo</label><select id="mtType" onchange="renderMaintenances()"><option value="">Todos</option><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field"><label>Sede</label><select id="mtSede" onchange="renderMaintenances()"></select></div>
-   <div></div><button class="btn" onclick="document.getElementById('mtSearch').value='';renderMaintenances()">Limpiar</button>
-  </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Reporte N°</th><th>Fecha</th><th>Equipo</th><th>Serie</th><th>Sede</th><th>Tipo</th><th>Técnico</th><th>Acción</th></tr></thead><tbody id="maintTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Sede</th><th>Servicio</th><th>INVIMA</th><th>Riesgo</th><th>Cronograma Mantenimiento</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
+  <div class="pagination"><span id="eqPagInfo">Mostrando 0 de 0</span><div style="display:flex;gap:6px;align-items:center"><button class="btn small" onclick="changeEqPage(-1)">‹ Anterior</button><span id="eqPageNum" style="font-weight:800">1</span><button class="btn small" onclick="changeEqPage(1)">Siguiente ›</button></div></div>
  </div>
 </section>
 
 <!-- EJECUCIÓN MASIVA -->
 <section class="page" id="page-masiva">
- <h3>Ejecución Masiva de Mantenimientos</h3>
- <div class="notice" style="margin:12px 0">Genera múltiples reportes preventivos autorrellenados con las actividades de la matriz técnica y la firma del técnico guardada.</div>
+ <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
+ <div class="notice" style="margin:12px 0">Selecciona la sede y marca los equipos a los que deseas generar reporte preventivo automático con firma guardada.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
-   <div class="field"><label>Tipo</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
+   <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
    <div class="field"><label>Fecha</label><input id="massDate" type="date"></div>
-   <div></div><button class="btn primary admin-only" onclick="runMass()">⚡ Generar reportes masivos</button>
+   <button class="btn primary admin-only" onclick="runMass()">⚡ Generar Mantenimientos Seleccionados</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>REF</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio</th><th>Actividades Protocolarias</th></tr></thead><tbody id="massTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio</th><th>Actividades de Matriz</th></tr></thead><tbody id="massTable"></tbody></table></div>
  </div>
 </section>
 
 <!-- CALIBRACIONES -->
 <section class="page" id="page-calibraciones">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Control de Calibraciones Metrológicas</h3><button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar calibración</button></div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Control de Calibraciones Metrológicas</h3><button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar Calibración</button></div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Buscar</label><input id="calSearch" oninput="renderCalibraciones()" placeholder="Equipo, certificado, serie..."></div>
    <div class="field"><label>Sede</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
    <div class="field"><label>Estado</label><select id="calState" onchange="renderCalibraciones()"><option value="">Todos</option><option value="VIGENTE">VIGENTE</option><option value="PRÓXIMA">PRÓXIMA</option><option value="VENCIDA">VENCIDA</option><option value="SIN REGISTRO">SIN REGISTRO</option></select></div>
-   <div></div><button class="btn" onclick="document.getElementById('calSearch').value='';renderCalibraciones()">Limpiar</button>
+   <button class="btn" onclick="document.getElementById('calSearch').value='';renderCalibraciones()">Limpiar</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última Calibración</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="calTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última Calibración</th><th>Fecha Vencimiento</th><th>Proveedor</th><th>Certificado</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="calTable"></tbody></table></div>
  </div>
 </section>
 
 <!-- MANUALES Y DOCUMENTOS -->
 <section class="page" id="page-documentos">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Manuales y Documentos Técnicos</h3><button class="btn primary admin-only" onclick="openDocModal()">+ Cargar manual por Tipo/Marca</button></div>
- <div class="notice" style="margin-bottom:14px"><b>Manuales Reutilizables:</b> Al subir un manual para un <i>Tipo de Equipo + Marca</i> (ej. Tensiómetro Digital + OMRON), quedará vinculado a todos los equipos iguales sin duplicar archivos.</div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Manuales de Usuario y Documentos Técnicos</h3><button class="btn primary admin-only" onclick="openDocModal()">+ Cargar Manual por Tipo/Marca</button></div>
+ <div class="notice" style="margin-bottom:14px"><b>Manuales Reutilizables:</b> Cargue un manual por Tipo/Marca y todos los equipos que coincidan lo visualizarán en su ventana individual.</div>
  <div class="card panel">
-  <div class="table-wrap"><table class="table"><thead><tr><th>Manual / Documento</th><th>Tipo</th><th>Aplica a Tipo de Equipo</th><th>Marca</th><th>Fecha Carga</th><th>Acción</th></tr></thead><tbody id="docsTable"></tbody></table></div>
- </div>
-</section>
-
-<!-- TRAZABILIDAD -->
-<section class="page" id="page-trazabilidad">
- <h3>Trazabilidad por Equipo</h3>
- <div class="card panel" style="margin-top:14px">
-  <div class="filters">
-   <div class="field span2"><label>Seleccione equipo</label><select id="traceEquip" onchange="renderTrace()"></select></div>
-  </div>
-  <div id="tracePanel" style="margin-top:14px"></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Nombre Documento</th><th>Tipo</th><th>Tipo de Equipo</th><th>Marca</th><th>Fecha Carga</th><th>Acción</th></tr></thead><tbody id="docsTable"></tbody></table></div>
  </div>
 </section>
 
@@ -258,52 +211,51 @@
  <div class="grid g3" style="margin-top:14px">
   <div class="card panel">
    <h3>Datos del Responsable</h3>
-   <div class="field" style="margin-top:8px"><label>Ingeniero Biomédico / Responsable</label><input id="cfgName"></div>
+   <div class="field" style="margin-top:8px"><label>Ingeniero Biomédico</label><input id="cfgName"></div>
    <div class="field" style="margin-top:8px"><label>Cargo</label><input id="cfgRole"></div>
-   <div class="field" style="margin-top:8px"><label>Empresa / Prestador</label><input id="cfgCompany"></div>
+   <div class="field" style="margin-top:8px"><label>Empresa</label><input id="cfgCompany"></div>
    <button class="btn primary admin-only" style="margin-top:12px;width:100%" onclick="saveConfig()">Guardar Datos</button>
   </div>
   <div class="card panel">
    <h3>Firma Digital del Técnico</h3>
-   <p class="muted" style="margin:4px 0 8px">Firma que se insertará automáticamente en los reportes BM-FT-04.</p>
+   <p class="muted" style="margin:4px 0 8px">Firma que aparecerá automáticamente en los reportes.</p>
    <input id="cfgSigFile" type="file" accept="image/*" onchange="uploadSigTech(this)">
    <div class="signature-box" id="sigCfgPrev" style="margin-top:8px">Sin firma guardada</div>
   </div>
   <div class="card panel">
-   <h3>Respaldo y Base de Datos</h3>
-   <p class="muted" style="margin-bottom:10px">Guarda copias de seguridad en archivo JSON.</p>
+   <h3>Base de Datos y Copias</h3>
+   <p class="muted" style="margin-bottom:10px">Guarde respaldos en formato JSON.</p>
    <button class="btn blue" style="width:100%;margin-bottom:8px" onclick="exportBackup()">Exportar Respaldo JSON</button>
    <label class="btn" style="width:100%;text-align:center;display:block">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
   </div>
  </div>
 
  <div class="card panel" style="margin-top:16px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3>Matriz Biomédica Protocolaria (Auto-relleno)</h3><button class="btn primary admin-only" onclick="openMatrixModal()">+ Nuevo tipo de equipo</button></div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Tipo de Equipo</th><th>Periodicidad</th><th>Calibración</th><th>Descripción / Vida Útil</th><th>Actividades Protocolarias</th><th>Acción</th></tr></thead><tbody id="matrixTable"></tbody></table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3>Matriz Biomédica Protocolaria (Auto-Relleno)</h3><button class="btn primary admin-only" onclick="openMatrixModal()">+ Nuevo Tipo de Equipo</button></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Tipo de Equipo</th><th>Periodicidad</th><th>Calibración</th><th>Descripción</th><th>Actividades Protocolarias</th><th>Acción</th></tr></thead><tbody id="matrixTable"></tbody></table></div>
  </div>
 </section>
 
 </div></main></div>
 
-<!-- MODAL CONTAINER -->
+<!-- MODAL GLOBAL -->
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v6_restored';
+const KEY='gestion_biomedica_v8_final';
 
-// TODAS LAS 119 FILAS DEL INVENTARIO CENDIATRA
-const SEED_INV = [{"REF-B": "1", "EQUIPO": "AGITADOR DE MAZINI", "MARCA": "WINCOM", "MODELO": "KJ-201BS", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-050", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "ACTA N°7 DEL 2009", "CALIBRACION": "SI"}, {"REF-B": "2", "EQUIPO": "AIRE ACONDICIONADO", "MARCA": "MIDEA", "MODELO": "MSABB-12CRND1-MP0W", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "VACUNACION", "INVIMA": "N/R", "CALIBRACION": "NO"}, {"REF-B": "3", "EQUIPO": "ALCOHOLIMETRO", "MARCA": "ALCOVISOR", "MODELO": "MERCURY", "SERIE": "10301514", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SA-000000250", "SERVICIO": "TOMA DE MUESTRAS", "INVIMA": "N/R", "CALIBRACION": "SI"}, {"REF-B": "4", "EQUIPO": "ANALIZADOR DE QUIMICA", "MARCA": "BIOSYSTEMS", "MODELO": "A15", "SERIE": "831054832", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-051", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "2016DM-0014508", "CALIBRACION": "NO"}, {"REF-B": "5", "EQUIPO": "AUDIOMETRO", "MARCA": "RESONANCE", "MODELO": "R07A", "SERIE": "R07A24B000797", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 9", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "6", "EQUIPO": "AUDIOMETRO", "MARCA": "AMPLIVOX", "MODELO": "116", "SERIE": "26205", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-017", "SERVICIO": "CONSULTORIO 5", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "12", "EQUIPO": "BASCULA DIGITAL", "MARCA": "N/R", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 1", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "17", "EQUIPO": "BASCULA DIGITAL", "MARCA": "LEMMAN", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-005", "SERVICIO": "CONSULTORIO 10", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "14", "EQUIPO": "BASCULA DIGITAL", "MARCA": "LEMMAN", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "C-0000587", "SERVICIO": "CONSULTORIO 14", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "8", "EQUIPO": "BASCULA DIGITAL", "MARCA": "N/R", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 15", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "11", "EQUIPO": "BASCULA DIGITAL", "MARCA": "LEMMAN", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORT-01-069", "SERVICIO": "CONSULTORIO 2", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "13", "EQUIPO": "BASCULA DIGITAL", "MARCA": "LEMMAN", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "C-0000586", "SERVICIO": "CONSULTORIO 3", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "9", "EQUIPO": "BASCULA DIGITAL", "MARCA": "N/R", "MODELO": "N/R", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 4", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "10", "EQUIPO": "BASCULA DIGITAL", "MARCA": "LEMMAN", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "C-0000585", "SERVICIO": "CONSULTORIO 6", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "7", "EQUIPO": "BASCULA DIGITAL", "MARCA": "SCANMED", "MODELO": "N/R", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-074", "SERVICIO": "CONSULTORIO 7 ESPIROMETRIA", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "16", "EQUIPO": "BASCULA DIGITAL", "MARCA": "CARDITEK", "MODELO": "180KG", "SERIE": "2025301110001718", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "BACK UP", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "15", "EQUIPO": "BASCULA DIGITAL", "MARCA": "NEOSENS", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORT-106-007", "SERVICIO": "CONSULTORIO 8", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "18", "EQUIPO": "BASCULA DIGITAL", "MARCA": "N/R", "MODELO": "180KG", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORT-01-023", "SERVICIO": "BACK UP", "INVIMA": "ACTA N°9 DEL 2015", "CALIBRACION": "SI"}, {"REF-B": "19", "EQUIPO": "CABINA SONOAMORTIGUADA", "MARCA": "SILVHER", "MODELO": "HP700", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "I", "CÓDIGO INTERNO": "SDNORTE-01-16", "SERVICIO": "CONSULTORIO 9", "INVIMA": "2019DM-0020487", "CALIBRACION": "SI"}, {"REF-B": "20", "EQUIPO": "CABINA SONOAMORTIGUADA", "MARCA": "SILVHER", "MODELO": "SP-90", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "I", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 5", "INVIMA": "2019DM-0020487", "CALIBRACION": "SI"}, {"REF-B": "32", "EQUIPO": "CENTRIFUGA", "MARCA": "EPPENDORF", "MODELO": "5702", "SERIE": "5702JL953044", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "I", "CÓDIGO INTERNO": "N/R", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "2024DM-0029999", "CALIBRACION": "SI"}, {"REF-B": "33", "EQUIPO": "ELECTROCARDIOGRAFO", "MARCA": "MINDRAY", "MODELO": "BENEHEARTR3", "SERIE": "FK-09024320", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 14", "INVIMA": "2018DM-0003378-R1", "CALIBRACION": "SI"}, {"REF-B": "39", "EQUIPO": "ESPIROMETRO", "MARCA": "MIR", "MODELO": "SPIROBANKII", "SERIE": "A23-0Y.11888", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIB", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 7 ESPIROMETRIA", "INVIMA": "2017EBC-0017101", "CALIBRACION": "SI"}, {"REF-B": "85", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "GMD", "MODELO": "GMD-BPM-1872", "SERIE": "BA8631211103166D", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 6", "INVIMA": "2016DM-0015017", "CALIBRACION": "SI"}, {"REF-B": "86", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "GMD", "MODELO": "GMD-BPM", "SERIE": "BA6596201201682D", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 2", "INVIMA": "2016DM-0015017", "CALIBRACION": "SI"}, {"REF-B": "87", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "HOME LIFE", "MODELO": "BSP-11", "SERIE": "25056733103821", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SA-000001353", "SERVICIO": "CONSULTORIO 15", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}, {"REF-B": "90", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160603871LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-106-06", "SERVICIO": "CONSULTORIO 10", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}, {"REF-B": "91", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160601890LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-011", "SERVICIO": "CONSULTORIO 4", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}];
+// BASE DE DATOS
+const SEED_INV = [{"REF-B": "1", "EQUIPO": "AGITADOR DE MAZINI", "MARCA": "WINCOM", "MODELO": "KJ-201BS", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-050", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "ACTA N°7 DEL 2009", "CALIBRACION": "SI"}, {"REF-B": "2", "EQUIPO": "AIRE ACONDICIONADO", "MARCA": "MIDEA", "MODELO": "MSABB-12CRND1-MP0W", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "N/R", "SERVICIO": "VACUNACION", "INVIMA": "N/R", "CALIBRACION": "NO"}, {"REF-B": "3", "EQUIPO": "ALCOHOLIMETRO", "MARCA": "ALCOVISOR", "MODELO": "MERCURY", "SERIE": "10301514", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SA-000000250", "SERVICIO": "TOMA DE MUESTRAS", "INVIMA": "N/R", "CALIBRACION": "SI"}, {"REF-B": "4", "EQUIPO": "ANALIZADOR DE QUIMICA", "MARCA": "BIOSYSTEMS", "MODELO": "A15", "SERIE": "831054832", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-051", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "2016DM-0014508", "CALIBRACION": "NO"}, {"REF-B": "5", "EQUIPO": "AUDIOMETRO", "MARCA": "RESONANCE", "MODELO": "R07A", "SERIE": "R07A24B000797", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 9", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "6", "EQUIPO": "AUDIOMETRO", "MARCA": "AMPLIVOX", "MODELO": "116", "SERIE": "26205", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-017", "SERVICIO": "CONSULTORIO 5", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "33", "EQUIPO": "ELECTROCARDIOGRAFO", "MARCA": "MINDRAY", "MODELO": "BENEHEARTR3", "SERIE": "FK-09024320", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 14", "INVIMA": "2018DM-0003378-R1", "CALIBRACION": "SI"}, {"REF-B": "39", "EQUIPO": "ESPIROMETRO", "MARCA": "MIR", "MODELO": "SPIROBANKII", "SERIE": "A23-0Y.11888", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIB", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 7 ESPIROMETRIA", "INVIMA": "2017EBC-0017101", "CALIBRACION": "SI"}, {"REF-B": "90", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160603871LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-106-06", "SERVICIO": "CONSULTORIO 10", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}];
 
-// MATRIZ TÉCNICA Y PROTOCOLOS
 const SEED_MAT = [
- {"EQUIPO": "TENSIOMETRO DIGITAL", "VIDA": "EL TENSIÓMETRO DIGITAL ES UN INSTRUMENTO MODERNO UTILIZADO PARA MEDIR LA PRESIÓN ARTERIAL DE MANERA RÁPIDA Y PRECISA.", "REPORTE": "REVISION DE VALVULA, BOMBA DE MEMBRANA Y SENSOR, SE REALIZA LIMPIEZA A LA TARJETA ELECTRONICA, VERIFICACION DE MANGUERAS. PRUEBAS DE PRESION SUPERADAS CON ÉXITO.", "OBSERVACION": "LIMPIEZA Y DESINFECCIÓN PERIÓDICA.", "VOLTAJE": "6V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"},
- {"EQUIPO": "AUDIOMETRO", "VIDA": "INSTRUMENTO UTILIZADO PARA MEDIR LA AUDICIÓN Y DETECTAR PÉRDIDAS AUDITIVAS EN PACIENTES.", "REPORTE": "REVISION DE FUNCIONES Y BOTONES, SE REVISAN CONEXIONES ELECTRONICAS, SE LIMPIA LA TARJETA, VERIFICACION DE CABLES Y ACCESORIOS. PRUEBAS FUNCIONALES SUPERADAS CON ÉXITO.", "OBSERVACION": "LIMPIEZA DE AURICULARES.", "VOLTAJE": "5V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "ANUAL"},
- {"EQUIPO": "ELECTROCARDIOGRAFO", "VIDA": "REGISTRO GRÁFICO DE LA ACTIVIDAD ELÉCTRICA DEL CORAZÓN A TRAVÉS DE ELECTRODOS.", "REPORTE": "REVISION Y LIMPIEZA DE ACCESORIOS, CLAMPS, ELECTRODOS DE SUCCION, CABLE EKG Y CABLE DE PODER. AJUSTE DE FILTROS Y PRUEBAS SUPERADAS.", "OBSERVACION": "VERIFICAR CABLE PACIENTE.", "VOLTAJE": "110V", "POTENCIA": "1W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"}
+ {"EQUIPO": "TENSIOMETRO DIGITAL", "VIDA": "EQUIPO UTILIZADO PARA MEDIR LA PRESIÓN ARTERIAL.", "REPORTE": "REVISION DE VALVULA, BOMBA DE MEMBRANA Y SENSOR. PRUEBAS DE PRESION SUPERADAS.", "VOLTAJE": "6V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"},
+ {"EQUIPO": "AUDIOMETRO", "VIDA": "INSTRUMENTO UTILIZADO PARA MEDIR LA AUDICIÓN.", "REPORTE": "REVISION DE FUNCIONES Y BOTONES. LIMPIEZA DE AURICULARES Y CABLES.", "VOLTAJE": "5V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "ANUAL"},
+ {"EQUIPO": "ELECTROCARDIOGRAFO", "VIDA": "REGISTRO GRÁFICO DE LA ACTIVIDAD ELÉCTRICA DEL CORAZÓN.", "REPORTE": "REVISION DE CABLE PACIENTE Y ELECTRODOS. LIMPIEZA INTERNA.", "VOLTAJE": "110V", "POTENCIA": "1W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD": "SEMESTRAL"}
 ];
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
- config: { name: 'Yesid Esteban Vergara Cárdenas', role: 'Ingeniero Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
+ config: { name: 'Ingeniero Biomédico', role: 'Coordinador Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
  users: { admin: { password: 'admin123', role: 'ADMIN' }, consulta: { password: 'consulta123', role: 'CONSULTA' } }
 };
 
@@ -330,7 +282,7 @@ function load() {
 function seed() {
  const sedeNames = [...new Set(SEED_INV.map(x => x['SEDE'] || 'NORTE 106'))];
  state.sedes = sedeNames.map(n => ({ id: uid(), nombre: n, ciudad: 'BOGOTA D.C.' }));
- state.matriz = SEED_MAT.map(m => ({ id: uid(), tipo: m.EQUIPO, descripcion: m.VIDA, actividades: m.REPORTE, observacion: m.OBSERVACION, voltaje: m.VOLTAJE, potencia: m.POTENCIA, riesgo: m.CLASIFICACION, alimentacion: m.ALIMENTACION, calibracion: m.CALIBRACION, periodicidad: m.PERIODICIDAD }));
+ state.matriz = SEED_MAT.map(m => ({ id: uid(), tipo: m.EQUIPO, descripcion: m.VIDA, actividades: m.REPORTE, voltaje: m.VOLTAJE, potencia: m.POTENCIA, riesgo: m.CLASIFICACION, alimentacion: m.ALIMENTACION, calibracion: m.CALIBRACION, periodicidad: m.PERIODICIDAD }));
  state.equipos = SEED_INV.map(x => {
   const s = state.sedes.find(z => norm(z.nombre) === norm(x['SEDE'])) || state.sedes[0];
   return { id: uid(), ref_b: String(x['REF-B'] || ''), equipo: String(x['EQUIPO'] || ''), marca: String(x['MARCA'] || ''), modelo: String(x['MODELO'] || ''), serie: String(x['SERIE'] || ''), sedeId: s.id, servicio: String(x['SERVICIO'] || ''), riesgo: String(x['RIESGO BIOMEDICO'] || 'IIA'), codigo: String(x['CÓDIGO INTERNO'] || ''), invima: String(x['INVIMA'] || ''), cal: String(x['CALIBRACION'] || 'SI'), estado: 'ACTIVO' };
@@ -344,8 +296,8 @@ function login() {
   currentUser = { username: u, ...state.users[u] };
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITOR / CONSULTA';
-  document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Administrador' : 'Consulta';
+  document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITOR';
+  document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Consulta';
   applyPermissions(); refreshAll();
  } else document.getElementById('loginError').classList.remove('hidden');
 }
@@ -355,7 +307,6 @@ function applyPermissions() { document.querySelectorAll('.admin-only').forEach(x
 function canEdit() { return currentUser?.role === 'ADMIN'; }
 
 function sedeName(id) { return state.sedes.find(s => s.id === id)?.nombre || 'SIN SEDE'; }
-function eqName(id) { return state.equipos.find(e => e.id === id)?.equipo || ''; }
 function matFor(tipoName) {
  return state.matriz.find(m => norm(m.tipo) === norm(tipoName)) ||
         state.matriz.find(m => norm(tipoName).includes(norm(m.tipo)) || norm(m.tipo).includes(norm(tipoName))) || null;
@@ -388,14 +339,10 @@ function go(page) {
 function renderPage(page) {
  fillSelects();
  if (page === 'dashboard') renderDashboard();
- if (page === 'sedes') renderSedes();
- if (page === 'equipos') filterEquipos();
- if (page === 'hojas') renderHojas();
- if (page === 'mantenimientos') renderMaintenances();
+ if (page === 'sedes') { renderSedes(); filterEquipos(); }
  if (page === 'masiva') renderMass();
  if (page === 'calibraciones') renderCalibraciones();
  if (page === 'documentos') renderDocs();
- if (page === 'trazabilidad') fillTrace();
  if (page === 'config') fillConfig();
 }
 
@@ -403,7 +350,7 @@ function refreshAll() { renderDashboard(); fillSelects(); filterEquipos(); rende
 
 function fillSelects() {
  const opts = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
- ['dashSedeFilter', 'eqSede', 'hvSede', 'mtSede', 'calSedeFilter', 'massSede'].forEach(id => {
+ ['dashSedeFilter', 'eqSede', 'calSedeFilter', 'massSede'].forEach(id => {
   const x = document.getElementById(id); if (!x) return;
   const old = x.value; x.innerHTML = '<option value="">Todas las Sedes</option>' + opts; x.value = old;
  });
@@ -419,68 +366,81 @@ function renderDashboard() {
  const todayStr = today();
  const mVenc = list.filter(e => nextMaint(e) < todayStr).length;
  const cVenc = list.filter(e => calState(e)[0] === 'VENCIDA').length;
- const doneM = list.filter(e => lastMaint(e.id)).length;
 
  document.getElementById('stats').innerHTML = [
-  [total, 'EQUIPOS REGISTRADOS', sid ? `Sede: ${sedeName(sid)}` : 'Todas las sedes'],
-  [mVenc, 'MANTENIMIENTOS VENCIDOS', 'Requieren atención'],
+  [total, 'EQUIPOS TOTALES', sid ? `Sede: ${sedeName(sid)}` : 'Todas las sedes'],
+  [mVenc, 'MANTENIMIENTOS VENCIDOS', 'Requieren preventiva'],
   [cVenc, 'CALIBRACIONES VENCIDAS', 'Equipos metrológicos'],
-  [doneM, 'EQUIPOS CON HISTORIAL', `Cobertura: ${Math.round(doneM / Math.max(total, 1) * 100)}%`]
+  [state.sedes.length, 'SEDES REGISTRADAS', 'Límite dinámico (32)']
  ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${x[1].includes('VENCID') && x[0] > 0 ? 'color:var(--red)' : ''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
  document.getElementById('alerts').innerHTML =
   (mVenc ? `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">🚨 <b>${mVenc} Mantenimientos Vencidos</b> en la selección actual.</div>` : '') +
   (cVenc ? `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">🔴 <b>${cVenc} Calibraciones Vencidas</b>.</div>` : '') +
-  (!mVenc && !cVenc ? `<div class="notice">✅ No hay alertas críticas para la selección actual.</div>` : '');
-
- document.getElementById('programStatus').innerHTML = `
-  <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Cobertura de Preventivos</span><b>${Math.round(doneM / Math.max(total, 1) * 100)}%</b></div>
-  <div style="height:8px;background:#eef2f6;border-radius:999px;overflow:hidden"><div style="width:${Math.round(doneM / Math.max(total, 1) * 100)}%;height:100%;background:var(--cyan)"></div></div>
- `;
+  (!mVenc && !cVenc ? `<div class="notice">✅ No hay alertas críticas registradas.</div>` : '');
 }
 
 function renderSedes() {
  document.getElementById('sedeCards').innerHTML = state.sedes.map(s => {
   const es = state.equipos.filter(e => e.sedeId === s.id);
-  const ca = es.filter(e => norm(e.cal) === 'SI').length;
-  return `<div class="card panel" style="cursor:pointer" onclick="go('equipos')">
+  return `<div class="card panel" style="cursor:pointer" onclick="selectSedeFilter('${s.id}')">
    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div><b style="font-size:16px;color:var(--navy)">${esc(s.nombre)}</b><br><small class="muted">${esc(s.ciudad)}</small></div>
-    <span style="font-size:26px;font-weight:850;color:var(--navy)">${es.length}</span>
+    <div><b style="font-size:15px;color:var(--navy)">${esc(s.nombre)}</b><br><small class="muted">${esc(s.ciudad)}</small></div>
+    <span style="font-size:24px;font-weight:850;color:var(--navy)">${es.length}</span>
    </div>
-   <div style="margin-top:12px"><span class="badge blue">${ca} Equipos que Calibran</span></div>
+   <small class="muted" style="margin-top:8px;display:block">Haga clic para ver inventario</small>
   </div>`;
  }).join('');
 }
 
-/* PAGINACIÓN Y FILTRADO */
+function selectSedeFilter(sid) {
+ document.getElementById('eqSede').value = sid;
+ filterEquipos();
+}
+
 function filterEquipos() {
  const q = norm(document.getElementById('eqSearch')?.value || '');
  const sid = document.getElementById('eqSede')?.value || '';
  const serv = norm(document.getElementById('eqService')?.value || '');
- const cal = document.getElementById('eqCal')?.value || '';
 
  filteredEquiposCache = state.equipos.filter(e =>
   (!sid || e.sedeId === sid) &&
   (!serv || norm(e.servicio) === serv) &&
-  (!cal || norm(e.cal) === cal) &&
-  (!q || [e.ref_b, e.equipo, e.marca, e.modelo, e.serie, e.codigo, e.invima].some(v => norm(v).includes(q)))
+  (!q || [e.equipo, e.marca, e.modelo, e.serie, e.codigo, e.invima].some(v => norm(v).includes(q)))
  );
  eqCurrentPage = 1;
  renderEquiposPage();
 }
 
+/* RENDERING CON CRONOGRAMA MENSUAL 1-12 */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
  const end = Math.min(start + PAGE_SIZE, total);
  const pageItems = filteredEquiposCache.slice(start, end);
 
- document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => `<tr>
-  <td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.riesgo)}</td>
-  <td><span class="badge ${norm(e.cal) === 'SI' ? 'green' : 'gray'}">${esc(e.cal)}</span></td>
-  <td><button class="btn small" onclick="openEquipmentDetail('${e.id}')">Ver Detalle</button></td>
- </tr>`).join('') : '<tr><td colspan="10"><div class="empty">No se encontraron equipos con esos filtros.</div></td></tr>';
+ const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
+
+ document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
+  const nxt = nextMaint(e);
+  const nxtMonth = new Date(nxt + 'T12:00:00').getMonth();
+  const isOver = nxt < today();
+  const isSem = String(matFor(e.equipo)?.periodicidad || 'SEMESTRAL').includes('SEMESTRAL');
+  const secondMonth = (nxtMonth + 6) % 12;
+
+  let cronHtml = months.map((m, idx) => {
+   let act = (idx === nxtMonth || (isSem && idx === secondMonth));
+   let cls = act ? (isOver ? 'cron-m over' : 'cron-m active') : 'cron-m';
+   return `<div class="${cls}">${m}</div>`;
+  }).join('');
+
+  return `<tr>
+   <td><a class="eq-link" onclick="openEquipmentProfile('${e.id}')">${esc(e.equipo)}</a></td>
+   <td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td>
+   <td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.invima)}</td><td>${esc(e.riesgo)}</td>
+   <td><div class="cron-grid">${cronHtml}</div></td>
+  </tr>`;
+ }).join('') : '<tr><td colspan="9"><div class="empty">No hay equipos registrados en esta sede.</div></td></tr>';
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
@@ -494,78 +454,103 @@ function changeEqPage(delta) {
 }
 
 function clearEqFilters() {
- ['eqSearch', 'eqSede', 'eqService', 'eqCal'].forEach(id => { const x = document.getElementById(id); if (x) x.value = ''; });
+ ['eqSearch', 'eqSede', 'eqService'].forEach(id => { const x = document.getElementById(id); if (x) x.value = ''; });
  filterEquipos();
 }
 
-function openEquipmentDetail(id) {
+/* PROFILE UNIFICADO AL CLIC EN NOMBRE */
+function openEquipmentProfile(id) {
  const e = state.equipos.find(x => x.id === id); if (!e) return;
+ openModal(`Perfil de Equipo · ${e.equipo}`, `
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+   <div><h2 style="color:var(--navy);margin:0">${esc(e.equipo)}</h2><p class="muted">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</p></div>
+   <span class="badge blue" style="font-size:12px;padding:6px 12px">${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</span>
+  </div>
+
+  <div class="tabs">
+   <button class="tab-btn active" onclick="switchEqTab('tab-hv', this)">Hoja de Vida (BM-FT-02)</button>
+   <button class="tab-btn" onclick="switchEqTab('tab-maint', this)">Mantenimientos (BM-FT-04)</button>
+   <button class="tab-btn" onclick="switchEqTab('tab-cal', this)">Calibraciones</button>
+   <button class="tab-btn" onclick="switchEqTab('tab-docs', this)">Manuales y Documentos</button>
+  </div>
+
+  <div id="tab-hv" class="eq-tab-content">${lifeHtml(e)}</div>
+  <div id="tab-maint" class="eq-tab-content hidden">${maintTabHtml(e)}</div>
+  <div id="tab-cal" class="eq-tab-content hidden">${calTabHtml(e)}</div>
+  <div id="tab-docs" class="eq-tab-content hidden">${docsTabHtml(e)}</div>
+ `, `<button class="btn" onclick="closeModal()">Cerrar</button>`);
+}
+
+function switchEqTab(tabId, btn) {
+ document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+ document.querySelectorAll('.eq-tab-content').forEach(c => c.classList.add('hidden'));
+ btn.classList.add('active');
+ document.getElementById(tabId).classList.remove('hidden');
+}
+
+function maintTabHtml(e) {
+ const ms = state.mantenimientos.filter(m => m.equipoId === e.id);
+ return `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+   <h4>Historial de Mantenimientos</h4>
+   ${canEdit() ? `<button class="btn primary small" onclick="openMaintenanceModal('${e.id}')">+ Nuevo Mantenimiento</button>` : ''}
+  </div>
+  ${ms.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Reporte N°</th><th>Fecha</th><th>Tipo</th><th>Técnico</th><th>Acción</th></tr></thead><tbody>
+   ${ms.map(m => `<tr><td><b>${esc(m.reporte)}</b></td><td>${fmtDate(m.fecha)}</td><td>${esc(m.tipo)}</td><td>${esc(m.tecnico)}</td><td><button class="btn small" onclick="openReport('${m.id}')">Ver PDF</button></td></tr>`).join('')}
+  </tbody></table></div>` : '<p class="muted">No registra mantenimientos ejecutados.</p>'}
+ `;
+}
+
+function calTabHtml(e) {
+ const cs = state.calibraciones.filter(c => c.equipoId === e.id);
+ return `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+   <h4>Historial Metrológico</h4>
+   ${canEdit() ? `<button class="btn primary small" onclick="openCalibrationModal('${e.id}')">+ Registrar Calibración</button>` : ''}
+  </div>
+  ${cs.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Fecha</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th></tr></thead><tbody>
+   ${cs.map(c => `<tr><td>${fmtDate(c.fecha)}</td><td>${fmtDate(c.vencimiento)}</td><td>${esc(c.proveedor)}</td><td>${esc(c.certificado)}</td></tr>`).join('')}
+  </tbody></table></div>` : '<p class="muted">No registra calibraciones.</p>'}
+ `;
+}
+
+function docsTabHtml(e) {
  const docs = getDocsForEquipment(e);
- openModal(`Equipo ${e.ref_b} · ${e.equipo}`, `
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-   <div><h2 style="color:var(--navy);margin:0">${esc(e.equipo)}</h2><p class="muted" style="margin-top:4px">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</p></div>
-   <button class="btn blue" onclick="openLifeDoc('${e.id}')">📄 Hoja de Vida PDF</button>
-  </div>
-  <div class="formgrid" style="margin-top:14px">
-   <div class="field"><label>Sede</label><div><b>${esc(sedeName(e.sedeId))}</b></div></div>
-   <div class="field"><label>Servicio</label><div><b>${esc(e.servicio)}</b></div></div>
-   <div class="field"><label>Código Interno</label><div><b>${esc(e.codigo)}</b></div></div>
-   <div class="field"><label>INVIMA</label><div><b>${esc(e.invima)}</b></div></div>
-  </div>
-  <h3 style="margin-top:16px;color:var(--navy)">Manuales y Documentos Vinculados</h3>
-  <div style="margin-top:8px">${docs.length ? docs.map(d => `<div style="padding:6px;border-bottom:1px solid #eee">📁 <b>${esc(d.nombre)}</b> (${esc(d.tipo)}) <button class="btn small" onclick="openDoc('${d.id}')">Abrir Documento</button></div>`).join('') : '<p class="muted">No hay manuales cargados para este tipo/marca.</p>'}</div>
- `, `<button class="btn" onclick="closeModal()">Cerrar</button>${canEdit() ? `<button class="btn primary" onclick="openMaintenanceModal('${e.id}')">Nuevo Mantenimiento</button>` : ''}`);
+ return `
+  <h4>Manuales del Equipo</h4>
+  <p class="muted" style="margin-bottom:10px">Manuales cargados por Tipo/Marca.</p>
+  ${docs.length ? docs.map(d => `<div style="padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
+   <div><b>${esc(d.nombre)}</b><br><small class="muted">${esc(d.tipo)}</small></div>
+   <button class="btn small blue" onclick="openDoc('${d.id}')">Abrir Documento</button>
+  </div>`).join('') : '<p class="muted">No hay manuales cargados.</p>'}
+ `;
+}
+
+function lifeHtml(e) {
+ const m = matFor(e.equipo) || {};
+ return `<div class="print-doc">
+  <h1>HOJA DE VIDA DE EQUIPO BIOMÉDICO</h1>
+  <div class="doc-meta">Código: BM-FT-02 · Versión 03 · CENDIATRA SAS</div>
+  <table class="print-table">
+   <tr><th>Equipo</th><td>${esc(e.equipo)}</td><th>REF-B</th><td>${esc(e.ref_b)}</td></tr>
+   <tr><th>Marca</th><td>${esc(e.marca)}</td><th>Modelo</th><td>${esc(e.modelo)}</td></tr>
+   <tr><th>Serie</th><td>${esc(e.serie)}</td><th>Sede</th><td>${esc(sedeName(e.sedeId))}</td></tr>
+   <tr><th>Servicio</th><td>${esc(e.servicio)}</td><th>INVIMA</th><td>${esc(e.invima)}</td></tr>
+   <tr><th>Riesgo</th><td>${esc(e.riesgo)}</td><th>Código Interno</th><td>${esc(e.codigo)}</td></tr>
+  </table>
+  <h3>1. Características Técnicas</h3>
+  <p style="font-size:10px">${esc(m.descripcion || 'Sin descripción en matriz.')}</p>
+  <table class="print-table">
+   <tr><th>Voltaje</th><td>${esc(m.voltaje || 'N/A')}</td><th>Potencia</th><td>${esc(m.potencia || 'N/A')}</td><th>Alimentación</th><td>${esc(m.alimentacion || 'N/A')}</td></tr>
+  </table>
+ </div>`;
 }
 
 function getDocsForEquipment(e) {
  return state.documentos.filter(d => d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo) && norm(d.marca) === norm(e.marca)));
 }
 
-/* HOJA DE VIDA Y REPORTES PDF */
-function renderHojas() {
- const q = norm(document.getElementById('hvSearch')?.value || '');
- const sid = document.getElementById('hvSede')?.value || '';
- const list = state.equipos.filter(e => (!sid || e.sedeId === sid) && (!q || [e.equipo, e.marca, e.serie].some(v => norm(v).includes(q))));
-
- document.getElementById('hvTable').innerHTML = list.slice(0, 100).map(e => `<tr>
-  <td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)} / ${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
-  <td>${fmtDate(lastMaint(e.id)?.fecha) || 'Sin registro'}</td><td><span class="badge ${calState(e)[1]}">${calState(e)[0]}</span></td>
-  <td><button class="btn small blue" onclick="openLifeDoc('${e.id}')">🖨 Ver BM-FT-02 PDF</button></td>
- </tr>`).join('');
-}
-
-function openLifeDoc(id) {
- const e = state.equipos.find(x => x.id === id);
- openModal('Hoja de Vida Biomédica · BM-FT-02', lifeHtml(e), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(lifeHtml(state.equipos.find(x=>x.id==='${id}')),'Hoja_de_Vida_${e.ref_b}')">🖨 Guardar / Imprimir PDF</button>`);
-}
-
-function lifeHtml(e) {
- const m = matFor(e.equipo) || {};
- const ms = state.mantenimientos.filter(x => x.equipoId === e.id);
- const cs = state.calibraciones.filter(x => x.equipoId === e.id);
- return `<div class="print-doc">
-  <h1>HOJA DE VIDA DE EQUIPO BIOMÉDICO</h1>
-  <div class="doc-meta">Código: BM-FT-02 · Versión 03 · CENDIATRA SAS</div>
-  <table class="print-table">
-   <tr><th>REF-B</th><td>${esc(e.ref_b)}</td><th>Equipo</th><td>${esc(e.equipo)}</td></tr>
-   <tr><th>Marca</th><td>${esc(e.marca)}</td><th>Modelo</th><td>${esc(e.modelo)}</td></tr>
-   <tr><th>Serie</th><td>${esc(e.serie)}</td><th>Sede</th><td>${esc(sedeName(e.sedeId))}</td></tr>
-   <tr><th>Servicio</th><td>${esc(e.servicio)}</td><th>Registro INVIMA</th><td>${esc(e.invima)}</td></tr>
-   <tr><th>Riesgo</th><td>${esc(e.riesgo)}</td><th>Código Interno</th><td>${esc(e.codigo)}</td></tr>
-  </table>
-  <h3>1. Características Técnicas y Uso</h3>
-  <p style="font-size:10px">${esc(m.descripcion || 'Sin descripción registrada en matriz.')}</p>
-  <table class="print-table">
-   <tr><th>Voltaje</th><td>${esc(m.voltaje || 'N/A')}</td><th>Potencia</th><td>${esc(m.potencia || 'N/A')}</td><th>Alimentación</th><td>${esc(m.alimentacion || 'N/A')}</td></tr>
-  </table>
-  <h3>2. Historial de Mantenimientos Preventivos / Correctivos</h3>
-  ${ms.length ? `<table class="print-table"><tr><th>Fecha</th><th>Reporte N°</th><th>Tipo</th><th>Técnico</th><th>Resultado</th></tr>${ms.map(x => `<tr><td>${fmtDate(x.fecha)}</td><td>${esc(x.reporte)}</td><td>${esc(x.tipo)}</td><td>${esc(x.tecnico)}</td><td>${esc(x.resultado)}</td></tr>`).join('')}</table>` : '<p style="font-size:10px">Sin mantenimientos registrados.</p>'}
-  <h3>3. Historial de Calibraciones Metrológicas</h3>
-  ${cs.length ? `<table class="print-table"><tr><th>Fecha</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th></tr>${cs.map(x => `<tr><td>${fmtDate(x.fecha)}</td><td>${fmtDate(x.vencimiento)}</td><td>${esc(x.proveedor)}</td><td>${esc(x.certificado)}</td></tr>`).join('')}</table>` : '<p style="font-size:10px">No registra calibraciones.</p>'}
- </div>`;
-}
-
-/* MANTENIMIENTOS Y FIRMA */
+/* MANTENIMIENTOS Y CALIBRACIONES */
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
  const e = state.equipos.find(x => x.id === equipId) || state.equipos[0];
@@ -577,18 +562,12 @@ function openMaintenanceModal(equipId = '') {
    <div class="field span2"><label>Equipo</label><select id="mEquipo" onchange="autoFillMaint()">${opts}</select></div>
    <div class="field"><label>Fecha</label><input id="mFecha" type="date" value="${today()}"></div>
    <div class="field"><label>Tipo</label><select id="mTipo"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field span2"><label>Ingeniero / Técnico Biomédico</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
+   <div class="field span2"><label>Ingeniero Biomédico</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
    <div class="field span2"><label>Persona que Recibe</label><input id="mReceptor" placeholder="Nombre completo"></div>
-   <div class="field span4"><label>Actividades Protocolarias (Auto-rellenadas)</label><textarea id="mActs" rows="5">${esc(m.actividades || '')}</textarea></div>
+   <div class="field span4"><label>Actividades Protocolarias</label><textarea id="mActs" rows="5">${esc(m.actividades || '')}</textarea></div>
    <div class="field span4"><label>Observaciones y Hallazgos</label><textarea id="mHallazgos" rows="2">EQUIPO OPERATIVO Y FUNCIONAL</textarea></div>
-   <div class="field span2">
-    <label>Firma Técnico (Guardada)</label>
-    <div class="signature-box">${state.config.sigTech ? `<img src="${state.config.sigTech}" style="max-height:60px">` : 'Sin firma configurada'}</div>
-   </div>
-   <div class="field span2">
-    <label>Firma Receptor en Pantalla</label>
-    <div class="signature-box"><canvas id="canvasRec" width="200" height="70"></canvas><br><button class="btn small" onclick="clearCanvasRec()">Limpiar</button></div>
-   </div>
+   <div class="field span2"><label>Firma Técnico</label><div class="signature-box">${state.config.sigTech ? `<img src="${state.config.sigTech}" style="max-height:60px">` : 'Sin firma'}</div></div>
+   <div class="field span2"><label>Firma Receptor</label><div class="signature-box"><canvas id="canvasRec" width="200" height="70"></canvas><br><button class="btn small" onclick="clearCanvasRec()">Limpiar</button></div></div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMaintenance()">Guardar y Generar PDF</button>`);
  initCanvasRec();
@@ -632,7 +611,7 @@ function saveMaintenance() {
 
 function openReport(id) {
  const r = state.mantenimientos.find(x => x.id === id); if (!r) return;
- openModal(`Reporte de Servicio N° ${r.reporte}`, reportHtml(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtml(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_${r.reporte}')">🖨 Imprimir / Guardar PDF</button>`);
+ openModal(`Reporte de Servicio N° ${r.reporte}`, reportHtml(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtml(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_${r.reporte}')">🖨 Imprimir PDF</button>`);
 }
 
 function reportHtml(r) {
@@ -657,28 +636,11 @@ function reportHtml(r) {
  </div>`;
 }
 
-function renderMaintenances() {
- const q = norm(document.getElementById('mtSearch')?.value || '');
- const list = state.mantenimientos.filter(m => {
-  const e = state.equipos.find(x => x.id === m.equipoId);
-  return !q || [m.reporte, m.tecnico, e?.equipo, e?.serie].some(v => norm(v).includes(q));
- }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-
- document.getElementById('maintTable').innerHTML = list.slice(0, 100).map(m => {
-  const e = state.equipos.find(x => x.id === m.equipoId);
-  return `<tr>
-   <td><b>${esc(m.reporte)}</b></td><td>${fmtDate(m.fecha)}</td><td>${esc(e?.equipo)}</td><td class="mono">${esc(e?.serie)}</td><td>${esc(sedeName(e?.sedeId))}</td><td><span class="badge blue">${esc(m.tipo)}</span></td><td>${esc(m.tecnico)}</td>
-   <td><button class="btn small" onclick="openReport('${m.id}')">Ver PDF</button></td>
-  </tr>`;
- }).join('');
-}
-
-/* EJECUCIÓN MASIVA */
 function renderMass() {
  const sid = document.getElementById('massSede')?.value || '';
  const list = state.equipos.filter(e => !sid || e.sedeId === sid);
  document.getElementById('massTable').innerHTML = list.slice(0, 200).map(e => `<tr>
-  <td><input type="checkbox" class="mass-check" value="${e.id}"></td><td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>${esc(e.servicio)}</td>
+  <td><input type="checkbox" class="mass-check" value="${e.id}"></td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>${esc(e.servicio)}</td>
   <td style="font-size:10px">${esc(matFor(e.equipo)?.actividades || 'Sin matriz')}</td>
  </tr>`).join('');
 }
@@ -705,10 +667,9 @@ function runMass() {
  save(); refreshAll(); alert(`Se generaron ${ids.length} reportes BM-FT-04.`);
 }
 
-/* CALIBRACIONES */
-function openCalibrationModal() {
+function openCalibrationModal(equipId = '') {
  if (!canEdit()) return;
- const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 300).map(e => `<option value="${e.id}">${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
+ const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 300).map(e => `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
  openModal('Registrar Calibración Metrológica', `
   <div class="formgrid">
    <div class="field span2"><label>Equipo</label><select id="cEquipo">${opts}</select></div>
@@ -737,12 +698,11 @@ function renderCalibraciones() {
    <td><b>${esc(e.equipo)}</b></td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
    <td>${d ? fmtDate(d.fecha) : '—'}</td><td>${d ? fmtDate(d.vencimiento) : '—'}</td><td>${esc(d?.proveedor || '—')}</td><td>${esc(d?.certificado || '—')}</td>
    <td><span class="badge ${c[1]}">${c[0]}</span></td>
-   <td><button class="btn small" onclick="openCalibrationModal()">Registrar</button></td>
+   <td><button class="btn small" onclick="openCalibrationModal('${e.id}')">Registrar</button></td>
   </tr>`;
  }).join('');
 }
 
-/* MANUALES Y DOCUMENTOS */
 function openDocModal() {
  if (!canEdit()) return;
  openModal('Cargar Manual por Tipo/Marca', `
@@ -764,7 +724,7 @@ function saveDoc() {
    tipoEquipo: document.getElementById('dTipoEq').value, marca: document.getElementById('dMarca').value,
    fecha: today(), data: r.result
   });
-  save(); closeModal(); renderDocs(); alert('Manual asociado globalmente.');
+  save(); closeModal(); renderDocs(); alert('Manual asociado.');
  };
  r.readAsDataURL(f);
 }
@@ -782,28 +742,6 @@ function openDoc(id) {
  if (d.data) w.document.write(`<iframe src="${d.data}" style="width:100%;height:100vh;border:0"></iframe>`);
 }
 
-/* TRAZABILIDAD */
-function fillTrace() {
- const x = document.getElementById('traceEquip'); if (!x) return;
- x.innerHTML = '<option value="">Seleccione un equipo...</option>' + state.equipos.slice(0, 300).map(e => `<option value="${e.id}">${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
-}
-
-function renderTrace() {
- const id = document.getElementById('traceEquip').value; if (!id) return;
- const e = state.equipos.find(x => x.id === id);
- const ms = state.mantenimientos.filter(m => m.equipoId === id);
- const cs = state.calibraciones.filter(c => c.equipoId === id);
-
- document.getElementById('tracePanel').innerHTML = `
-  <div class="notice"><b>${esc(e.equipo)}</b> · Serie: ${esc(e.serie)} · Sede: ${esc(sedeName(e.sedeId))}</div>
-  <h4 style="margin-top:12px;color:var(--navy)">Mantenimientos Realizados (${ms.length})</h4>
-  ${ms.map(m => `<div style="padding:6px;border-bottom:1px solid #eee"><b>Reporte N° ${esc(m.reporte)}</b> (${fmtDate(m.fecha)}) - Técnico: ${esc(m.tecnico)}</div>`).join('')}
-  <h4 style="margin-top:12px;color:var(--navy)">Calibraciones (${cs.length})</h4>
-  ${cs.map(c => `<div style="padding:6px;border-bottom:1px solid #eee"><b>Certificado: ${esc(c.certificado)}</b> - Vence:${fmtDate(c.vencimiento)}</div>`).join('')}
- `;
-}
-
-/* CONFIGURACIÓN Y MATRIZ */
 function fillConfig() {
  document.getElementById('cfgName').value = state.config.name || '';
  document.getElementById('cfgRole').value = state.config.role || '';
@@ -846,7 +784,7 @@ function openMatrixModal(id = '') {
    <div class="field"><label>Periodicidad</label><select id="mxPer"><option ${m.periodicidad === 'SEMESTRAL' ? 'selected' : ''}>SEMESTRAL</option><option ${m.periodicidad === 'ANUAL' ? 'selected' : ''}>ANUAL</option></select></div>
    <div class="field"><label>Calibración</label><select id="mxCal"><option ${m.calibracion === 'SI' ? 'selected' : ''}>SI</option><option ${m.calibracion === 'NO' ? 'selected' : ''}>NO</option></select></div>
    <div class="field span4"><label>Descripción / Hoja de Vida</label><textarea id="mxVida" rows="3">${esc(m.descripcion || '')}</textarea></div>
-   <div class="field span4"><label>Actividades Protocolarias de Mantenimiento</label><textarea id="mxActs" rows="5">${esc(m.actividades || '')}</textarea></div>
+   <div class="field span4"><label>Actividades Protocolarias</label><textarea id="mxActs" rows="5">${esc(m.actividades || '')}</textarea></div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMatrix('${id}')">Guardar Matriz</button>`);
 }
@@ -861,9 +799,8 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN EXCEL */
 function openImport() {
- openModal('Importar Inventario Excel (Hasta 2000+ Equipos)', `
+ openModal('Importar Inventario Excel', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
    <p style="margin-bottom:8px"><b>Seleccione su archivo Excel (.xlsx / .xls)</b></p>
    <input id="importExcel" type="file" accept=".xlsx,.xls" onchange="previewExcel(this.files[0])">
@@ -896,12 +833,11 @@ function doImportExcel() {
    codigo: String(r['CODIGO'] || '').trim(), invima: String(r['INVIMA'] || '').trim(), cal: String(r['CALIBRACION'] || 'NO').trim(), estado: 'ACTIVO'
   });
  });
- save(); closeModal(); refreshAll(); alert(`¡Importación exitosa! Se añadieron ${importData.length} equipos.`);
+ save(); closeModal(); refreshAll(); alert(`Se añadieron ${importData.length} equipos.`);
 }
 
-/* MODAL & UTILS */
 function openSedeModal() {
- openModal('Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
+ openModal('Agregar Nueva Sede (Hasta 32 Sedes)', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
 }
 function saveSede() {
  const n = document.getElementById('sNombre').value; if (!n) return;
