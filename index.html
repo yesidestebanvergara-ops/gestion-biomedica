@@ -59,13 +59,13 @@
 .empty{padding:30px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-size:11.5px;color:var(--muted)}
 
-/* CRONOGRAMAS SEMÁFORO (VERDE / ROJO / AMARILLO) */
+/* CRONOGRAMAS SEMÁFORO (AÑO ACTUAL) */
 .cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
 .cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
 .cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
-.cron-cell.done{background:#168457;color:#fff;border-color:#168457} /* VERDE: REALIZADO */
-.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43} /* ROJO: NO REALIZADO EN MES PASADO */
-.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100} /* AMARILLO: PROGRAMADO FUTURO / MES ACTUAL */
+.cron-cell.done{background:#168457;color:#fff;border-color:#168457} /* 🟢 VERDE: REALIZADO EN ESTE AÑO */
+.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43} /* 🔴 ROJO: VENCIDO EN ESTE AÑO */
+.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100} /* 🟡 AMARILLO: PROGRAMADO AÑO ACTUAL (FUTURO) */
 .cron-tag{font-size:8px;font-weight:800;color:var(--navy);background:#e6f2fb;padding:2px 5px;border-radius:4px;display:inline-block;text-align:center}
 
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px}
@@ -149,7 +149,7 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page active" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar el inventario. Leyenda Cronograma: 🟢 Realizado | 🟡 Programado | 🔴 Vencido/No Realizado</p></div>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Anual en Curso: 🟢 Realizado este año | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
   <div class="toolbar admin-only">
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
    <button class="btn primary" onclick="openSedeModal()">+ Agregar Sede</button>
@@ -179,8 +179,8 @@
       <th>SERVICIO</th>
       <th>ACTIVO</th>
       <th>FECHA INICIO</th>
-      <th>CRONOGRAMA MANTENIMIENTO</th>
-      <th>CRONOGRAMA CALIBRACIÓN</th>
+      <th>CRONOGRAMA MANTENIMIENTO (AÑO ACTUAL)</th>
+      <th>CRONOGRAMA CALIBRACIÓN (AÑO ACTUAL)</th>
      </tr>
     </thead>
     <tbody id="equiposTable"></tbody>
@@ -268,7 +268,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v14_cendiatra';
+const KEY='gestion_biomedica_v15_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -467,18 +467,27 @@ function filterEquipos() {
  renderEquiposPage();
 }
 
-/* TABLA PRINCIPAL Y LÓGICA DE COLORES SEMÁFORO DEL CRONOGRAMA */
+/* TABLA PRINCIPAL Y LÓGICA DE CRONOGRAMA FILTRADO POR EL AÑO ACTUAL EN CURSO */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
  const end = Math.min(start + PAGE_SIZE, total);
  const pageItems = filteredEquiposCache.slice(start, end);
  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
- const currentMonthIdx = new Date().getMonth();
+ 
+ const now = new Date();
+ const currentYear = now.getFullYear();
+ const currentMonthIdx = now.getMonth();
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
-  const eqMaints = state.mantenimientos.filter(m => m.equipoId === e.id);
+  
+  // Mantenimientos del año actual en curso
+  const eqMaintsCurrentYear = state.mantenimientos.filter(m => {
+   if (m.equipoId !== e.id || !m.fecha) return false;
+   const d = new Date(m.fecha + 'T12:00:00');
+   return d.getFullYear() === currentYear;
+  });
 
   let startMonthIdx = 11; // Diciembre por defecto
   if (e.fechaInicio) {
@@ -486,26 +495,27 @@ function renderEquiposPage() {
   }
   const secondMonthIdx = (startMonthIdx + 6) % 12;
 
-  // Lógica Semáforo Mantenimiento: Verde = Realizado | Amarillo = Programado Futuro/Actual | Rojo = Vencido
+  // Lógica Semáforo Mantenimiento Año Actual
   let cronMaintHtml = months.map((m, idx) => {
    let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
 
-   let hasReportInMonth = eqMaints.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
+   // Buscar si existe reporte en ESTE AÑO ACTUAL para este mes específico
+   let hasReportInMonth = eqMaintsCurrentYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
    
    let cls = 'cron-cell';
    if (hasReportInMonth) {
-    cls = 'cron-cell done'; // 🟢 VERDE: Se realizó el reporte en ese mes
+    cls = 'cron-cell done'; // 🟢 VERDE: Ya se ejecutó en este año actual
    } else if (idx < currentMonthIdx) {
-    cls = 'cron-cell overdue'; // 🔴 ROJO: El mes ya pasó y no hay reporte
+    cls = 'cron-cell overdue'; // 🔴 ROJO: Mes pasado del año actual sin reporte
    } else {
-    cls = 'cron-cell pending'; // 🟡 AMARILLO: Mes actual o futuro pendiente
+    cls = 'cron-cell pending'; // 🟡 AMARILLO: Mes actual o futuro pendiente del año actual
    }
 
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
-  // Lógica Semáforo Calibración
+  // Lógica Semáforo Calibración Año Actual
   const cState = calState(e);
   const cs = cState[2];
   let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : startMonthIdx;
@@ -514,8 +524,10 @@ function renderEquiposPage() {
    let isScheduled = (norm(e.cal) === 'SI' && idx === calMonthIdx);
    if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
 
+   let isCalInCurrentYear = cs && new Date((cs.fecha || cs.vencimiento) + 'T12:00:00').getFullYear() === currentYear;
+
    let cls = 'cron-cell';
-   if (cs && cState[0] === 'VIGENTE') {
+   if (isCalInCurrentYear && cState[0] === 'VIGENTE') {
     cls = 'cron-cell done'; // 🟢 VERDE
    } else if (idx < currentMonthIdx || cState[0] === 'VENCIDA') {
     cls = 'cron-cell overdue'; // 🔴 ROJO
@@ -1002,7 +1014,7 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE EXCEL CON MAPEO DE COLUMNAS SOLICITADAS */
+/* IMPORTACIÓN DESDE EXCEL */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
