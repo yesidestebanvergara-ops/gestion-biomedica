@@ -59,7 +59,7 @@
 .empty{padding:30px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-size:11.5px;color:var(--muted)}
 
-/* CRONOGRAMAS SEMÁFORO (AÑO ACTUAL) */
+/* CRONOGRAMAS SEMÁFORO */
 .cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
 .cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
 .cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
@@ -86,8 +86,6 @@
 .fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}
 .fmt-header{text-align:center;font-weight:bold;font-size:13px}
 .fmt-title{font-weight:bold;background:#eef4f8;padding:4px;border:1px solid #000;margin-top:8px;font-size:10px;text-transform:uppercase}
-
-/* CUADRICULA LISTA DE CHEQUEO */
 .chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}
 .chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}
 .chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}
@@ -221,12 +219,12 @@
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Control Metrológico y Calibraciones</h3><button class="btn primary" onclick="openCalibrationModal()">+ Registrar Calibración</button></div>
  <div class="card panel">
   <div class="filters">
-   <div class="field"><label>Buscar</label><input id="calSearch" oninput="renderCalibraciones()" placeholder="Equipo, certificado, serie..."></div>
+   <div class="field"><label>Buscar</label><input id="calSearch" oninput="renderCalibraciones()" placeholder="Equipo, serie..."></div>
    <div class="field"><label>Sede</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
    <div class="field"><label>Estado</label><select id="calState" onchange="renderCalibraciones()"><option value="">Todos</option><option value="VIGENTE">VIGENTE</option><option value="PRÓXIMA">PRÓXIMA</option><option value="VENCIDA">VENCIDA</option><option value="SIN REGISTRO">SIN REGISTRO</option></select></div>
    <button class="btn" onclick="document.getElementById('calSearch').value='';renderCalibraciones()">Limpiar</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última Calibración</th><th>Fecha Vencimiento</th><th>Proveedor</th><th>Certificado</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="calTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última Calibración</th><th>Fecha Vencimiento</th><th>Documento</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="calTable"></tbody></table></div>
  </div>
 </section>
 
@@ -279,7 +277,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v17_cendiatra';
+const KEY='gestion_biomedica_v18_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -613,8 +611,8 @@ function calTabHtml(e) {
    <h4>Historial Metrológico</h4>
    ${canEdit() ? `<button class="btn primary small" onclick="openCalibrationModal('${e.id}')">+ Registrar Calibración</button>` : ''}
   </div>
-  ${cs.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Fecha</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th></tr></thead><tbody>
-   ${cs.map(c => `<tr><td>${fmtDate(c.fecha)}</td><td>${fmtDate(c.vencimiento)}</td><td>${esc(c.proveedor)}</td><td>${esc(c.certificado)}</td></tr>`).join('')}
+  ${cs.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Fecha</th><th>Vencimiento</th><th>Documento</th></tr></thead><tbody>
+   ${cs.map(c => `<tr><td>${fmtDate(c.fecha)}</td><td>${fmtDate(c.vencimiento)}</td><td>${c.fileData ? `<button class="btn small blue" onclick="openCalFile('${c.id}')">Ver PDF</button>` : 'Sin archivo adjunto'}</td></tr>`).join('')}
   </tbody></table></div>` : '<p class="muted">No registra calibraciones metrológicas.</p>'}
  `;
 }
@@ -892,36 +890,69 @@ function runMass() {
  save(); refreshAll(); alert(`Se generaron ${ids.length} reportes EV-INTER-03 firmados por el Ing. ${tecName} y el Coordinador ${recName}.`);
 }
 
+/* CALIBRACIONES CON CÁLCULO DE AÑO AUTOMÁTICO Y SUBIDA DE PDF/ARCHIVO */
 function openCalibrationModal(equipId = '') {
  if (!canEdit()) return;
  const opts = state.equipos.filter(e => norm(e.cal) === 'SI').slice(0, 300).map(e => `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
  openModal('Registrar Calibración Metrológica', `
   <div class="formgrid">
    <div class="field span2"><label>Equipo</label><select id="cEquipo">${opts}</select></div>
-   <div class="field"><label>Fecha Calibración</label><input id="cFecha" type="date" value="${today()}"></div>
-   <div class="field"><label>Fecha Vencimiento</label><input id="cVence" type="date"></div>
-   <div class="field span2"><label>Laboratorio / Proveedor</label><input id="cProv"></div>
-   <div class="field span2"><label>N° Certificado</label><input id="cCert"></div>
+   <div class="field span2"><label>Fecha Calibración (El vencimiento es automático a 1 año)</label><input id="cFecha" type="date" value="${today()}"></div>
+   <div class="field span4"><label>Certificado / Archivo PDF</label><input id="cFile" type="file" accept=".pdf,image/*"></div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCalibration()">Guardar Calibración</button>`);
 }
 
 function saveCalibration() {
- state.calibraciones.push({
-  id: uid(), equipoId: document.getElementById('cEquipo').value, fecha: document.getElementById('cFecha').value,
-  vencimiento: document.getElementById('cVence').value, proveedor: document.getElementById('cProv').value,
-  certificado: document.getElementById('cCert').value
- });
- save(); closeModal(); refreshAll();
+ const eid = document.getElementById('cEquipo').value;
+ const fecha = document.getElementById('cFecha').value;
+ if (!fecha) return alert('Por favor seleccione la fecha de calibración.');
+
+ const d = new Date(fecha + 'T12:00:00');
+ d.setFullYear(d.getFullYear() + 1);
+ const vence = d.toISOString().slice(0, 10);
+
+ const f = document.getElementById('cFile').files[0];
+
+ if (f) {
+  const r = new FileReader();
+  r.onload = () => {
+   state.calibraciones.push({
+    id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence,
+    fileName: f.name, fileData: r.result
+   });
+   finishSaveCalibration();
+  };
+  r.readAsDataURL(f);
+ } else {
+  state.calibraciones.push({
+   id: uid(), equipoId: eid, fecha: fecha, vencimiento: vence,
+   fileName: '', fileData: ''
+  });
+  finishSaveCalibration();
+ }
+}
+
+function finishSaveCalibration() {
+ save(); closeModal(); refreshAll(); alert('Calibración registrada con éxito.');
+}
+
+function openCalFile(id) {
+ const c = state.calibraciones.find(x => x.id === id); 
+ if (!c || !c.fileData) return alert('No hay documento adjunto.');
+ const w = window.open();
+ w.document.write(`<iframe src="${c.fileData}" style="width:100%;height:100vh;border:0"></iframe>`);
 }
 
 function renderCalibraciones() {
  const list = state.equipos.filter(e => norm(e.cal) === 'SI');
  document.getElementById('calTable').innerHTML = list.slice(0, 100).map(e => {
   const c = calState(e), d = c[2];
+  const btnDoc = d && d.fileData ? `<button class="btn small blue" onclick="openCalFile('${d.id}')">Ver PDF</button>` : '—';
+  
   return `<tr>
    <td><b>${esc(e.equipo)}</b></td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
-   <td>${d ? fmtDate(d.fecha) : '—'}</td><td>${d ? fmtDate(d.vencimiento) : '—'}</td><td>${esc(d?.proveedor || '—')}</td><td>${esc(d?.certificado || '—')}</td>
+   <td>${d ? fmtDate(d.fecha) : '—'}</td><td>${d ? fmtDate(d.vencimiento) : '—'}</td><td>${btnDoc}</td>
    <td><span class="badge ${c[1]}">${c[0]}</span></td>
    <td><button class="btn small" onclick="openCalibrationModal('${e.id}')">Registrar</button></td>
   </tr>`;
@@ -963,6 +994,12 @@ function renderDocs() {
   <td><b>${esc(d.nombre)}</b></td><td>${esc(d.tipo)}</td><td>${esc(d.tipoEquipo || 'General')}</td><td>${esc(d.marca || 'Todas')}</td><td>${fmtDate(d.fecha)}</td>
   <td><button class="btn small blue" onclick="openDoc('${d.id}')">Abrir Documento</button></td>
  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">No hay documentos cargados.</div></td></tr>';
+}
+
+function openDoc(id) {
+ const d = state.documentos.find(x => x.id === id); if (!d) return;
+ const w = window.open();
+ if (d.data) w.document.write(`<iframe src="${d.data}" style="width:100%;height:100vh;border:0"></iframe>`);
 }
 
 function fillConfig() {
