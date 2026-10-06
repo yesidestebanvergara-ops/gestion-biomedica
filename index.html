@@ -1,995 +1,924 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GESTIÓN BIOMÉDICA - CENDIATRA SAS</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- SheetJS (Lector de Excel) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- html2pdf.js (Generador de PDF) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            sidebar: '#0b192c',
-            sidebarHover: '#1e293b',
-            brandBlue: '#0b2f52',
-            brandBg: '#f8fafc'
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @media print {
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión Biomédica | CENDIATRA SAS</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#b78100;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:16px}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.login{position:fixed;inset:0;background:linear-gradient(135deg,#082640,#123f68 55%,#eaf3fa);display:flex;align-items:center;justify-content:center;padding:22px;z-index:200}.login-card{width:min(460px,100%);background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.2);overflow:hidden}.login-head{padding:30px;background:linear-gradient(135deg,#0d3558,#1d6b9f);color:#fff}.login-head h1{margin:0;font-size:24px}.login-head p{margin:7px 0 0;opacity:.8;font-size:13px}.login-body{padding:26px}.login-actions{display:grid;gap:10px;margin-top:15px}.hint{font-size:11px;color:var(--muted);margin-top:13px}
+.app{display:flex;min-height:100vh}.sidebar{width:255px;background:linear-gradient(180deg,#0b2945,#0e3d63);color:#fff;padding:18px 13px;position:fixed;height:100vh;left:0;top:0;z-index:20}.brand{padding:10px 10px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:18px;margin:0 0 4px}.brand small{opacity:.65}.role-chip{display:inline-flex;margin-top:9px;padding:5px 8px;border-radius:99px;background:rgba(255,255,255,.1);font-size:10px}.nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 11px 6px}.nav button{display:flex;gap:11px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:11px 11px;border-radius:10px;text-align:left}.nav button:hover,.nav button.active{background:rgba(255,255,255,.11);color:#fff}.logout{margin-top:14px}
+.main{margin-left:255px;flex:1;min-width:0}.topbar{height:74px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:15}.topbar h1{font-size:20px;margin:0}.top-user{display:flex;align-items:center;gap:10px}.avatar{width:35px;height:35px;border-radius:50%;background:#e6f2fb;display:grid;place-items:center;color:var(--navy);font-weight:800}.content{padding:24px}.page{display:none}.page.active{display:block}.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.panel{padding:18px}.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.hero h2{font-size:25px;margin:0;color:var(--navy)}.hero p{margin:7px 0 0;color:var(--muted)}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:10px;padding:9px 13px;font-weight:750;font-size:13px}.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}.btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}.btn.success{background:var(--green);color:#fff;border-color:var(--green)}.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}.btn.small{padding:6px 9px;font-size:11px}.stat{padding:17px}.stat .label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:28px;color:var(--navy);font-weight:850;margin-top:4px}.stat small{color:var(--muted)}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.section-title h3{margin:0;font-size:16px}.notice{padding:12px 14px;border:1px solid #c9dfef;background:#eef7fd;border-radius:11px;color:#205b88;font-size:12px}.filters{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr auto;gap:9px;margin-bottom:13px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 10px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1;box-shadow:0 0 0 3px rgba(23,105,170,.1)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.table{width:100%;border-collapse:collapse;min-width:1000px}.table th,.table td{padding:10px 10px;border-bottom:1px solid #eef2f6;text-align:left;font-size:12px}.table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.table tr:hover td{background:#fbfdff}.badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850}.badge.green{background:#e8f7ef;color:#176e45}.badge.yellow{background:#fff4da;color:#8d6500}.badge.red{background:#fdeced;color:#a32d35}.badge.blue{background:#e9f3fb;color:#1d5f91}.badge.gray{background:#eef2f6;color:#526273}.empty{padding:42px;text-align:center;color:var(--muted)}.kpi-line{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px;color:var(--muted)}.progress{height:8px;background:#eaf0f4;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:var(--cyan)}
+.sede-card{padding:18px;cursor:pointer;transition:.18s}.sede-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,47,82,.11)}.sede-top{display:flex;justify-content:space-between;gap:10px}.sede-name{font-weight:850;color:var(--navy);font-size:16px}.sede-meta{font-size:11px;color:var(--muted);margin-top:4px}.sede-count{font-size:27px;font-weight:850;color:var(--navy)}
+.schedule{display:grid;grid-template-columns:1.2fr 2fr;gap:16px}.calendar{padding:18px}.month-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.month-head strong{color:var(--navy)}.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.day-name{font-size:10px;color:var(--muted);font-weight:800;text-align:center;padding:5px}.day{min-height:72px;background:#f9fbfd;border:1px solid #edf1f5;border-radius:8px;padding:6px;font-size:10px}.day .num{font-weight:800}.day.has{background:#eef7fd;border-color:#cce1ef}.event-dot{margin-top:6px;padding:3px 4px;border-radius:5px;background:#dbeef9;color:#185d8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.detail-title{color:var(--navy);font-size:24px;font-weight:850}.detail-sub{color:var(--muted);font-size:12px;margin-top:3px}.pillbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.data-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}.data-cell{padding:11px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.data-cell:nth-child(4n){border-right:0}.data-cell .lab{font-size:9px;text-transform:uppercase;font-weight:850;color:var(--muted)}.data-cell .val{font-size:12px;font-weight:700;margin-top:4px}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:750;color:var(--navy)}.tab.active{background:#eaf3fa;border-color:#c7deee}.timeline{border-left:2px solid #d9e6ef;margin:4px 0 0 10px;padding-left:17px}.timeline-item{position:relative;margin-bottom:16px}.timeline-item:before{content:'';position:absolute;left:-23px;top:5px;width:9px;height:9px;background:#2d8ec5;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #9fc4da}.timeline-item strong{font-size:12px}.timeline-item small{color:var(--muted);display:block;margin:3px 0}.timeline-item .doc{display:inline-block;margin-top:5px}
+.modal-bg{position:fixed;inset:0;background:rgba(7,22,36,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal-bg.open{display:flex}.modal{width:min(1050px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.23)}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;color:var(--navy)}.modal-body{padding:18px}.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--line)}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:1/-1}.signature{border:1px dashed #b9cedd;border-radius:10px;padding:8px;min-height:100px;display:grid;place-items:center;background:#fbfdff;text-align:center}.signature canvas{touch-action:none;border:1px solid var(--line);background:#fff;border-radius:6px}.preview-file{max-height:80px;max-width:100%}
+.print-doc{background:#fff;border:1px solid #d9e2ea;border-radius:10px;padding:25px;color:#16263a;font-size:11px;line-height:1.4}.print-doc h1{font-size:17px;text-align:center;margin:0;color:#0b2f52;text-transform:uppercase}.print-doc .doc-meta{text-align:center;color:#64748b;font-size:10px;margin:4px 0 16px;border-bottom:2px solid #0b2f52;padding-bottom:6px}.print-table{width:100%;border-collapse:collapse;margin:10px 0}.print-table th,.print-table td{border:1px solid #cad4de;padding:6px 8px;font-size:10px;vertical-align:top}.print-table th{background:#eef4f8;text-align:left;color:#0b2f52;font-weight:800}.sign-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:25px}.sign-box{border-top:1px solid #8b98a5;padding-top:6px;font-size:10px;min-height:75px}
+.toast{position:fixed;right:20px;bottom:20px;background:#143e61;color:#fff;padding:11px 16px;border-radius:10px;display:none;z-index:150;box-shadow:0 15px 35px rgba(0,0,0,.2)}.toast.show{display:block}.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.plan-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:end}.plan-summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.mini-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.mini-card b{display:block;font-size:20px;color:var(--navy);margin-top:4px}.mini-card span{font-size:9px;text-transform:uppercase;font-weight:850;color:var(--muted)}.month-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:12px 0}.month-box{border:1px solid var(--line);border-radius:9px;padding:6px;text-align:center;background:#f8fafc}.month-box strong{display:block;font-size:10px;color:var(--navy)}.month-box span{display:block;font-size:16px;font-weight:850;margin-top:2px}.plan-table{min-width:1400px}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:8px 0}.plan-print{display:none}
+@media print{.sidebar,.topbar,.btn,.tabs,.toolbar,.no-print{display:none!important}.main{margin:0}.content{padding:0}.card{box-shadow:none;border:0}.page{display:none!important}.print-only{display:block!important}.print-doc{border:0;padding:0}}
+</style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
-
-  <!-- ================= 1. PANTALLA DE LOGIN ================= -->
-  <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-95 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
-      <div class="bg-sidebar p-6 text-white text-center">
-        <div class="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-          <i class="fa-solid fa-heart-pulse text-2xl text-white"></i>
-        </div>
-        <h2 class="text-2xl font-bold tracking-tight">Gestión Biomédica</h2>
-        <p class="text-xs text-slate-300 mt-1">Control de equipos, mantenimiento, calibración y trazabilidad</p>
-      </div>
-      <form id="login-form" class="p-6 space-y-4" onsubmit="handleLogin(event)">
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">USUARIO</label>
-          <select id="login-role" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 text-sm font-medium">
-            <option value="admin">admin — Administrador</option>
-            <option value="consulta">consulta — Consulta (Solo Lectura)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">CONTRASEÑA</label>
-          <input type="password" id="login-password" placeholder="Ingrese su contraseña" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none text-sm">
-        </div>
-        <div id="login-error" class="hidden text-rose-500 text-xs text-center font-medium">Contraseña incorrecta.</div>
-        <button type="submit" class="w-full bg-sidebar hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md transition-all text-sm uppercase tracking-wider">
-          Ingresar al sistema
-        </button>
-        <p class="text-[11px] text-slate-500 text-center mt-3">
-          Usuarios iniciales: <b>admin / admin123</b> y <b>consulta / consulta123</b>
-        </p>
-      </form>
-    </div>
+<body>
+<div id="login" class="login">
+ <div class="login-card">
+  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema integral de control técnico, mantenimiento y calibración</p></div>
+  <div class="login-body">
+   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Solo consulta / Auditoría</option></select></div>
+   <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()"></div>
+   <div id="loginError" class="badge red hidden" style="margin-top:11px">Usuario o contraseña incorrectos</div>
+   <div class="login-actions"><button class="btn primary" onclick="login()">Ingresar al sistema</button></div>
+   <div class="hint">Credenciales predeterminadas: <b>admin / admin123</b> y <b>consulta / consulta123</b>.</div>
   </div>
+ </div>
+</div>
+<div class="app" id="app" style="display:none">
+<aside class="sidebar">
+ <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS · Control técnico</small><div id="roleChip" class="role-chip"></div></div>
+ <div class="nav" id="nav">
+  <button class="active" data-page="dashboard">⌂ <span>Inicio / Indicadores</span></button>
+  <div class="nav-group">Inventario</div>
+  <button data-page="sedes">▦ <span>Sedes</span></button>
+  <button data-page="equipos">◫ <span>Equipos biomédicos</span></button>
+  <button data-page="hojas">▤ <span>Hojas de vida (PDF)</span></button>
+  <div class="nav-group">Mantenimiento</div>
+  <button data-page="cronograma">◷ <span>Cronograma anual</span></button>
+  <button data-page="mantenimientos">🛠 <span>Mantenimientos</span></button>
+  <button data-page="masiva">⚡ <span>Ejecución masiva</span></button>
+  <button data-page="calibraciones">◌ <span>Calibraciones</span></button>
+  <div class="nav-group">Documentación</div>
+  <button data-page="documentos">▤ <span>Manuales por tipo/marca</span></button>
+  <button data-page="trazabilidad">⌁ <span>Trazabilidad</span></button>
+  <div class="nav-group">Sistema</div>
+  <button data-page="config">⚙ <span>Configuración y Firma</span></button>
+ </div>
+ <button class="btn small logout" style="width:100%;background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.12)" onclick="logout()">Cerrar sesión</button>
+</aside>
+<main class="main">
+<header class="topbar"><h1 id="pageTitle">Panel principal</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AB</div></div></header>
+<div class="content">
 
-  <!-- ================= 2. LAYOUT PRINCIPAL ================= -->
-  <div id="app-layout" class="hidden flex-1 flex flex-col md:flex-row min-h-screen">
-    
-    <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-sidebar text-slate-300 flex-shrink-0 flex flex-col justify-between">
-      <div>
-        <div class="p-5 border-b border-slate-800 flex flex-col space-y-1">
-          <h1 class="font-bold text-base text-white tracking-wide">GESTIÓN BIOMÉDICA</h1>
-          <p class="text-xs text-slate-400">CENDIATRA SAS · Control técnico</p>
-          <div class="pt-1">
-            <span id="role-badge" class="px-2 py-0.5 text-[10px] font-extrabold rounded bg-sky-600 text-white uppercase tracking-wider">ADMINISTRADOR</span>
-          </div>
-        </div>
-
-        <nav class="p-3 space-y-4 text-xs font-medium">
-          <div>
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-sky-600/30 text-white font-semibold transition-colors">
-              <i class="fa-solid fa-house w-4 text-center"></i> <span>Inicio</span>
-            </button>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">INVENTARIO</p>
-            <div class="space-y-0.5">
-              <button onclick="switchTab('sedes')" id="nav-sedes" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-building w-4 text-center"></i> <span>Sedes</span>
-              </button>
-              <button onclick="switchTab('equipos')" id="nav-equipos" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-laptop-medical w-4 text-center"></i> <span>Equipos biomédicos</span>
-              </button>
-              <button onclick="switchTab('hojas-vida')" id="nav-hojas-vida" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-file-invoice w-4 text-center"></i> <span>Hojas de vida</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">MANTENIMIENTO</p>
-            <div class="space-y-0.5">
-              <button onclick="switchTab('cronograma')" id="nav-cronograma" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-calendar-days w-4 text-center"></i> <span>Cronograma</span>
-              </button>
-              <button onclick="switchTab('reportes')" id="nav-reportes" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-screwdriver-wrench w-4 text-center"></i> <span>Mantenimientos</span>
-              </button>
-              <button onclick="switchTab('calibraciones')" id="nav-calibraciones" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-sliders w-4 text-center"></i> <span>Calibraciones</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">DOCUMENTACIÓN</p>
-            <div class="space-y-0.5">
-              <button onclick="switchTab('manuales')" id="nav-manuales" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-book-medical w-4 text-center"></i> <span>Manuales y documentos</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">SISTEMA</p>
-            <div class="space-y-0.5">
-              <button onclick="switchTab('configuracion')" id="nav-configuracion" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-sidebarHover transition-colors">
-                <i class="fa-solid fa-gear w-4 text-center"></i> <span>Configuración</span>
-              </button>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      <div class="p-4 border-t border-slate-800">
-        <button onclick="logout()" class="w-full bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-200 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-right-from-bracket"></i> <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 bg-slate-50 p-6 overflow-y-auto">
-      
-      <!-- TOP USER BAR -->
-      <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-        <div>
-          <h2 id="page-title" class="text-xl font-bold text-slate-800">Panel principal</h2>
-        </div>
-        <div class="flex items-center space-x-3">
-          <div class="text-right">
-            <p id="user-display-name" class="text-xs font-bold text-slate-800">Administrador</p>
-            <p id="user-display-role" class="text-[10px] text-slate-500">Acceso Total</p>
-          </div>
-          <div id="user-avatar" class="w-8 h-8 rounded-full bg-sidebar text-white font-bold flex items-center justify-center text-xs shadow">
-            AD
-          </div>
-        </div>
-      </header>
-
-      <!-- TAB: DASHBOARD -->
-      <section id="tab-dashboard" class="tab-content space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <p class="text-[10px] font-bold uppercase text-slate-400">Equipos Registrados</p>
-            <h3 id="dash-total-equipos" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
-            <p class="text-xs text-slate-500 mt-1">En inventario global</p>
-          </div>
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <p class="text-[10px] font-bold uppercase text-slate-400">Sedes Registradas</p>
-            <h3 id="dash-total-sedes" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
-            <p class="text-xs text-slate-500 mt-1">Inventarios independientes</p>
-          </div>
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <p class="text-[10px] font-bold uppercase text-slate-400">Mantenimientos Ejecutados</p>
-            <h3 id="dash-maint-pending" class="text-3xl font-extrabold text-amber-600 mt-1">0</h3>
-            <p class="text-xs text-slate-500 mt-1">Reportes técnicos</p>
-          </div>
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <p class="text-[10px] font-bold uppercase text-slate-400">Equipos que Calibran</p>
-            <h3 id="dash-calib-pending" class="text-3xl font-extrabold text-sky-600 mt-1">0</h3>
-            <p class="text-xs text-slate-500 mt-1">Sujetos a metrología</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
-              <i class="fa-solid fa-chart-line text-sky-600"></i>
-              <span>Estado del Programa de Mantenimiento</span>
-            </h4>
-            <div>
-              <div class="flex justify-between text-xs font-bold mb-1">
-                <span class="text-slate-600">Cobertura de Mantenimiento</span>
-                <span id="kpi-maint-percent" class="text-sky-600">0%</span>
-              </div>
-              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                <div id="kpi-maint-bar" class="bg-sky-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
-              <i class="fa-solid fa-bell text-amber-500"></i>
-              <span>Alertas Técnicas</span>
-            </h4>
-            <div id="alerts-container" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB: SEDES -->
-      <section id="tab-sedes" class="tab-content hidden space-y-6">
-        <div class="flex justify-between items-center">
-          <h3 class="text-base font-bold text-slate-800">Inventario por Sede</h3>
-          <button onclick="openModal('modal-sede')" class="admin-only bg-sidebar hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow">
-            + Nueva Sede
-          </button>
-        </div>
-        <div id="sedes-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-      </section>
-
-      <!-- TAB: EQUIPOS BIOMÉDICOS -->
-      <section id="tab-equipos" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-          <div class="flex flex-1 items-center space-x-3 w-full">
-            <input type="text" id="search-equipos" oninput="renderEquiposTable()" placeholder="Buscar por equipo, marca, serie o sede..." class="w-full p-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
-            <select id="filter-sede-equipos" onchange="renderEquiposTable()" class="p-2 border border-slate-300 rounded-lg text-xs bg-white font-medium">
-              <option value="ALL">Todas las Sedes</option>
-            </select>
-          </div>
-          <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-            <label class="admin-only bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg cursor-pointer flex items-center space-x-1">
-              <i class="fa-solid fa-file-excel"></i> <span>Cargar Excel</span>
-              <input type="file" id="excel-import-input" accept=".xlsx, .xls" class="hidden" onchange="importExcelEquipos(event)">
-            </label>
-            <button onclick="openModal('modal-equipo')" class="admin-only bg-sidebar hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center space-x-1">
-              <i class="fa-solid fa-plus"></i> <span>Nuevo Equipo</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200 uppercase font-bold text-slate-500">
-              <tr>
-                <th class="p-3">Ref / Nombre</th>
-                <th class="p-3">Marca / Modelo</th>
-                <th class="p-3">Serie</th>
-                <th class="p-3">Sede</th>
-                <th class="p-3 text-center">Calibración</th>
-                <th class="p-3 text-center">Riesgo</th>
-                <th class="p-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="equipos-table-body" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TAB: HOJAS DE VIDA -->
-      <section id="tab-hojas-vida" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <select id="hv-equipo-select" onchange="renderHojaDeVidaView()" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-medium">
-            <option value="">-- Seleccionar Equipo para ver Hoja de Vida --</option>
-          </select>
-          <button onclick="downloadHojaDeVidaPDF()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center space-x-2 shrink-0">
-            <i class="fa-solid fa-file-pdf"></i> <span>Descargar / Imprimir PDF</span>
-          </button>
-        </div>
-
-        <div id="hoja-vida-printable" class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6 max-w-4xl mx-auto text-slate-800">
-          <p class="text-center text-slate-400 italic text-xs">Seleccione un equipo para ver su Hoja de Vida formateada.</p>
-        </div>
-      </section>
-
-      <!-- TAB: CRONOGRAMA -->
-      <section id="tab-cronograma" class="tab-content hidden space-y-6">
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-sm font-bold text-slate-800">Cronograma General de Mantenimiento Preventivo</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border border-slate-200">
-              <thead class="bg-slate-100 font-bold uppercase text-slate-600">
-                <tr>
-                  <th class="border p-2">Equipo</th>
-                  <th class="border p-2">Sede</th>
-                  <th class="border p-2">Periodicidad</th>
-                  <th class="border p-2 text-center">Semestre 1</th>
-                  <th class="border p-2 text-center">Semestre 2</th>
-                </tr>
-              </thead>
-              <tbody id="cronograma-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB: MANTENIMIENTOS -->
-      <section id="tab-mantenimientos" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <h3 class="text-sm font-bold text-slate-800">Reportes de Mantenimiento Ejecutados</h3>
-          <button onclick="openModal('modal-reporte')" class="admin-only bg-sidebar text-white text-xs font-bold px-3 py-2 rounded-lg">
-            + Nuevo Reporte
-          </button>
-        </div>
-        <div id="reportes-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </section>
-
-      <!-- TAB: CALIBRACIONES -->
-      <section id="tab-calibraciones" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-          <h3 class="text-sm font-bold text-slate-800">Certificados Metrológicos de Calibración</h3>
-          <button onclick="openModal('modal-calibracion')" class="admin-only bg-sidebar text-white text-xs font-bold px-3 py-2 rounded-lg">
-            + Subir Certificado
-          </button>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b uppercase font-bold text-slate-500">
-              <tr>
-                <th class="p-3">Equipo</th>
-                <th class="p-3">Fecha Calibración</th>
-                <th class="p-3">Vencimiento</th>
-                <th class="p-3">Estado</th>
-              </tr>
-            </thead>
-            <tbody id="calibraciones-table-body" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TAB: MANUALES Y DOCUMENTOS -->
-      <section id="tab-manuales" class="tab-content hidden space-y-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-          <h3 class="text-sm font-bold text-slate-800">Repositorio Central de Documentos</h3>
-          <button onclick="openModal('modal-manual')" class="admin-only bg-sidebar text-white text-xs font-bold px-3 py-2 rounded-lg">
-            + Cargar Manual
-          </button>
-        </div>
-        <div id="manuales-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-      </section>
-
-      <!-- TAB: CONFIGURACIÓN -->
-      <section id="tab-configuracion" class="tab-content hidden space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 text-sm border-b pb-2">Datos de la Empresa y Firmas</h4>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Responsable Biomédico</label>
-                <input type="text" id="cfg-responsable" class="w-full p-2 border rounded text-xs">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Cargo</label>
-                <input type="text" id="cfg-cargo" class="w-full p-2 border rounded text-xs">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Empresa</label>
-                <input type="text" id="cfg-empresa" class="w-full p-2 border rounded text-xs">
-              </div>
-              <div class="admin-only pt-2 border-t">
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Firma Digital PNG</label>
-                <input type="file" id="cfg-signature-file" accept="image/png" class="text-xs" onchange="handleSignatureUpload(event)">
-                <div id="signature-preview" class="mt-2 border rounded p-2 text-center bg-slate-50 min-h-[50px]"></div>
-              </div>
-            </div>
-            <button onclick="saveGeneralConfig()" class="admin-only w-full bg-sidebar text-white font-bold text-xs py-2 rounded">Guardar Cambios</button>
-          </div>
-
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <h4 class="font-bold text-slate-800 text-sm border-b pb-2">Credenciales de Acceso</h4>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Contraseña Admin</label>
-                <input type="password" id="cfg-pass-admin" placeholder="Nueva clave admin" class="w-full p-2 border rounded text-xs">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Contraseña Consulta</label>
-                <input type="password" id="cfg-pass-consulta" placeholder="Nueva clave consulta" class="w-full p-2 border rounded text-xs">
-              </div>
-              <button onclick="updateUserPasswords()" class="admin-only w-full bg-sky-600 text-white font-bold text-xs py-2 rounded">Actualizar Claves</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- MATRIZ DE MANTENIMIENTO -->
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex justify-between items-center border-b pb-2">
-            <div>
-              <h4 class="font-bold text-slate-800 text-sm">Matriz de Mantenimiento Preventivo</h4>
-              <p class="text-[10px] text-slate-500">Auto-relleno automático para hojas de vida y reportes de mantenimiento.</p>
-            </div>
-            <button onclick="openModal('modal-matriz')" class="admin-only bg-sky-600 text-white text-xs font-bold px-3 py-1.5 rounded">
-              + Tipo de Equipo
-            </button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-slate-100 uppercase font-bold text-slate-600">
-                <tr>
-                  <th class="p-2 border">Equipo</th>
-                  <th class="p-2 border">Periodicidad</th>
-                  <th class="p-2 border text-center">Calibración</th>
-                  <th class="p-2 border">Descripción</th>
-                  <th class="p-2 border">Actividades Estándar</th>
-                  <th class="p-2 border text-right admin-only">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="matriz-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
+<section class="page active" id="page-dashboard">
+ <div class="hero">
+  <div>
+   <h2>Panel de Gestión e Indicadores Biomédicos</h2>
+   <p>Control por sede, alertas de vencimiento de mantenimiento y calibración en tiempo real.</p>
   </div>
-
-  <!-- ================= MODALES ================= -->
-
-  <!-- MODAL: SEDE -->
-  <div id="modal-sede" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-sm text-slate-800">Agregar Nueva Sede</h3>
-      <form onsubmit="saveSede(event)" class="space-y-3">
-        <input type="text" id="sede-nombre" placeholder="Nombre Sede" required class="w-full p-2 border rounded text-xs">
-        <input type="text" id="sede-direccion" placeholder="Dirección" required class="w-full p-2 border rounded text-xs">
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-sede')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar</button>
-        </div>
-      </form>
-    </div>
+  <div class="toolbar">
+   <div class="field" style="margin:0"><select id="dashSedeFilter" onchange="renderDashboard()"><option value="">Todas las Sedes</option></select></div>
+   <button class="btn blue" onclick="exportBackup()">Respaldo JSON</button>
+   <button class="btn primary" onclick="go('equipos')">Ver equipos</button>
   </div>
+ </div>
+ <div id="stats" class="grid g4" style="margin-top:18px"></div>
+ <div class="grid g2" style="margin-top:16px">
+  <div class="card panel"><div class="section-title"><h3>Indicadores de Cobertura y Cumplimiento</h3></div><div id="programStatus"></div></div>
+  <div class="card panel"><div class="section-title"><h3>Alertas de Mantenimiento y Calibración Vencida</h3></div><div id="alerts"></div></div>
+ </div>
+ <div class="grid g2" style="margin-top:16px">
+  <div class="card panel"><div class="section-title"><h3>Equipos por Sede</h3><button class="btn small" onclick="go('sedes')">Ver sedes</button></div><div id="dashboardSedes"></div></div>
+  <div class="card panel"><div class="section-title"><h3>Actividad Reciente / Trazabilidad</h3><button class="btn small" onclick="go('trazabilidad')">Ver trazabilidad</button></div><div id="recent"></div></div>
+ </div>
+</section>
 
-  <!-- MODAL: EQUIPO -->
-  <div id="modal-equipo" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <h3 class="font-bold text-sm text-slate-800">Registrar / Editar Equipo Biomédico</h3>
-      <form onsubmit="saveEquipo(event)" class="space-y-3">
-        <input type="hidden" id="equipo-id">
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="eq-nombre" placeholder="Nombre Equipo" required class="w-full p-2 border rounded text-xs uppercase">
-          <input type="text" id="eq-marca" placeholder="Marca" class="w-full p-2 border rounded text-xs">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="eq-modelo" placeholder="Modelo" class="w-full p-2 border rounded text-xs">
-          <input type="text" id="eq-serie" placeholder="Serie" required class="w-full p-2 border rounded text-xs">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="eq-sede" required class="w-full p-2 border rounded text-xs"></select>
-          <input type="text" id="eq-ubicacion" placeholder="Servicio / Ubicación" class="w-full p-2 border rounded text-xs uppercase">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="eq-riesgo" class="w-full p-2 border rounded text-xs">
-            <option value="I">Riesgo I (Bajo)</option>
-            <option value="IIA">Riesgo IIA (Moderado)</option>
-            <option value="IIB">Riesgo IIB (Alto)</option>
-            <option value="III">Riesgo III (Muy Alto)</option>
-          </select>
-          <select id="eq-calibracion" class="w-full p-2 border rounded text-xs">
-            <option value="SI">Requiere Calibración: SÍ</option>
-            <option value="NO">Requiere Calibración: NO</option>
-          </select>
-        </div>
-        <input type="text" id="eq-invima" placeholder="Registro INVIMA" class="w-full p-2 border rounded text-xs">
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-equipo')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar Equipo</button>
-        </div>
-      </form>
-    </div>
+<section class="page" id="page-sedes">
+ <div class="section-title"><h3>Inventario por Sede</h3><button class="btn primary admin-only" onclick="openSedeModal()">+ Nueva sede</button></div>
+ <div class="notice">Filtra y accede directamente a los equipos, mantenimientos y calibraciones independientes de cada sede.</div>
+ <div id="sedeCards" class="grid g3" style="margin-top:14px"></div>
+</section>
+
+<section class="page" id="page-equipos">
+ <div class="section-title"><h3>Equipos Biomédicos</h3><div class="toolbar"><button class="btn blue" onclick="openImport()">⇧ Importar Excel</button><button class="btn primary admin-only" onclick="openEquipoModal()">+ Nuevo equipo</button></div></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar</label><input id="eqSearch" placeholder="Equipo, marca, modelo, serie, código..." oninput="renderEquipos()"></div>
+   <div class="field"><label>Sede</label><select id="eqSede" onchange="renderEquipos()"></select></div>
+   <div class="field"><label>Servicio</label><select id="eqService" onchange="renderEquipos()"></select></div>
+   <div class="field"><label>Calibración</label><select id="eqCal" onchange="renderEquipos()"><option value="">Todos</option><option>SI</option><option>NO</option></select></div>
+   <button class="btn" onclick="clearEqFilters()">Limpiar</button>
   </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>REF-B</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Sede</th><th>Servicio</th><th>Riesgo</th><th>Cali.</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
+ </div>
+</section>
 
-  <!-- MODAL: REPORTE -->
-  <div id="modal-reporte" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
-      <h3 class="font-bold text-sm text-slate-800">Generar Reporte de Mantenimiento</h3>
-      <form onsubmit="saveReporte(event)" class="space-y-3">
-        <select id="rep-equipo-id" onchange="autoFillReportActivities()" required class="w-full p-2 border rounded text-xs"></select>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="rep-tipo" class="w-full p-2 border rounded text-xs">
-            <option value="PREVENTIVO">PREVENTIVO</option>
-            <option value="CORRECTIVO">CORRECTIVO</option>
-          </select>
-          <input type="date" id="rep-fecha" required class="w-full p-2 border rounded text-xs">
-        </div>
-        <textarea id="rep-actividades" rows="3" placeholder="Actividades realizadas" required class="w-full p-2 border rounded text-xs"></textarea>
-        <input type="text" id="rep-observaciones" placeholder="Observaciones" class="w-full p-2 border rounded text-xs">
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-reporte')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar Reporte</button>
-        </div>
-      </form>
-    </div>
+<section class="page" id="page-hojas">
+ <div class="section-title"><h3>Hojas de Vida (BM-FT-02)</h3><button class="btn blue" onclick="go('equipos')">Buscar equipo</button></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar equipo</label><input id="hvSearch" placeholder="Equipo, marca, serie..." oninput="renderHojas()"></div>
+   <div class="field"><label>Sede</label><select id="hvSede" onchange="renderHojas()"></select></div>
+   <div class="field"><label>Estado documental</label><select id="hvState" onchange="renderHojas()"><option value="">Todos</option><option>CON HOJA</option><option>SIN HOJA</option></select></div>
+   <div></div>
+   <button class="btn" onclick="clearHvFilters()">Limpiar</button>
   </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>REF-B</th><th>Equipo</th><th>Marca / Modelo</th><th>Serie</th><th>Sede</th><th>Estado Documental</th><th>Último Preventivo</th><th>Calibración</th><th>Acciones</th></tr></thead><tbody id="hvTable"></tbody></table></div>
+ </div>
+</section>
 
-  <!-- MODAL: CALIBRACIÓN -->
-  <div id="modal-calibracion" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-sm text-slate-800">Subir Certificado de Calibración</h3>
-      <form onsubmit="saveCalibracion(event)" class="space-y-3">
-        <select id="cal-equipo-id" required class="w-full p-2 border rounded text-xs"></select>
-        <div class="grid grid-cols-2 gap-2">
-          <input type="date" id="cal-fecha" required class="w-full p-2 border rounded text-xs">
-          <input type="date" id="cal-fecha-prox" required class="w-full p-2 border rounded text-xs">
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-calibracion')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar</button>
-        </div>
-      </form>
-    </div>
+<section class="page" id="page-cronograma">
+ <div class="section-title">
+  <div><h3>Programa y Cronograma Anual de Mantenimiento</h3><div class="muted" style="font-size:11px">Control programado por equipo, frecuencia, ejecución y estado técnico.</div></div>
+  <div class="toolbar no-print"><button class="btn blue" onclick="setPlanYear(-1)">‹ Año</button><button class="btn blue" onclick="setPlanYear(1)">Año ›</button><button class="btn primary admin-only" onclick="generateAnnualPlan()">⚡ Generar / actualizar plan</button><button class="btn" onclick="printAnnualPlan()">🖨 Imprimir plan</button></div>
+ </div>
+ <div class="card panel no-print" style="margin-bottom:14px">
+  <div class="plan-toolbar">
+   <div class="field"><label>Año</label><input id="planYear" type="number" min="2020" max="2100" style="width:110px" onchange="renderAnnualPlan()"></div>
+   <div class="field"><label>Sede</label><select id="planSede" onchange="renderAnnualPlan()"></select></div>
+   <div class="field"><label>Servicio</label><select id="planService" onchange="renderAnnualPlan()"></select></div>
+   <div class="field"><label>Estado</label><select id="planState" onchange="renderAnnualPlan()"><option value="">Todos</option><option>PENDIENTE</option><option>PROGRAMADO</option><option>EJECUTADO</option><option>VENCIDO</option></select></div>
+   <div class="field"><label>Tipo</label><select id="planType" onchange="renderAnnualPlan()"><option value="PREVENTIVO">PREVENTIVO</option><option value="CALIBRACIÓN">CALIBRACIÓN</option><option value="TODOS">TODOS</option></select></div>
   </div>
+ </div>
+ <div id="planSummary" class="plan-summary no-print"></div>
+ <div class="card panel no-print">
+  <div class="month-strip" id="monthStrip"></div>
+  <div class="legend"><span>● Programado</span><span>● Ejecutado</span><span>● Vencido</span></div>
+  <div class="table-wrap"><table class="table plan-table"><thead><tr><th>#</th><th>Fecha programada</th><th>Sede</th><th>Servicio</th><th>REF-B</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Frecuencia</th><th>Responsable</th><th>Fecha ejecución</th><th>Reporte</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="annualPlanTable"></tbody></table></div>
+ </div>
+</section>
 
-  <!-- MODAL: MANUAL -->
-  <div id="modal-manual" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-sm text-slate-800">Cargar Documento / Manual</h3>
-      <form onsubmit="saveManual(event)" class="space-y-3">
-        <input type="text" id="man-titulo" placeholder="Título Documento" required class="w-full p-2 border rounded text-xs">
-        <input type="text" id="man-tipo" placeholder="Tipo / Modelo de Equipo" required class="w-full p-2 border rounded text-xs uppercase">
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-manual')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar</button>
-        </div>
-      </form>
-    </div>
+<section class="page" id="page-mantenimientos">
+ <div class="section-title"><h3>Mantenimientos Biomédicos</h3><button class="btn primary admin-only" onclick="openMaintenanceModal()">+ Nuevo mantenimiento</button></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar</label><input id="mtSearch" placeholder="Reporte, equipo, serie, técnico..." oninput="renderMaintenances()"></div>
+   <div class="field"><label>Tipo</label><select id="mtType" onchange="renderMaintenances()"><option value="">Todos</option><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option><option>INSTALACIÓN</option><option>DIAGNÓSTICO</option></select></div>
+   <div class="field"><label>Sede</label><select id="mtSede" onchange="renderMaintenances()"></select></div>
+   <div class="field"><label>Estado</label><select id="mtState" onchange="renderMaintenances()"><option value="">Todos</option><option>EJECUTADO</option><option>PENDIENTE</option></select></div>
+   <button class="btn" onclick="clearMtFilters()">Limpiar</button>
   </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Reporte</th><th>Fecha</th><th>Equipo</th><th>Serie</th><th>Sede</th><th>Tipo</th><th>Técnico</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="maintTable"></tbody></table></div>
+ </div>
+</section>
 
-  <!-- MODAL: MATRIZ ITEM -->
-  <div id="modal-matriz" class="hidden fixed inset-0 z-50 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-      <h3 class="font-bold text-sm text-slate-800">Agregar Tipo a Matriz de Mantenimiento</h3>
-      <form onsubmit="saveMatrizItem(event)" class="space-y-3">
-        <input type="text" id="mat-nombre" placeholder="Nombre Equipo" required class="w-full p-2 border rounded text-xs uppercase">
-        <div class="grid grid-cols-2 gap-2">
-          <select id="mat-periodicidad" class="w-full p-2 border rounded text-xs">
-            <option value="TRIMESTRAL">TRIMESTRAL</option>
-            <option value="SEMESTRAL" selected>SEMESTRAL</option>
-            <option value="ANUAL">ANUAL</option>
-          </select>
-          <select id="mat-calibracion" class="w-full p-2 border rounded text-xs">
-            <option value="SI">Calibración: SÍ</option>
-            <option value="NO">Calibración: NO</option>
-          </select>
-        </div>
-        <textarea id="mat-descripcion" placeholder="Descripción Técnica" class="w-full p-2 border rounded text-xs"></textarea>
-        <textarea id="mat-actividades" placeholder="Actividades Preventivas Estándar" class="w-full p-2 border rounded text-xs"></textarea>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeModal('modal-matriz')" class="px-3 py-1.5 text-xs font-bold text-slate-500">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-sidebar text-white rounded">Guardar Matriz</button>
-        </div>
-      </form>
-    </div>
+<section class="page" id="page-masiva">
+ <div class="section-title"><h3>Ejecución Masiva de Reportes</h3><button class="btn blue" onclick="massSelectAll()">Seleccionar todos</button></div>
+ <div class="notice">Genera múltiples reportes preventivos autorrellenados con las actividades del protocolo biomédico y firma digital guardada.</div>
+ <div class="card panel" style="margin-top:14px">
+  <div class="filters">
+   <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
+   <div class="field"><label>Servicio</label><select id="massService" onchange="renderMass()"></select></div>
+   <div class="field"><label>Tipo</label><select id="massType"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
+   <div class="field"><label>Fecha</label><input id="massDate" type="date"></div>
+   <button class="btn primary admin-only" onclick="runMass()">⚡ Generar reportes</button>
   </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>REF</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio</th><th>Actividades Protocolarias</th></tr></thead><tbody id="massTable"></tbody></table></div>
+ </div>
+</section>
 
-  <!-- LÓGICA DE JAVASCRIPT COMPLETA -->
-  <script>
-    const DEFAULT_DATA = {
-      users: { admin: 'admin123', consulta: 'consulta123' },
-      config: { responsable: 'Yesid Esteban Vergara Cárdenas', cargo: 'Ingeniero Biomédico', empresa: 'CENDIATRA SAS', signature: null },
-      sedes: [
-        { id: 'S1', nombre: 'NORTE 106', direccion: 'BOGOTA D.C. - Calle 106' },
-        { id: 'S2', nombre: 'CENTRO 19', direccion: 'BOGOTA D.C. - Calle 19' }
-      ],
-      matriz: [
-        { equipo: 'AGITADOR DE MAZINI', periodicidad: 'SEMESTRAL', calibracion: 'SI', descripcion: 'AGITADOR DE LABORATORIO PARA MEZCLA UNIFORME DE MUESTRAS.', actividades: 'REVISION FISICA Y FUNCIONAL DEL EQUIPO, LIMPIEZA SUPERFICIAL, VERIFICACION DE VELOCIDAD Y TEMPORIZADOR.' },
-        { equipo: 'ALCOHOLIMETRO', periodicidad: 'SEMESTRAL', calibracion: 'SI', descripcion: 'MEDIDOR DE CONCENTRACIÓN DE ALCOHOL EN AIRE EXHALADO.', actividades: 'REVISION FISICA Y FUNCIONAL, REVISION DE CELDA, BATERIAS Y SOFTWARE.' }
-      ],
-      equipos: [
-        { id: 'EQ1', nombre: 'AGITADOR DE MAZINI', marca: 'MAZINI', modelo: 'M-100', serie: '13717', sedeId: 'S1', ubicacion: 'LABORATORIO CLINICO', riesgo: 'IIA', calibracion: 'SI', invima: '2019DM-00123' },
-        { id: 'EQ2', nombre: 'ALCOHOLIMETRO', marca: 'ALCOVISOR', modelo: 'MERCURY', serie: '10301514', sedeId: 'S1', ubicacion: 'TOMA DE MUESTRAS', riesgo: 'IIA', calibracion: 'SI', invima: '2020DM-00456' }
-      ],
-      reportes: [],
-      calibraciones: [],
-      manuales: []
-    };
+<section class="page" id="page-calibraciones">
+ <div class="section-title"><h3>Control de Calibraciones</h3><button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar calibración (PDF)</button></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar</label><input id="calSearch" placeholder="Equipo, serie, certificado..." oninput="renderCalibraciones()"></div>
+   <div class="field"><label>Sede</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
+   <div class="field"><label>Estado</label><select id="calState" onchange="renderCalibraciones()"><option value="">Todos</option><option>VIGENTE</option><option>PRÓXIMA</option><option>VENCIDA</option><option>SIN REGISTRO</option></select></div>
+   <div></div>
+   <button class="btn" onclick="clearCalFilters()">Limpiar</button>
+  </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="calTable"></tbody></table></div>
+ </div>
+</section>
 
-    let currentUser = null;
-    let appData = JSON.parse(localStorage.getItem('GB_CENDIATRA_DATA')) || DEFAULT_DATA;
+<section class="page" id="page-documentos">
+ <div class="section-title"><h3>Manuales y Documentos Técnicos</h3><button class="btn primary admin-only" onclick="openDocModal()">+ Cargar manual / documento</button></div>
+ <div class="notice"><b>Manuales compartidos por tipo/marca:</b> Puedes cargar un manual único (ej. Tensiómetros Digitales OMRON) que quedará asociado automáticamente a todos los equipos del mismo tipo y marca.</div>
+ <div class="card panel" style="margin-top:14px">
+  <div class="filters">
+   <div class="field"><label>Buscar</label><input id="docSearch" oninput="renderDocs()" placeholder="Nombre, equipo, tipo, marca..."></div>
+   <div class="field"><label>Tipo de documento</label><select id="docTypeFilter" onchange="renderDocs()"><option value="">Todos</option><option>MANUAL DE USUARIO</option><option>FICHA TÉCNICA</option><option>CERTIFICADO DE FABRICA</option><option>OTRO</option></select></div>
+   <div></div><div></div>
+   <button class="btn" onclick="document.getElementById('docSearch').value='';document.getElementById('docTypeFilter').value='';renderDocs()">Limpiar</button>
+  </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Documento / Manual</th><th>Tipo</th><th>Aplica a (Tipo / Marca / Equipo)</th><th>Fecha Carga</th><th>Acciones</th></tr></thead><tbody id="docsTable"></tbody></table></div>
+ </div>
+</section>
 
-    function saveData() { localStorage.setItem('GB_CENDIATRA_DATA', JSON.stringify(appData)); }
+<section class="page" id="page-trazabilidad">
+ <div class="section-title"><h3>Trazabilidad Completa por Equipo</h3></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Seleccione Equipo</label><select id="traceEquip" onchange="renderTrace()"></select></div>
+   <div class="field"><label>Buscar evento</label><input id="traceSearch" oninput="renderTrace()" placeholder="Reporte, calibración, manual..."></div>
+   <div></div><div></div>
+   <button class="btn" onclick="document.getElementById('traceSearch').value='';renderTrace()">Limpiar</button>
+  </div>
+  <div id="tracePanel"></div>
+ </div>
+</section>
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const role = document.getElementById('login-role').value;
-      const pass = document.getElementById('login-password').value;
-      const errorEl = document.getElementById('login-error');
+<section class="page" id="page-config">
+ <div class="section-title"><h3>Configuración del Área y Firma Digital</h3><button class="btn primary admin-only" onclick="saveConfig()">Guardar cambios</button></div>
+ <div class="grid g3">
+  <div class="card panel">
+   <div class="section-title"><h3>Datos de la Empresa / Área</h3></div>
+   <div class="field"><label>Ingeniero Biomédico / Responsable</label><input id="cfgName"></div>
+   <div class="field" style="margin-top:10px"><label>Cargo</label><input id="cfgRole"></div>
+   <div class="field" style="margin-top:10px"><label>Empresa / Prestador</label><input id="cfgCompany"></div>
+  </div>
+  <div class="card panel">
+   <div class="section-title"><h3>Firma Digital del Técnico</h3></div>
+   <p class="muted" style="font-size:11px">Esta firma se autorrellenará en todos los reportes de servicio y mantenimientos masivos.</p>
+   <div class="field"><label>Cargar imagen de firma (.png / .jpg)</label><input id="cfgSigFile" type="file" accept="image/*" onchange="previewFile(this,'sigCfgPrev')"></div>
+   <div class="signature" id="sigCfgPrev" style="margin-top:10px">Sin firma guardada</div>
+  </div>
+  <div class="card panel">
+   <div class="section-title"><h3>Contraseñas de Usuarios</h3></div>
+   <div class="field"><label>Contraseña Administrador (admin)</label><input id="adminPassNew" type="password"></div>
+   <div class="field" style="margin-top:10px"><label>Contraseña Consulta (consulta)</label><input id="viewerPassNew" type="password"></div>
+  </div>
+ </div>
+ <div class="card panel" style="margin-top:16px">
+  <div class="section-title"><h3>Matriz Biomédica y Protocolos Técnicos</h3><button class="btn primary admin-only" onclick="openMatrixModal()">+ Nuevo tipo de equipo</button></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Periodicidad</th><th>Calibración</th><th>Descripción Técnica / Vida</th><th>Actividades Protocolarias</th><th>Acciones</th></tr></thead><tbody id="matrixTable"></tbody></table></div>
+ </div>
+</section>
 
-      if (appData.users[role] && appData.users[role] === pass) {
-        currentUser = role;
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-layout').classList.remove('hidden');
-        setupUI();
-        switchTab('dashboard');
-      } else {
-        errorEl.classList.remove('hidden');
-      }
-    }
+</div></main></div>
 
-    function logout() {
-      currentUser = null;
-      document.getElementById('app-layout').classList.add('hidden');
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('login-password').value = '';
-    }
+<div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+<div id="toast" class="toast"></div>
 
-    function setupUI() {
-      const isConsult = currentUser === 'consulta';
-      document.getElementById('role-badge').textContent = currentUser.toUpperCase();
-      document.getElementById('user-display-name').textContent = isConsult ? 'Usuario Consulta' : 'Administrador';
-      document.getElementById('user-display-role').textContent = isConsult ? 'Solo Lectura' : 'Acceso Total';
-      document.getElementById('user-avatar').textContent = isConsult ? 'CO' : 'AD';
+<script>
+const KEY='gestion_biomedica_web_v5';
+const SEED_INV = [{"REF-B": "1", "EQUIPO": "AGITADOR DE MAZINI", "MARCA": "WINCOM", "MODELO": "KJ-201BS", "SERIE": "N/R", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SDNORTE-01-050", "SERVICIO": "LABORATORIO CLINICO", "INVIMA": "ACTA N°7 DEL 2009", "CALIBRACION": "SI"}, {"REF-B": "3", "EQUIPO": "ALCOHOLIMETRO", "MARCA": "ALCOVISOR", "MODELO": "MERCURY", "SERIE": "10301514", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "N/R", "CÓDIGO INTERNO": "SA-000000250", "SERVICIO": "TOMA DE MUESTRAS", "INVIMA": "N/R", "CALIBRACION": "SI"}, {"REF-B": "5", "EQUIPO": "AUDIOMETRO", "MARCA": "RESONANCE", "MODELO": "R07A", "SERIE": "R07A24B000797", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 9", "INVIMA": "2019DM-0020588", "CALIBRACION": "SI"}, {"REF-B": "33", "EQUIPO": "ELECTROCARDIOGRAFO", "MARCA": "MINDRAY", "MODELO": "BENEHEARTR3", "SERIE": "FK-09024320", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 14", "INVIMA": "2018DM-0003378-R1", "CALIBRACION": "SI"}, {"REF-B": "85", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "GMD", "MODELO": "GMD-BPM-1872", "SERIE": "BA8631211103166D", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "N/R", "SERVICIO": "CONSULTORIO 6", "INVIMA": "2016DM-0015017", "CALIBRACION": "SI"}, {"REF-B": "90", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160603871LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-106-06", "SERVICIO": "CONSULTORIO 10", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}, {"REF-B": "91", "EQUIPO": "TENSIOMETRO DIGITAL", "MARCA": "OMRON", "MODELO": "HEM-7120", "SERIE": "20160601890LG", "SEDE": "NORTE 106", "RIESGO BIOMEDICO": "IIA", "CÓDIGO INTERNO": "SDNORTE-01-011", "SERVICIO": "CONSULTORIO 4", "INVIMA": "2015DM-0013273", "CALIBRACION": "SI"}];
+const SEED_MAT = [{"EQUIPO": "TENSIOMETRO DIGITAL", "VIDA": "EL TENSIÓMETRO DIGITAL ES UN INSTRUMENTO MODERNO UTILIZADO PARA MEDIR LA PRESIÓN ARTERIAL DE MANERA RÁPIDA Y PRECISA.", "REPORTE": "REVISION DE VALVULA, BOMBA DE MEMBRANA Y SENSOR, SE REALIZA LIMPIEZA A LA TARJETA ELECTRONICA, VERIFICACION DE MANGUERAS. PRUEBAS DE PRESION SUPERADAS CON ÉXITO.", "OBSERVACION": "LIMPIEZA Y DESINFECCIÓN PERIÓDICA.", "VOLTAJE": "6V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD":"SEMESTRAL"}, {"EQUIPO": "AUDIOMETRO", "VIDA": "INSTRUMENTO UTILIZADO PARA MEDIR LA AUDICIÓN Y DETECTAR PÉRDIDAS AUDITIVAS EN PACIENTES.", "REPORTE": "REVISION DE FUNCIONES Y BOTONES, SE REVISAN CONEXIONES ELECTRONICAS, SE LIMPIA LA TARJETA, VERIFICACION DE CABLES Y ACCESORIOS. PRUEBAS FUNCIONALES SUPERADAS CON ÉXITO.", "OBSERVACION": "LIMPIEZA DE AURICULARES.", "VOLTAJE": "5V", "POTENCIA": "0,5W", "CLASIFICACION": "IIA", "ALIMENTACION": "ELECTRICA", "CALIBRACION": "SI", "PERIODICIDAD":"ANUAL"}];
 
-      document.querySelectorAll('.admin-only').forEach(el => {
-        if (isConsult) el.classList.add('hidden'); else el.classList.remove('hidden');
-      });
+let state = {sedes:[], equipos:[], matriz:[], mantenimientos:[], calibraciones:[], documentos:[], hojas:{}, config:{name:'Yesid Esteban Vergara Cárdenas', role:'Ingeniero Biomédico', company:'CENDIATRA SAS', sigTechData:''}, users:{admin:{password:'admin123',role:'ADMIN'}, consulta:{password:'consulta123',role:'CONSULTA'}}, planAnnual:[]};
+let currentUser=null, currentMonth=new Date();
 
-      populateSedeDropdowns();
-    }
+const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
+const today=()=>new Date().toISOString().slice(0,10);
+const norm=s=>String(s??'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const isoDate=s=>String(s||'').slice(0,10);
+const fmtDate=s=>s?new Date(s+'T12:00:00').toLocaleDateString('es-CO'):'';
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('bg-sky-600/30', 'text-white', 'font-semibold');
-        btn.classList.add('text-slate-300');
-      });
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function load(){
+ try{
+  let x=JSON.parse(localStorage.getItem(KEY));
+  if(x) state={...state, ...x, config:{...state.config, ...(x.config||{})}, users:{...state.users, ...(x.users||{})}};
+ }catch(e){}
+ if(!state.equipos.length) seed();
+}
 
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-      const activeNav = document.getElementById(`nav-${tabId}`);
-      if (activeNav) {
-        activeNav.classList.add('bg-sky-600/30', 'text-white', 'font-semibold');
-        activeNav.classList.remove('text-slate-300');
-      }
+function seed(){
+ const sedeNames=[...new Set(SEED_INV.map(x=>x['SEDE']||'NORTE 106'))];
+ state.sedes=sedeNames.map(n=>({id:uid(),nombre:n,ciudad:'BOGOTA D.C.',direccion:'',activa:true}));
+ state.equipos=SEED_INV.map(x=>{
+  const s=state.sedes.find(z=>norm(z.nombre)==norm(x['SEDE']))||state.sedes[0];
+  return {id:uid(),ref_b:String(x['REF-B']??''),equipo:String(x['EQUIPO']??''),marca:String(x['MARCA']??''),modelo:String(x['MODELO']??''),serie:String(x['SERIE']??''),sedeId:s.id,riesgo:String(x['RIESGO BIOMEDICO']??''),codigo:String(x['CÓDIGO INTERNO']??''),servicio:String(x['SERVICIO']??''),invima:String(x['INVIMA']??''),cal:String(x['CALIBRACION']??'SI'),estado:'ACTIVO',fechaAlta:today()};
+ });
+ state.matriz=SEED_MAT.map(x=>({id:uid(),tipo:String(x['EQUIPO']),descripcion:String(x['VIDA']),actividades:String(x['REPORTE']),observacion:String(x['OBSERVACION']),voltaje:String(x['VOLTAJE']),potencia:String(x['POTENCIA']),riesgo:String(x['CLASIFICACION']),alimentacion:String(x['ALIMENTACION']),calibracion:String(x['CALIBRACION']),periodicidad:x['PERIODICIDAD']||'SEMESTRAL'}));
+ save();
+}
 
-      const titles = {
-        'dashboard': 'Panel principal', 'sedes': 'Inventario por sede', 'equipos': 'Equipos biomédicos',
-        'hojas-vida': 'Hojas de vida', 'cronograma': 'Cronograma de mantenimiento',
-        'reportes': 'Mantenimientos', 'calibraciones': 'Calibraciones',
-        'manuales': 'Manuales y documentos', 'configuracion': 'Configuración'
-      };
-      document.getElementById('page-title').textContent = titles[tabId] || 'Gestión Biomédica';
+function login(){
+ const u=document.getElementById('loginUser').value, p=document.getElementById('loginPass').value;
+ if(state.users[u]?.password===p){
+  currentUser={username:u,...state.users[u]};
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').style.display='flex';
+  document.getElementById('roleChip').textContent=currentUser.role==='ADMIN'?'ADMINISTRADOR BIOMÉDICO':'SOLO CONSULTA / AUDITORÍA';
+  document.getElementById('topRole').textContent=currentUser.role==='ADMIN'?'Administrador':'Consulta';
+  document.getElementById('avatar').textContent=currentUser.role==='ADMIN'?'AD':'CO';
+  applyPermissions(); refreshAll();
+ }else document.getElementById('loginError').classList.remove('hidden');
+}
 
-      if (tabId === 'dashboard') initDashboard();
-      if (tabId === 'sedes') renderSedesGrid();
-      if (tabId === 'equipos') renderEquiposTable();
-      if (tabId === 'hojas-vida') populateHVEquiposSelect();
-      if (tabId === 'cronograma') renderCronograma();
-      if (tabId === 'reportes') renderReportesList();
-      if (tabId === 'calibraciones') renderCalibracionesTable();
-      if (tabId === 'manuales') renderManualesGrid();
-      if (tabId === 'configuracion') loadConfigTab();
-    }
+function logout(){currentUser=null; document.getElementById('app').style.display='none'; document.getElementById('login').classList.remove('hidden');}
+function applyPermissions(){document.querySelectorAll('.admin-only').forEach(x=>x.classList.toggle('hidden',currentUser?.role!=='ADMIN'));}
+function canEdit(){return currentUser?.role==='ADMIN'}
+function toast(msg){const x=document.getElementById('toast'); x.textContent=msg; x.classList.add('show'); setTimeout(()=>x.classList.remove('show'),2800)}
 
-    function initDashboard() {
-      document.getElementById('dash-total-equipos').textContent = appData.equipos.length;
-      document.getElementById('dash-total-sedes').textContent = appData.sedes.length;
-      document.getElementById('dash-maint-pending').textContent = appData.reportes.length;
-      document.getElementById('dash-calib-pending').textContent = appData.equipos.filter(e => e.calibracion === 'SI').length;
+function sedeName(id){return state.sedes.find(s=>s.id===id)?.nombre||'SIN SEDE'}
+function eqName(id){return state.equipos.find(e=>e.id===id)?.equipo||''}
+function matFor(eqNameStr){return state.matriz.find(m=>norm(m.tipo)===norm(eqNameStr))||state.matriz.find(m=>norm(eqNameStr).includes(norm(m.tipo))||norm(m.tipo).includes(norm(eqNameStr)))||null}
 
-      const cov = appData.equipos.length ? Math.min(100, Math.round((appData.reportes.length / appData.equipos.length) * 100)) : 0;
-      document.getElementById('kpi-maint-percent').textContent = `${cov}%`;
-      document.getElementById('kpi-maint-bar').style.width = `${cov}%`;
+function lastMaint(eid){return [...state.mantenimientos].filter(m=>m.equipoId===eid).sort((a,b)=>isoDate(b.fecha).localeCompare(isoDate(a.fecha)))[0]}
+function nextMaint(e){
+ const l=lastMaint(e.id);
+ const days=(String(matFor(e.equipo)?.periodicidad||'SEMESTRAL').includes('ANUAL'))?365:182;
+ const d=new Date((l?.fecha||today())+'T12:00:00');
+ d.setDate(d.getDate()+days);
+ return d.toISOString().slice(0,10);
+}
 
-      const alerts = document.getElementById('alerts-container');
-      alerts.innerHTML = appData.equipos.length ? `<p class="text-sky-700 font-bold"><i class="fa-solid fa-check-circle"></i> Sistema al día con ${appData.equipos.length} equipos en base de datos.</p>` : '<p class="text-slate-400">Sin alertas.</p>';
-    }
+function calState(e){
+ if(norm(e.cal)!=='SI') return ['N/A','gray',null];
+ const cs=state.calibraciones.filter(c=>c.equipoId===e.id).sort((a,b)=>isoDate(b.vencimiento||b.fecha).localeCompare(isoDate(a.vencimiento||a.fecha)))[0];
+ if(!cs) return ['SIN REGISTRO','yellow',null];
+ const d=isoDate(cs.vencimiento);
+ const n=Math.ceil((new Date(d+'T12:00:00')-new Date(today()+'T12:00:00'))/86400000);
+ return n<0?['VENCIDA','red',cs]:n<=30?['PRÓXIMA','yellow',cs]:['VIGENTE','green',cs];
+}
 
-    function renderSedesGrid() {
-      const grid = document.getElementById('sedes-grid');
-      grid.innerHTML = appData.sedes.map(s => {
-        const count = appData.equipos.filter(e => e.sedeId === s.id).length;
-        return `
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm">${s.nombre}</h4>
-                <p class="text-[11px] text-slate-500">${s.direccion}</p>
-              </div>
-              <span class="bg-sky-100 text-sky-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${count} equipos</span>
-            </div>
-            <button onclick="filterBySede('${s.id}')" class="text-sky-600 font-bold text-xs hover:underline">Ver equipos &rarr;</button>
-          </div>
-        `;
-      }).join('');
-    }
+function go(page){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById('page-'+page).classList.add('active');
+ document.querySelectorAll('#nav button[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+ renderPage(page);
+}
 
-    function filterBySede(sedeId) {
-      switchTab('equipos');
-      document.getElementById('filter-sede-equipos').value = sedeId;
-      renderEquiposTable();
-    }
+function renderPage(page){
+ if(page==='dashboard') renderDashboard();
+ if(page==='sedes') renderSedes();
+ if(page==='equipos'){fillSelects(); renderEquipos();}
+ if(page==='hojas'){fillSelects(); renderHojas();}
+ if(page==='cronograma'){fillSelects(); renderAnnualPlan();}
+ if(page==='mantenimientos'){fillSelects(); renderMaintenances();}
+ if(page==='masiva'){fillSelects(); renderMass();}
+ if(page==='calibraciones'){fillSelects(); renderCalibraciones();}
+ if(page==='documentos') renderDocs();
+ if(page==='trazabilidad'){fillTrace(); renderTrace();}
+ if(page==='config'){fillConfig(); renderMatrix();}
+}
 
-    function renderEquiposTable() {
-      const search = document.getElementById('search-equipos').value.toLowerCase();
-      const sede = document.getElementById('filter-sede-equipos').value;
-      const tbody = document.getElementById('equipos-table-body');
+function refreshAll(){
+ fillSelects(); renderDashboard(); renderSedes(); renderEquipos(); renderHojas(); renderAnnualPlan(); renderMaintenances(); renderCalibraciones(); renderDocs(); fillTrace(); fillConfig(); renderMatrix();
+}
 
-      const filtered = appData.equipos.filter(e => {
-        const matchSede = sede === 'ALL' || e.sedeId === sede;
-        const matchSearch = e.nombre.toLowerCase().includes(search) || e.serie.toLowerCase().includes(search);
-        return matchSede && matchSearch;
-      });
+function fillSelects(){
+ const opts=state.sedes.map(s=>`<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
+ ['dashSedeFilter','eqSede','hvSede','mtSede','calSedeFilter','massSede','planSede'].forEach(id=>{
+  const x=document.getElementById(id);
+  if(x){
+   const old=x.value;
+   x.innerHTML=`<option value="">${id==='dashSedeFilter'?'Todas las Sedes':'Todas'}</option>`+opts;
+   x.value=old;
+  }
+ });
+}
 
-      tbody.innerHTML = filtered.map(e => {
-        const sObj = appData.sedes.find(s => s.id === e.sedeId) || { nombre: 'N/A' };
-        return `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 font-bold">${e.nombre}</td>
-            <td class="p-3 text-slate-600">${e.marca} / ${e.modelo}</td>
-            <td class="p-3 font-mono text-slate-600">${e.serie}</td>
-            <td class="p-3">${sObj.nombre}</td>
-            <td class="p-3 text-center"><span class="px-2 py-0.5 text-[10px] font-bold rounded ${e.calibracion === 'SI' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'}">${e.calibracion}</span></td>
-            <td class="p-3 text-center"><span class="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-100 text-sky-800">${e.riesgo}</span></td>
-            <td class="p-3 text-right space-x-2">
-              <button onclick="openHV('${e.id}')" class="text-sky-600 font-bold hover:underline">Hoja de vida</button>
-              <button onclick="deleteEquipo('${e.id}')" class="admin-only text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
+function renderDashboard(){
+ const sid=document.getElementById('dashSedeFilter')?.value||'';
+ const eqList=state.equipos.filter(e=>!sid||e.sedeId===sid);
+ const total=eqList.length;
+ const todayStr=today();
+ 
+ const maintVencidos=eqList.filter(e=>nextMaint(e)<todayStr).length;
+ const maintProximos=eqList.filter(e=>nextMaint(e)>=todayStr && nextMaint(e)<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).length;
+ 
+ const calVencidas=eqList.filter(e=>calState(e)[0]==='VENCIDA').length;
+ const calProximas=eqList.filter(e=>calState(e)[0]==='PRÓXIMA').length;
+ const doneMaint=eqList.filter(e=>lastMaint(e.id)).length;
 
-    function saveSede(e) {
-      e.preventDefault();
-      appData.sedes.push({ id: 'S' + Date.now(), nombre: document.getElementById('sede-nombre').value, direccion: document.getElementById('sede-direccion').value });
-      saveData(); closeModal('modal-sede'); renderSedesGrid(); populateSedeDropdowns();
-    }
+ document.getElementById('stats').innerHTML=[
+  [total,'EQUIPOS REGISTRADOS',sid?`Sede: ${sedeName(sid)}`:'Global CENDIATRA'],
+  [maintVencidos,'MANTENIMIENTOS VENCIDOS',`${maintProximos} próximos a vencer`],
+  [calVencidas,'CALIBRACIONES VENCIDAS',`${calProximas} próximas a vencer`],
+  [doneMaint,'CON HISTORIAL TÉCNICO',`Cobertura: ${Math.round(doneMaint/Math.max(total,1)*100)}%`]
+ ].map(x=>`<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${x[1].includes('VENCID')&&x[0]>0?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
-    function saveEquipo(e) {
-      e.preventDefault();
-      const newEq = {
-        id: document.getElementById('equipo-id').value || 'EQ' + Date.now(),
-        nombre: document.getElementById('eq-nombre').value.toUpperCase(),
-        marca: document.getElementById('eq-marca').value,
-        modelo: document.getElementById('eq-modelo').value,
-        serie: document.getElementById('eq-serie').value,
-        sedeId: document.getElementById('eq-sede').value,
-        ubicacion: document.getElementById('eq-ubicacion').value.toUpperCase(),
-        riesgo: document.getElementById('eq-riesgo').value,
-        calibracion: document.getElementById('eq-calibracion').value,
-        invima: document.getElementById('eq-invima').value
-      };
-      appData.equipos.push(newEq);
-      saveData(); closeModal('modal-equipo'); renderEquiposTable();
-    }
+ const prog=Math.round(doneMaint/Math.max(total,1)*100);
+ document.getElementById('programStatus').innerHTML=`
+  <div class="kpi-line"><span>Cobertura de Mantenimiento Preventivo</span><b>${prog}%</b></div>
+  <div class="progress"><span style="width:${prog}%"></span></div>
+  <div style="margin-top:15px" class="kpi-line"><span>Mantenimientos próximos (30 días)</span><b>${maintProximos}</b></div>
+  <div class="kpi-line"><span>Calibraciones Vigentes</span><b>${eqList.filter(e=>calState(e)[0]==='VIGENTE').length}</b></div>
+ `;
 
-    function deleteEquipo(id) {
-      if (currentUser !== 'admin') return;
-      if (confirm('¿Eliminar equipo?')) { appData.equipos = appData.equipos.filter(e => e.id !== id); saveData(); renderEquiposTable(); }
-    }
+ document.getElementById('alerts').innerHTML=
+  (maintVencidos?`<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#9d2d35;margin-bottom:8px">🚨 <b>${maintVencidos} Mantenimientos Vencidos</b> en la sede seleccionada.</div>`:'')+
+  (calVencidas?`<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#9d2d35;margin-bottom:8px">🔴 <b>${calVencidas} Calibraciones Vencidas</b>.</div>`:'')+
+  (!maintVencidos && !calVencidas?`<div class="notice">✅ No hay alertas críticas de vencimiento para la selección actual.</div>`:'');
 
-    function importExcelEquipos(e) {
-      if (currentUser !== 'admin') return;
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        json.forEach(row => {
-          appData.equipos.push({
-            id: 'EQ' + Date.now() + Math.random().toString(36).substr(2, 3),
-            nombre: (row.EQUIPO || row.Nombre || 'EQUIPO').toUpperCase(),
-            marca: row.MARCA || 'N/R', modelo: row.MODELO || 'N/R', serie: String(row.SERIE || 'N/R'),
-            sedeId: appData.sedes[0] ? appData.sedes[0].id : 'S1', ubicacion: 'GENERAL', riesgo: 'IIA', calibracion: 'SI', invima: '2020DM-000'
-          });
-        });
-        saveData(); renderEquiposTable(); alert('Cargados ' + json.length + ' equipos.');
-      };
-      reader.readAsArrayBuffer(file);
-    }
+ document.getElementById('dashboardSedes').innerHTML=state.sedes.map(s=>{
+  const es=state.equipos.filter(e=>e.sedeId===s.id);
+  return `<div style="padding:8px 0;border-bottom:1px solid #eef2f6">
+   <div class="kpi-line"><b style="color:var(--navy)">${esc(s.nombre)}</b><span>${es.length} equipos</span></div>
+  </div>`;
+ }).join('');
 
-    function populateHVEquiposSelect() {
-      const select = document.getElementById('hv-equipo-select');
-      select.innerHTML = '<option value="">-- Seleccionar Equipo para ver Hoja de Vida --</option>';
-      appData.equipos.forEach(e => select.innerHTML += `<option value="${e.id}">${e.nombre} - Serie: ${e.serie}</option>`);
-    }
+ const rec=[...state.mantenimientos].sort((a,b)=>isoDate(b.fecha).localeCompare(isoDate(a.fecha))).slice(0,5);
+ document.getElementById('recent').innerHTML=rec.length?rec.map(m=>`<div class="timeline-item"><strong>N° ${esc(m.reporte)}</strong> · ${esc(eqName(m.equipoId))}<small>${fmtDate(m.fecha)} · ${esc(m.tipo)}</small></div>`).join(''):'<div class="empty">Sin actividad reciente.</div>';
+}
 
-    function openHV(eqId) {
-      switchTab('hojas-vida');
-      document.getElementById('hv-equipo-select').value = eqId;
-      renderHojaDeVidaView();
-    }
+function renderSedes(){
+ document.getElementById('sedeCards').innerHTML=state.sedes.map(s=>{
+  const es=state.equipos.filter(e=>e.sedeId===s.id);
+  const ca=es.filter(e=>norm(e.cal)==='SI').length;
+  const pm=es.filter(e=>lastMaint(e.id)).length;
+  return `<div class="card sede-card" onclick="go('equipos')">
+   <div class="sede-top"><div><div class="sede-name">${esc(s.nombre)}</div><div class="sede-meta">${esc(s.ciudad)}</div></div><div class="sede-count">${es.length}</div></div>
+   <div class="kpi-line" style="margin-top:14px"><span>Equipos con Preventivo</span><b>${pm}/${es.length}</b></div>
+   <div class="progress"><span style="width:${Math.round(pm/Math.max(es.length,1)*100)}%"></span></div>
+   <div class="pillbar"><span class="badge blue">${ca} calibran</span></div>
+  </div>`;
+ }).join('');
+}
 
-    function renderHojaDeVidaView() {
-      const eqId = document.getElementById('hv-equipo-select').value;
-      const container = document.getElementById('hoja-vida-printable');
-      if (!eqId) { container.innerHTML = '<p class="text-center text-slate-400 italic text-xs">Seleccione un equipo.</p>'; return; }
+function renderEquipos(){
+ let q=norm(document.getElementById('eqSearch')?.value||'');
+ let sid=document.getElementById('eqSede')?.value||'';
+ let arr=state.equipos.filter(e=>(!sid||e.sedeId===sid)&&(!q||[e.ref_b,e.equipo,e.marca,e.modelo,e.serie,e.codigo,e.servicio].some(v=>norm(v).includes(q))));
+ document.getElementById('equiposTable').innerHTML=arr.length?arr.map(e=>`<tr>
+  <td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.riesgo)}</td><td><span class="badge ${norm(e.cal)==='SI'?'green':'gray'}">${esc(e.cal)}</span></td><td><span class="badge green">${esc(e.estado)}</span></td>
+  <td><button class="btn small" onclick="openEquipmentDetail('${e.id}')">Ver Detalle</button></td>
+ </tr>`).join(''):'<tr><td colspan="11"><div class="empty">No se encontraron equipos.</div></td></tr>';
+}
 
-      const eq = appData.equipos.find(e => e.id === eqId);
-      const sObj = appData.sedes.find(s => s.id === eq.sedeId) || { nombre: 'N/A' };
-      const mat = appData.matriz.find(m => m.equipo.toUpperCase() === eq.nombre.toUpperCase()) || { periodicidad: 'SEMESTRAL', descripcion: 'Estándar técnico.', actividades: 'Mantenimiento preventivo general.' };
+function clearEqFilters(){document.getElementById('eqSearch').value=''; document.getElementById('eqSede').value=''; renderEquipos();}
 
-      container.innerHTML = `
-        <div class="border-2 border-slate-800 p-6 space-y-4 text-xs">
-          <div class="flex justify-between items-center border-b-2 border-slate-800 pb-3">
-            <div>
-              <h2 class="text-base font-bold uppercase tracking-wider">${appData.config.empresa}</h2>
-              <p class="font-bold text-slate-600">HOJA DE VIDA DE EQUIPO BIOMÉDICO</p>
-            </div>
-            <div class="text-right text-[10px]">
-              <p><b>FECHA:</b> ${new Date().toLocaleDateString()}</p>
-              <p><b>RESPONSABLE:</b> ${appData.config.responsable}</p>
-            </div>
-          </div>
-          <div class="bg-slate-50 p-3 rounded border border-slate-200">
-            <h4 class="font-bold uppercase text-slate-700 mb-2">1. Identificación del Equipo</h4>
-            <div class="grid grid-cols-2 gap-2">
-              <p><b>Equipo:</b> ${eq.nombre}</p> <p><b>Marca / Modelo:</b> ${eq.marca} / ${eq.modelo}</p>
-              <p><b>Serie:</b> ${eq.serie}</p> <p><b>Sede:</b> ${sObj.nombre}</p>
-              <p><b>Ubicación:</b> ${eq.ubicacion || 'GENERAL'}</p> <p><b>Clasificación Riesgo:</b> ${eq.riesgo}</p>
-              <p><b>Registro INVIMA:</b> ${eq.invima || 'N/R'}</p> <p><b>Requiere Calibración:</b> ${eq.calibracion}</p>
-            </div>
-          </div>
-          <div class="bg-slate-50 p-3 rounded border border-slate-200">
-            <h4 class="font-bold uppercase text-slate-700 mb-2">2. Rutina Técnica y Matriz</h4>
-            <p><b>Periodicidad:</b> ${mat.periodicidad}</p>
-            <p><b>Descripción:</b> ${mat.descripcion}</p>
-            <p class="mt-1"><b>Actividades Estándar:</b> ${mat.actividades}</p>
-          </div>
-          <div class="pt-8 flex justify-between items-end">
-            <div class="text-center w-40">
-              ${appData.config.signature ? `<img src="${appData.config.signature}" class="h-10 mx-auto mb-1">` : '<div class="h-10 border-b border-slate-400 mb-1"></div>'}
-              <p class="font-bold">${appData.config.responsable}</p>
-              <p class="text-[9px] text-slate-500">${appData.config.cargo}</p>
-            </div>
-            <div class="text-center w-40">
-              <div class="h-10 border-b border-slate-400 mb-1"></div>
-              <p class="font-bold">Recibe Sede (${sObj.nombre})</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+function renderHojas(){
+ let q=norm(document.getElementById('hvSearch')?.value||''), sid=document.getElementById('hvSede')?.value||'';
+ const arr=state.equipos.filter(e=>(!sid||e.sedeId===sid)&&(!q||[e.equipo,e.marca,e.serie].some(v=>norm(v).includes(q))));
+ document.getElementById('hvTable').innerHTML=arr.map(e=>`<tr>
+  <td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)} / ${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
+  <td><span class="badge green">CON HOJA BM-FT-02</span></td><td>${fmtDate(lastMaint(e.id)?.fecha)||'Sin registro'}</td><td><span class="badge ${calState(e)[1]}">${calState(e)[0]}</span></td>
+  <td><button class="btn small blue" onclick="openLifeDoc('${e.id}')">🖨 Imprimir Hoja PDF</button></td>
+ </tr>`).join('');
+}
 
-    function downloadHojaDeVidaPDF() {
-      const el = document.getElementById('hoja-vida-printable');
-      html2pdf().set({ margin: 0.5, filename: 'Hoja_de_Vida.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(el).save();
-    }
+function openEquipmentDetail(id){
+ const e=state.equipos.find(x=>x.id===id); if(!e) return;
+ openModal(`Equipo ${e.ref_b} · ${e.equipo}`, equipmentDetailHtml(e), `<button class="btn" onclick="closeModal()">Cerrar</button>${canEdit()?`<button class="btn primary" onclick="openMaintenanceModal('${e.id}')">Nuevo Mantenimiento</button>`:''}`);
+}
 
-    function renderCronograma() {
-      const tbody = document.getElementById('cronograma-table-body');
-      tbody.innerHTML = appData.equipos.map(e => {
-        const sObj = appData.sedes.find(s => s.id === e.sedeId) || { nombre: 'N/A' };
-        return `<tr><td class="border p-2 font-bold">${e.nombre} (${e.serie})</td><td class="border p-2">${sObj.nombre}</td><td class="border p-2">SEMESTRAL</td><td class="border p-2 text-center text-emerald-600 font-bold">Programado</td><td class="border p-2 text-center text-emerald-600 font-bold">Programado</td></tr>`;
-      }).join('');
-    }
+function equipmentDetailHtml(e){
+ const m=matFor(e.equipo);
+ return `<div class="detail-head">
+  <div>
+   <div class="detail-title">${esc(e.equipo)}</div>
+   <div class="detail-sub">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</div>
+   <div class="pillbar"><span class="badge blue">${esc(sedeName(e.sedeId))}</span><span class="badge green">INVIMA: ${esc(e.invima)}</span></div>
+  </div>
+  <div class="toolbar"><button class="btn blue" onclick="openLifeDoc('${e.id}')">📄 Hoja de Vida PDF</button></div>
+ </div>
+ <div class="data-grid" style="margin-top:15px">
+  <div class="data-cell"><div class="lab">REF-B</div><div class="val">${esc(e.ref_b)}</div></div>
+  <div class="data-cell"><div class="lab">Servicio</div><div class="val">${esc(e.servicio)}</div></div>
+  <div class="data-cell"><div class="lab">Código Interno</div><div class="val">${esc(e.codigo)}</div></div>
+  <div class="data-cell"><div class="lab">Clasificación Riesgo</div><div class="val">${esc(e.riesgo)}</div></div>
+ </div>
+ <h3>Documentos y Manuales Aplicables</h3>
+ <div id="eqDocsList">`+getDocsForEquipment(e).map(d=>`<div style="padding:6px;border-bottom:1px solid #eee">📁 <b>${esc(d.nombre)}</b> (${esc(d.tipo)}) <button class="btn small" onclick="openDoc('${d.id}')">Abrir Documento / PDF</button></div>`).join('')+`</div>`;
+}
 
-    function renderReportesList() {
-      const container = document.getElementById('reportes-list');
-      container.innerHTML = appData.reportes.map(r => {
-        const eq = appData.equipos.find(e => e.id === r.equipoId) || { nombre: 'N/A', serie: 'N/A' };
-        return `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1"><h4 class="font-bold text-xs">${eq.nombre} (${eq.serie})</h4><p class="text-[10px] text-slate-500">Fecha: ${r.fecha} | Tipo: ${r.tipo}</p><p class="text-xs text-slate-600 bg-slate-50 p-2 rounded">${r.actividades}</p></div>`;
-      }).join('') || '<p class="text-xs text-slate-400 italic">Sin reportes registrados.</p>';
-    }
+function getDocsForEquipment(e){
+ return state.documentos.filter(d=> d.equipoId===e.id || (d.tipoEquipo && norm(d.tipoEquipo)===norm(e.equipo) && norm(d.marca)===norm(e.marca)) );
+}
 
-    function autoFillReportActivities() {
-      const eqId = document.getElementById('rep-equipo-id').value;
-      const eq = appData.equipos.find(e => e.id === eqId);
-      if (eq) {
-        const mat = appData.matriz.find(m => m.equipo.toUpperCase() === eq.nombre.toUpperCase());
-        if (mat) document.getElementById('rep-actividades').value = mat.actividades;
-      }
-    }
+function openLifeDoc(id){
+ const e=state.equipos.find(x=>x.id===id);
+ openModal('Hoja de Vida Biomédica · BM-FT-02', lifeHtml(e), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(lifeHtml(state.equipos.find(x=>x.id==='${id}')),'Hoja_de_Vida_${e.ref_b}')">🖨 Guardar / Imprimir PDF</button>`);
+}
 
-    function saveReporte(e) {
-      e.preventDefault();
-      appData.reportes.push({ id: 'REP' + Date.now(), equipoId: document.getElementById('rep-equipo-id').value, tipo: document.getElementById('rep-tipo').value, fecha: document.getElementById('rep-fecha').value, actividades: document.getElementById('rep-actividades').value });
-      saveData(); closeModal('modal-reporte'); renderReportesList();
-    }
+function lifeHtml(e){
+ const m=matFor(e.equipo)||{};
+ const ms=state.mantenimientos.filter(x=>x.equipoId===e.id);
+ const cs=state.calibraciones.filter(x=>x.equipoId===e.id);
+ return `<div class="print-doc">
+  <h1>HOJA DE VIDA DE EQUIPO BIOMÉDICO</h1>
+  <div class="doc-meta">Código: BM-FT-02 · Versión 03 · CENDIATRA SAS</div>
+  <table class="print-table">
+   <tr><th>REF-B</th><td>${esc(e.ref_b)}</td><th>Equipo</th><td>${esc(e.equipo)}</td></tr>
+   <tr><th>Marca</th><td>${esc(e.marca)}</td><th>Modelo</th><td>${esc(e.modelo)}</td></tr>
+   <tr><th>Serie</th><td>${esc(e.serie)}</td><th>Sede</th><td>${esc(sedeName(e.sedeId))}</td></tr>
+   <tr><th>Servicio</th><td>${esc(e.servicio)}</td><th>Registro INVIMA</th><td>${esc(e.invima)}</td></tr>
+   <tr><th>Riesgo</th><td>${esc(e.riesgo)}</td><th>Código Interno</th><td>${esc(e.codigo)}</td></tr>
+  </table>
+  <h3>1. Descripción y Especificaciones Técnicas</h3>
+  <div style="font-size:10px">${esc(m.descripcion||'Sin descripción.')}</div>
+  <table class="print-table">
+   <tr><th>Voltaje</th><td>${esc(m.voltaje||'N/A')}</td><th>Potencia</th><td>${esc(m.potencia||'N/A')}</td><th>Alimentación</th><td>${esc(m.alimentacion||'N/A')}</td></tr>
+  </table>
+  <h3>2. Historial de Mantenimientos Preventivos y Correctivos</h3>
+  ${ms.length?`<table class="print-table"><tr><th>Fecha</th><th>Reporte N°</th><th>Tipo</th><th>Técnico</th><th>Resultado</th></tr>${ms.map(x=>`<tr><td>${fmtDate(x.fecha)}</td><td>${esc(x.reporte)}</td><td>${esc(x.tipo)}</td><td>${esc(x.tecnico)}</td><td>${esc(x.resultado)}</td></tr>`).join('')}</table>`:'<p>Sin historial de mantenimientos.</p>'}
+  <h3>3. Historial de Calibraciones</h3>
+  ${cs.length?`<table class="print-table"><tr><th>Fecha</th><th>Vencimiento</th><th>Proveedor</th><th>Certificado</th></tr>${cs.map(x=>`<tr><td>${fmtDate(x.fecha)}</td><td>${fmtDate(x.vencimiento)}</td><td>${esc(x.proveedor)}</td><td>${esc(x.certificado)}</td></tr>`).join('')}</table>`:'<p>No registra calibraciones.</p>'}
+ </div>`;
+}
 
-    function renderCalibracionesTable() {
-      const tbody = document.getElementById('calibraciones-table-body');
-      tbody.innerHTML = appData.calibraciones.map(c => {
-        const eq = appData.equipos.find(e => e.id === c.equipoId) || { nombre: 'N/A' };
-        return `<tr><td class="p-3 font-bold">${eq.nombre}</td><td class="p-3">${c.fecha}</td><td class="p-3">${c.fechaProx}</td><td class="p-3 text-sky-600 font-bold">VIGENTE</td></tr>`;
-      }).join('') || '<tr><td colspan="4" class="p-3 text-slate-400 italic">Sin calibraciones.</td></tr>';
-    }
+function openMaintenanceModal(equipId=''){
+ if(!canEdit()) return toast('El usuario CONSULTA no tiene permisos de edición.');
+ const e=state.equipos.find(x=>x.id===equipId)||state.equipos[0];
+ const options=state.equipos.map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${esc(x.equipo)} - ${esc(x.serie)} (${esc(sedeName(x.sedeId))})</option>`).join('');
+ const m=matFor(e.equipo)||{};
+ 
+ openModal('Registrar Reporte de Servicio · BM-FT-04', `
+  <div class="formgrid">
+   <div class="field span2"><label>Equipo</label><select id="mEquipo" onchange="fillMaintActivities()">${options}</select></div>
+   <div class="field"><label>Fecha</label><input id="mFecha" type="date" value="${today()}"></div>
+   <div class="field"><label>Tipo Servicio</label><select id="mTipo"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
+   <div class="field span2"><label>Ingeniero / Técnico Biomédico</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
+   <div class="field span2"><label>Persona que Recibe</label><input id="mReceptor" placeholder="Nombre de quien recibe"></div>
+   <div class="field span4"><label>Actividades Ejecutadas</label><textarea id="mActs" rows="6">${esc(m.actividades||'')}</textarea></div>
+   <div class="field span4"><label>Observaciones / Hallazgos</label><textarea id="mHallazgos" rows="2">EQUIPO OPERATIVO Y FUNCIONAL</textarea></div>
+   <div class="field span2">
+    <label>Firma Técnico (Predeterminada en Configuración)</label>
+    <div class="signature" id="mSigTechBox">${state.config.sigTechData?`<img src="${state.config.sigTechData}" style="max-height:70px">`:'Sin firma guardada'}</div>
+   </div>
+   <div class="field span2">
+    <label>Firma Receptor en Pantalla</label>
+    <div class="signature"><canvas id="canvasRec" width="220" height="80"></canvas><br><button class="btn small" onclick="clearCanvasRec()">Limpiar Firma</button></div>
+   </div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMaintenance()">Guardar y Generar BM-FT-04</button>`);
+ initCanvasRec();
+}
 
-    function saveCalibracion(e) {
-      e.preventDefault();
-      appData.calibraciones.push({ id: 'CAL' + Date.now(), equipoId: document.getElementById('cal-equipo-id').value, fecha: document.getElementById('cal-fecha').value, fechaProx: document.getElementById('cal-fecha-prox').value });
-      saveData(); closeModal('modal-calibracion'); renderCalibracionesTable();
-    }
+let canvasRecCtx=null;
+function initCanvasRec(){
+ setTimeout(()=>{
+  const c=document.getElementById('canvasRec'); if(!c) return;
+  canvasRecCtx=c.getContext('2d');
+  let drawing=false;
+  c.onmousedown=e=>{drawing=true; canvasRecCtx.beginPath(); canvasRecCtx.moveTo(e.offsetX,e.offsetY);};
+  c.onmousemove=e=>{if(drawing){canvasRecCtx.lineTo(e.offsetX,e.offsetY); canvasRecCtx.stroke();}};
+  c.onmouseup=()=>drawing=false;
+ },200);
+}
+function clearCanvasRec(){const c=document.getElementById('canvasRec'); if(c) canvasRecCtx.clearRect(0,0,c.width,c.height);}
 
-    function renderManualesGrid() {
-      const grid = document.getElementById('manuales-grid');
-      grid.innerHTML = appData.manuales.map(m => `
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <i class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
-          <h4 class="font-bold text-xs">${m.titulo}</h4>
-          <p class="text-[10px] text-slate-500">Asociado: ${m.tipo}</p>
-        </div>
-      `).join('') || '<p class="text-xs text-slate-400 italic">Sin documentos.</p>';
-    }
+function fillMaintActivities(){
+ const e=state.equipos.find(x=>x.id===document.getElementById('mEquipo').value);
+ const m=matFor(e?.equipo);
+ if(m) document.getElementById('mActs').value=m.actividades;
+}
 
-    function saveManual(e) {
-      e.preventDefault();
-      appData.manuales.push({ id: 'MAN' + Date.now(), titulo: document.getElementById('man-titulo').value, tipo: document.getElementById('man-tipo').value.toUpperCase() });
-      saveData(); closeModal('modal-manual'); renderManualesGrid();
-    }
+async function saveMaintenance(){
+ const eid=document.getElementById('mEquipo').value;
+ const no=String(Math.max(13716,...state.mantenimientos.map(x=>Number(x.numero||0)),13716)+1);
+ const cRec=document.getElementById('canvasRec');
+ const sigRecData=cRec?cRec.toDataURL():'';
+ 
+ const r={
+  id:uid(), numero:no, reporte:no, equipoId:eid, fecha:document.getElementById('mFecha').value,
+  tipo:document.getElementById('mTipo').value, tecnico:document.getElementById('mTecnico').value,
+  receptor:document.getElementById('mReceptor').value, actividades:document.getElementById('mActs').value,
+  hallazgos:document.getElementById('mHallazgos').value, resultado:'EQUIPO OPERATIVO Y FUNCIONAL',
+  estado:'EJECUTADO', sigTech:state.config.sigTechData, sigRec:sigRecData
+ };
+ state.mantenimientos.push(r);
+ save(); closeModal(); refreshAll();
+ toast(`Reporte N° ${no} generado con éxito.`);
+ openReport(r.id);
+}
 
-    function loadConfigTab() {
-      document.getElementById('cfg-responsable').value = appData.config.responsable;
-      document.getElementById('cfg-cargo').value = appData.config.cargo;
-      document.getElementById('cfg-empresa').value = appData.config.empresa;
-      renderMatrizTable();
-    }
+function openReport(id){
+ const r=state.mantenimientos.find(x=>x.id===id); if(!r) return;
+ openModal(`Reporte de Servicio N° ${r.reporte}`, reportHtml(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtml(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_BM-FT-04_${r.reporte}')">🖨 Imprimir / Guardar PDF</button>`);
+}
 
-    function saveGeneralConfig() {
-      if (currentUser !== 'admin') return;
-      appData.config.responsable = document.getElementById('cfg-responsable').value;
-      appData.config.cargo = document.getElementById('cfg-cargo').value;
-      appData.config.empresa = document.getElementById('cfg-empresa').value;
-      saveData(); alert('Configuración guardada.');
-    }
+function reportHtml(r){
+ const e=state.equipos.find(x=>x.id===r.equipoId)||{};
+ return `<div class="print-doc">
+  <h1>REPORTE DE SERVICIO TÉCNICO DE EQUIPOS BIOMÉDICOS</h1>
+  <div class="doc-meta">Código: BM-FT-04 · Versión 02 · Reporte N° ${esc(r.reporte)}</div>
+  <table class="print-table">
+   <tr><th>Fecha</th><td>${fmtDate(r.fecha)}</td><th>Tipo de Servicio</th><td>${esc(r.tipo)}</td></tr>
+   <tr><th>REF-B</th><td>${esc(e.ref_b)}</td><th>Equipo</th><td>${esc(e.equipo)}</td></tr>
+   <tr><th>Marca / Modelo</th><td>${esc(e.marca)} / ${esc(e.modelo)}</td><th>Serie</th><td>${esc(e.serie)}</td></tr>
+   <tr><th>Sede / Servicio</th><td>${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</td><th>Código Interno</th><td>${esc(e.codigo)}</td></tr>
+  </table>
+  <h3>Actividades Ejecutadas</h3>
+  <div style="white-space:pre-line;font-size:10px">${esc(r.actividades)}</div>
+  <h3>Observaciones y Resultado</h3>
+  <div style="white-space:pre-line;font-size:10px">${esc(r.hallazgos)}</div>
+  <div class="sign-row">
+   <div class="sign-box">${r.sigTech?`<img src="${r.sigTech}" style="max-height:50px"><br>`:''}<b>${esc(r.tecnico)}</b><br>Ingeniero Biomédico / Técnico</div>
+   <div class="sign-box">${r.sigRec?`<img src="${r.sigRec}" style="max-height:50px"><br>`:''}<b>${esc(r.receptor||'Satisfactorio')}</b><br>Persona que Recibe</div>
+  </div>
+ </div>`;
+}
 
-    function handleSignatureUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        appData.config.signature = evt.target.result;
-        saveData();
-        document.getElementById('signature-preview').innerHTML = `<img src="${evt.target.result}" class="h-10 mx-auto">`;
-      };
-      reader.readAsDataURL(file);
-    }
+function renderMaintenances(){
+ let q=norm(document.getElementById('mtSearch')?.value||'');
+ let arr=state.mantenimientos.filter(m=>{
+  const e=state.equipos.find(x=>x.id===m.equipoId);
+  return !q || [m.reporte, m.tecnico, e?.equipo, e?.serie].some(v=>norm(v).includes(q));
+ }).sort((a,b)=>isoDate(b.fecha).localeCompare(isoDate(a.fecha)));
+ 
+ document.getElementById('maintTable').innerHTML=arr.map(m=>{
+  const e=state.equipos.find(x=>x.id===m.equipoId);
+  return `<tr>
+   <td><b>${esc(m.reporte)}</b></td><td>${fmtDate(m.fecha)}</td><td>${esc(e?.equipo)}</td><td class="mono">${esc(e?.serie)}</td><td>${esc(sedeName(e?.sedeId))}</td><td><span class="badge blue">${esc(m.tipo)}</span></td><td>${esc(m.tecnico)}</td><td><span class="badge green">EJECUTADO</span></td>
+   <td><button class="btn small" onclick="openReport('${m.id}')">Ver Reporte PDF</button></td>
+  </tr>`;
+ }).join('');
+}
 
-    function updateUserPasswords() {
-      if (currentUser !== 'admin') return;
-      const pA = document.getElementById('cfg-pass-admin').value;
-      const pC = document.getElementById('cfg-pass-consulta').value;
-      if (pA) appData.users.admin = pA;
-      if (pC) appData.users.consulta = pC;
-      saveData(); alert('Contraseñas actualizadas.');
-    }
+function clearMtFilters(){document.getElementById('mtSearch').value=''; renderMaintenances();}
 
-    function renderMatrizTable() {
-      const tbody = document.getElementById('matriz-table-body');
-      tbody.innerHTML = appData.matriz.map(m => `
-        <tr class="hover:bg-slate-50 text-xs">
-          <td class="p-2 font-bold border">${m.equipo}</td>
-          <td class="p-2 border">${m.periodicidad}</td>
-          <td class="p-2 border text-center">${m.calibracion}</td>
-          <td class="p-2 border">${m.descripcion}</td>
-          <td class="p-2 border">${m.actividades}</td>
-          <td class="p-2 border text-right admin-only">
-            <button onclick="deleteMatrizItem('${m.equipo}')" class="text-rose-600"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-    }
+function openCalibrationModal(){
+ if(!canEdit()) return;
+ const opts=state.equipos.filter(e=>norm(e.cal)==='SI').map(e=>`<option value="${e.id}">${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
+ openModal('Registrar Certificado de Calibración (PDF)', `
+  <div class="formgrid">
+   <div class="field span2"><label>Equipo</label><select id="cEquipo">${opts}</select></div>
+   <div class="field"><label>Fecha Calibración</label><input id="cFecha" type="date" value="${today()}"></div>
+   <div class="field"><label>Fecha Vencimiento</label><input id="cVence" type="date"></div>
+   <div class="field span2"><label>Laboratorio / Proveedor</label><input id="cProv" placeholder="Nombre del laboratorio"></div>
+   <div class="field span2"><label>N° Certificado</label><input id="cCert"></div>
+   <div class="field span4"><label>Adjuntar Certificado PDF</label><input id="cFile" type="file" accept=".pdf"></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveCalibration()">Guardar Calibración</button>`);
+}
 
-    function saveMatrizItem(e) {
-      e.preventDefault();
-      appData.matriz.push({ equipo: document.getElementById('mat-nombre').value.toUpperCase(), periodicidad: document.getElementById('mat-periodicidad').value, calibracion: document.getElementById('mat-calibracion').value, descripcion: document.getElementById('mat-descripcion').value, actividades: document.getElementById('mat-actividades').value });
-      saveData(); closeModal('modal-matriz'); renderMatrizTable();
-    }
+function saveCalibration(){
+ const f=document.getElementById('cFile').files[0];
+ const r=new FileReader();
+ const saveObj=dataUrl=>{
+  state.calibraciones.push({
+   id:uid(), equipoId:document.getElementById('cEquipo').value, fecha:document.getElementById('cFecha').value,
+   vencimiento:document.getElementById('cVence').value, proveedor:document.getElementById('cProv').value,
+   certificado:document.getElementById('cCert').value, pdfData:dataUrl
+  });
+  save(); closeModal(); refreshAll(); toast('Calibración registrada.');
+ };
+ if(f) { r.onload=()=>saveObj(r.result); r.readAsDataURL(f); } else saveObj('');
+}
 
-    function deleteMatrizItem(eq) {
-      if (currentUser !== 'admin') return;
-      if (confirm('¿Eliminar de matriz?')) { appData.matriz = appData.matriz.filter(m => m.equipo !== eq); saveData(); renderMatrizTable(); }
-    }
+function renderCalibraciones(){
+ const arr=state.equipos.filter(e=>norm(e.cal)==='SI');
+ document.getElementById('calTable').innerHTML=arr.map(e=>{
+  const c=calState(e), d=c[2];
+  return `<tr>
+   <td><b>${esc(e.equipo)}</b></td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
+   <td>${d?fmtDate(d.fecha):'—'}</td><td>${d?fmtDate(d.vencimiento):'—'}</td><td>${esc(d?.proveedor||'—')}</td><td>${esc(d?.certificado||'—')}</td>
+   <td><span class="badge ${c[1]}">${c[0]}</span></td>
+   <td><button class="btn small" onclick="openCalibrationModal()">Actualizar</button></td>
+  </tr>`;
+ }).join('');
+}
 
-    function populateSedeDropdowns() {
-      const eqSede = document.getElementById('eq-sede');
-      const filterSede = document.getElementById('filter-sede-equipos');
-      const repEq = document.getElementById('rep-equipo-id');
-      const calEq = document.getElementById('cal-equipo-id');
+function clearCalFilters(){renderCalibraciones();}
 
-      if (eqSede) eqSede.innerHTML = appData.sedes.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
-      if (filterSede) filterSede.innerHTML = '<option value="ALL">Todas las Sedes</option>' + appData.sedes.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
-      if (repEq) repEq.innerHTML = appData.equipos.map(e => `<option value="${e.id}">${e.nombre} (${e.serie})</option>`).join('');
-      if (calEq) calEq.innerHTML = appData.equipos.filter(e => e.calibracion === 'SI').map(e => `<option value="${e.id}">${e.nombre} (${e.serie})</option>`).join('');
-    }
+function openDocModal(){
+ if(!canEdit()) return;
+ openModal('Cargar Manual o Documento Técnico', `
+  <div class="formgrid">
+   <div class="field span2"><label>Tipo Documento</label><select id="dTipo"><option>MANUAL DE USUARIO</option><option>FICHA TÉCNICA</option><option>CERTIFICADO FABRICA</option></select></div>
+   <div class="field span2"><label>Aplica a Tipo de Equipo</label><input id="dTipoEq" placeholder="Ej. TENSIOMETRO DIGITAL"></div>
+   <div class="field span2"><label>Marca Específica</label><input id="dMarca" placeholder="Ej. OMRON"></div>
+   <div class="field span2"><label>Nombre del Archivo / Manual</label><input id="dNombre" placeholder="Ej. Manual Usuario OMRON HEM-7120"></div>
+   <div class="field span4"><label>Archivo PDF / Documento</label><input id="dFile" type="file" accept=".pdf,.doc,.docx"></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveDoc()">Cargar Manual</button>`);
+}
 
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-  </script>
+function saveDoc(){
+ const f=document.getElementById('dFile').files[0]; if(!f) return toast('Selecciona un archivo.');
+ const r=new FileReader();
+ r.onload=()=>{
+  state.documentos.push({
+   id:uid(), nombre:document.getElementById('dNombre').value||f.name, tipo:document.getElementById('dTipo').value,
+   tipoEquipo:document.getElementById('dTipoEq').value, marca:document.getElementById('dMarca').value,
+   fecha:today(), data:r.result
+  });
+  save(); closeModal(); renderDocs(); toast('Manual/Documento guardado para el tipo de equipo.');
+ };
+ r.readAsDataURL(f);
+}
+
+function renderDocs(){
+ document.getElementById('docsTable').innerHTML=state.documentos.length?state.documentos.map(d=>`<tr>
+  <td><b>${esc(d.nombre)}</b></td><td>${esc(d.tipo)}</td><td>${esc(d.tipoEquipo||'General')} / ${esc(d.marca||'Todas')}</td><td>${fmtDate(d.fecha)}</td>
+  <td><button class="btn small" onclick="openDoc('${d.id}')">Abrir Documento</button></td>
+ </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No hay manuales cargados.</div></td></tr>';
+}
+
+function openDoc(id){
+ const d=state.documentos.find(x=>x.id===id); if(!d) return;
+ const w=window.open();
+ if(d.data) w.document.write(`<iframe src="${d.data}" style="width:100%;height:100vh;border:0"></iframe>`);
+}
+
+function fillTrace(){
+ document.getElementById('traceEquip').innerHTML='<option value="">Seleccione equipo...</option>'+state.equipos.map(e=>`<option value="${e.id}">${esc(e.equipo)} - ${esc(e.serie)} (${esc(sedeName(e.sedeId))})</option>`).join('');
+}
+
+function renderTrace(){
+ const id=document.getElementById('traceEquip').value; if(!id) return;
+ const e=state.equipos.find(x=>x.id===id);
+ const ms=state.mantenimientos.filter(m=>m.equipoId===id);
+ const cs=state.calibraciones.filter(c=>c.equipoId===id);
+ document.getElementById('tracePanel').innerHTML=`
+  <div class="notice"><b>${esc(e.equipo)}</b> · Serie: ${esc(e.serie)} · Sede: ${esc(sedeName(e.sedeId))}</div>
+  <h3>Mantenimientos (${ms.length})</h3>
+  ${ms.map(m=>`<div class="timeline-item"><strong>Reporte N° ${esc(m.reporte)} (${fmtDate(m.fecha)})</strong><small>${esc(m.tipo)} - Técnico: ${esc(m.tecnico)}</small></div>`).join('')}
+  <h3>Calibraciones (${cs.length})</h3>
+  ${cs.map(c=>`<div class="timeline-item"><strong>Certificado ${esc(c.certificado)}</strong><small>Vence:${fmtDate(c.vencimiento)}</small></div>`).join('')}
+ `;
+}
+
+function fillConfig(){
+ document.getElementById('cfgName').value=state.config.name||'';
+ document.getElementById('cfgRole').value=state.config.role||'';
+ document.getElementById('cfgCompany').value=state.config.company||'';
+ if(state.config.sigTechData) document.getElementById('sigCfgPrev').innerHTML=`<img src="${state.config.sigTechData}" style="max-height:70px">`;
+}
+
+function saveConfig(){
+ state.config.name=document.getElementById('cfgName').value;
+ state.config.role=document.getElementById('cfgRole').value;
+ state.config.company=document.getElementById('cfgCompany').value;
+ const ap=document.getElementById('adminPassNew').value;
+ const vp=document.getElementById('viewerPassNew').value;
+ if(ap) state.users.admin.password=ap;
+ if(vp) state.users.consulta.password=vp;
+ save(); toast('Configuración y firmas guardadas.');
+}
+
+function previewFile(input,id){
+ const f=input.files[0]; if(!f) return;
+ const r=new FileReader();
+ r.onload=()=>{
+  document.getElementById(id).innerHTML=`<img class="preview-file" src="${r.result}">`;
+  if(id==='sigCfgPrev') state.config.sigTechData=r.result;
+ };
+ r.readAsDataURL(f);
+}
+
+function renderMatrix(){
+ document.getElementById('matrixTable').innerHTML=state.matriz.map(m=>`<tr>
+  <td><b>${esc(m.tipo)}</b></td><td>${esc(m.periodicidad)}</td><td>${esc(m.calibracion)}</td>
+  <td style="font-size:10px">${esc(m.descripcion)}</td><td style="font-size:10px">${esc(m.actividades)}</td>
+  <td><button class="btn small" onclick="openMatrixModal('${m.id}')">Editar</button></td>
+ </tr>`).join('');
+}
+
+function openMatrixModal(id=''){
+ const m=state.matriz.find(x=>x.id===id)||{};
+ openModal('Editar Matriz Biomédica', `
+  <div class="formgrid">
+   <div class="field span2"><label>Tipo de Equipo</label><input id="mxTipo" value="${esc(m.tipo||'')}"></div>
+   <div class="field"><label>Periodicidad</label><select id="mxPer"><option ${m.periodicidad==='SEMESTRAL'?'selected':''}>SEMESTRAL</option><option ${m.periodicidad==='ANUAL'?'selected':''}>ANUAL</option></select></div>
+   <div class="field"><label>Calibración</label><select id="mxCal"><option ${m.calibracion==='SI'?'selected':''}>SI</option><option ${m.calibracion==='NO'?'selected':''}>NO</option></select></div>
+   <div class="field span4"><label>Descripción Técnica</label><textarea id="mxVida" rows="3">${esc(m.descripcion||'')}</textarea></div>
+   <div class="field span4"><label>Actividades Protocolarias</label><textarea id="mxActs" rows="5">${esc(m.actividades||'')}</textarea></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMatrix('${id}')">Guardar</button>`);
+}
+
+function saveMatrix(id){
+ const obj={id:id||uid(), tipo:document.getElementById('mxTipo').value, periodicidad:document.getElementById('mxPer').value, calibracion:document.getElementById('mxCal').value, descripcion:document.getElementById('mxVida').value, actividades:document.getElementById('mxActs').value};
+ const idx=state.matriz.findIndex(x=>x.id===id);
+ if(idx>=0) state.matriz[idx]=obj; else state.matriz.push(obj);
+ save(); closeModal(); renderMatrix(); toast('Matriz actualizada.');
+}
+
+function renderAnnualPlan(){
+ const y=Number(document.getElementById('planYear')?.value||new Date().getFullYear());
+ const sid=document.getElementById('planSede')?.value||'';
+ const rows=state.equipos.filter(e=>!sid||e.sedeId===sid);
+ document.getElementById('annualPlanTable').innerHTML=rows.map((e,i)=>`<tr>
+  <td>${i+1}</td><td>${nextMaint(e)}</td><td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.ref_b)}</td>
+  <td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>SEMESTRAL</td><td>${esc(state.config.name)}</td>
+  <td>${fmtDate(lastMaint(e.id)?.fecha)||'—'}</td><td>${esc(lastMaint(e.id)?.reporte||'—')}</td>
+  <td><span class="badge ${nextMaint(e)<today()?'red':'green'}">${nextMaint(e)<today()?'VENCIDO':'PROGRAMADO'}</span></td>
+  <td><button class="btn small" onclick="openMaintenanceModal('${e.id}')">Ejecutar</button></td>
+ </tr>`).join('');
+}
+
+function renderMass(){
+ const sid=document.getElementById('massSede')?.value||'';
+ const arr=state.equipos.filter(e=>!sid||e.sedeId===sid);
+ document.getElementById('massTable').innerHTML=arr.map(e=>`<tr>
+  <td><input type="checkbox" class="mass-check" value="${e.id}"></td><td>${esc(e.ref_b)}</td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>${esc(e.servicio)}</td>
+  <td style="font-size:10px">${esc(matFor(e.equipo)?.actividades||'Sin matriz')}</td>
+ </tr>`).join('');
+}
+
+function toggleMass(v){document.querySelectorAll('.mass-check').forEach(x=>x.checked=v)}
+function massSelectAll(){document.getElementById('massAll').checked=true; toggleMass(true)}
+
+function runMass(){
+ if(!canEdit()) return;
+ const ids=[...document.querySelectorAll('.mass-check:checked')].map(x=>x.value);
+ if(!ids.length) return toast('Selecciona al menos un equipo.');
+ const date=document.getElementById('massDate').value||today();
+ const type=document.getElementById('massType').value;
+ 
+ ids.forEach(eid=>{
+  const e=state.equipos.find(x=>x.id===eid);
+  const m=matFor(e.equipo);
+  const no=String(Math.max(13716,...state.mantenimientos.map(x=>Number(x.numero||0)),13716)+1);
+  state.mantenimientos.push({
+   id:uid(), numero:no, reporte:no, equipoId:eid, fecha:date, tipo, técnico:state.config.name,
+   receptor:'Coordinador de Sede', actividades:m?.actividades||'Mantenimiento preventivo según protocolo.',
+   hallazgos:'EQUIPO EN BUEN ESTADO OPERATIVO Y FUNCIONAL', resultado:'EQUIPO OPERATIVO', estado:'EJECUTADO', sigTech:state.config.sigTechData
+  });
+ });
+ save(); refreshAll(); toast(`Se generaron ${ids.length} reportes de servicio BM-FT-04.`);
+}
+
+function openSedeModal(){
+ openModal('Nueva Sede', `
+  <div class="formgrid">
+   <div class="field span2"><label>Nombre de la Sede</label><input id="sNombre"></div>
+   <div class="field span2"><label>Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
+}
+
+function saveSede(){
+ const n=document.getElementById('sNombre').value; if(!n) return;
+ state.sedes.push({id:uid(), nombre:n, ciudad:document.getElementById('sCiudad').value, activa:true});
+ save(); closeModal(); refreshAll(); toast('Sede creada.');
+}
+
+function openEquipoModal(){
+ const sedes=state.sedes.map(s=>`<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
+ openModal('Nuevo Equipo Biomédico', `
+  <div class="formgrid">
+   <div class="field"><label>REF-B</label><input id="eRef"></div>
+   <div class="field span2"><label>Equipo</label><input id="eEquipo"></div>
+   <div class="field"><label>Marca</label><input id="eMarca"></div>
+   <div class="field"><label>Modelo</label><input id="eModelo"></div>
+   <div class="field"><label>Serie</label><input id="eSerie"></div>
+   <div class="field"><label>Sede</label><select id="eSede">${sedes}</select></div>
+   <div class="field"><label>Servicio</label><input id="eServicio"></div>
+   <div class="field"><label>Riesgo</label><input id="eRiesgo" value="IIA"></div>
+   <div class="field"><label>INVIMA</label><input id="eInvima"></div>
+   <div class="field"><label>Código Interno</label><input id="eCodigo"></div>
+   <div class="field"><label>Calibración</label><select id="eCal"><option>SI</option><option>NO</option></select></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEquipo()">Guardar Equipo</button>`);
+}
+
+function saveEquipo(){
+ state.equipos.push({
+  id:uid(), ref_b:document.getElementById('eRef').value, equipo:document.getElementById('eEquipo').value,
+  marca:document.getElementById('eMarca').value, modelo:document.getElementById('eModelo').value,
+  serie:document.getElementById('eSerie').value, sedeId:document.getElementById('eSede').value,
+  servicio:document.getElementById('eServicio').value, riesgo:document.getElementById('eRiesgo').value,
+  invima:document.getElementById('eInvima').value, codigo:document.getElementById('eCodigo').value,
+  cal:document.getElementById('eCal').value, estado:'ACTIVO', fechaAlta:today()
+ });
+ save(); closeModal(); refreshAll(); toast('Equipo agregado al inventario.');
+}
+
+function openImport(){
+ openModal('Importar Inventario desde Excel', `
+  <div class="drop" style="border:2px dashed var(--line);padding:20px;text-align:center">
+   <p>Sube tu archivo <b>.xlsx / .xls</b> de inventario biomédico</p>
+   <input id="importExcel" type="file" accept=".xlsx,.xls" onchange="previewExcel(this.files[0])">
+  </div>
+  <div id="excelInfo" style="margin-top:12px"></div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="doImportExcel()">Importar Filas</button>`);
+}
+
+let importRows=[];
+async function previewExcel(file){
+ if(!file) return;
+ const buf=await file.arrayBuffer();
+ const wb=XLSX.read(buf,{type:'array'});
+ const sheet=wb.Sheets[wb.SheetNames[0]];
+ importRows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+ document.getElementById('excelInfo').innerHTML=`<div class="notice">✅ <b>${importRows.length} registros detectados</b> en la primera hoja.</div>`;
+}
+
+function doImportExcel(){
+ if(!importRows.length) return toast('Carga un Excel válido.');
+ importRows.forEach(r=>{
+  let sedeNameStr=String(r['SEDE']||r['Sede']||'NORTE 106').trim();
+  let s=state.sedes.find(x=>norm(x.nombre)===norm(sedeNameStr));
+  if(!s){s={id:uid(),nombre:sedeNameStr,ciudad:'BOGOTA D.C.',activa:true}; state.sedes.push(s);}
+  state.equipos.push({
+   id:uid(), ref_b:String(r['REF-B']||r['REF']||''), equipo:String(r['EQUIPO']||r['Nombre']||''),
+   marca:String(r['MARCA']||''), modelo:String(r['MODELO']||''), serie:String(r['SERIE']||''),
+   sedeId:s.id, riesgo:String(r['RIESGO']||'IIA'), codigo:String(r['CODIGO']||''),
+   servicio:String(r['SERVICIO']||''), invima:String(r['INVIMA']||''), cal:String(r['CALIBRACION']||'NO'), estado:'ACTIVO'
+  });
+ });
+ save(); closeModal(); refreshAll(); toast('Inventario actualizado desde Excel.');
+}
+
+function openModal(title,body,foot){
+ document.getElementById('modalTitle').textContent=title;
+ document.getElementById('modalBody').innerHTML=body;
+ document.getElementById('modalFoot').innerHTML=foot;
+ document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+
+function printHtmlDoc(inner,title){
+ const w=window.open('','_blank'); if(!w) return;
+ w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;color:#16263a;margin:0;padding:0}.print-doc{padding:15px}.print-doc h1{font-size:16px;text-align:center;color:#0b2f52;margin:0}.doc-meta{text-align:center;color:#64748b;font-size:10px;margin-bottom:12px;border-bottom:2px solid #0b2f52;padding-bottom:4px}.print-table{width:100%;border-collapse:collapse;margin:8px 0}.print-table th,.print-table td{border:1px solid #cad4de;padding:5px 7px;font-size:10px}.print-table th{background:#eef4f8;text-align:left}.sign-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:25px}.sign-box{border-top:1px solid #8b98a5;padding-top:5px;font-size:10px;min-height:60px}</style></head><body>${inner}</body></html>`);
+ w.document.close();
+ setTimeout(()=>w.print(),300);
+}
+
+function exportBackup(){
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
+ a.download=`Gestion_Biomedica_Respaldo_${today()}.json`;
+ a.click();
+}
+
+function init(){
+ load();
+ document.querySelectorAll('#nav button[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+ document.getElementById('massDate').value=today();
+ applyPermissions();
+}
+init();
+</script>
 </body>
 </html>
