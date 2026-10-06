@@ -138,7 +138,8 @@ Agregar Equipo
 <th>Modelo</th>
 <th>Serie</th>
 <th>Sede</th>
-
+<th>Acciones</th>
+  
 </tr>
 
 </thead>
@@ -206,63 +207,162 @@ document.getElementById(
 ).innerHTML=
 
 equipos.map(e=>`
-
+ 
 <tr>
-
+ 
 <td>${e.ref}</td>
 <td>${e.equipo}</td>
 <td>${e.marca}</td>
 <td>${e.modelo}</td>
 <td>${e.serie}</td>
 <td>${e.sede}</td>
-
+ 
+<td>
+ 
+<button onclick="verHojaVida('${e.ref}')">
+📄 Hoja de Vida
+</button>
+ 
+</td>
+ 
 </tr>
-
+ 
 `).join("");
 
 }
 
 function nuevoEquipo(){
+function verHojaVida(ref){
 
-let ref=
-prompt("REF-B");
+const equipo=
+equipos.find(
+e=>e.ref===ref
+);
 
-if(!ref) return;
+const ventana=
+window.open(
+"",
+"_blank"
+);
 
-let equipo=
-prompt("Equipo");
+ventana.document.write(`
 
-let marca=
-prompt("Marca");
+<html>
 
-let modelo=
-prompt("Modelo");
+<head>
 
-let serie=
-prompt("Serie");
+<title>
+Hoja de Vida Biomédica
+</title>
 
-let sede=
-prompt("Sede");
+<style>
 
-equipos.push({
-
-ref,
-equipo,
-marca,
-modelo,
-serie,
-sede
-
-});
-
-render();
-
+body{
+font-family:Arial;
+margin:30px;
 }
 
-render();
+h1{
+color:#0b2f52;
+text-align:center;
+}
 
-</script>
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+}
+
+th{
+background:#eef4f8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+HOJA DE VIDA DE EQUIPO BIOMÉDICO
+</h1>
+
+<h3>
+CENDIATRA SAS
+</h3>
+
+<table>
+
+<tr>
+<th>REF-B</th>
+<td>${equipo.ref}</td>
+</tr>
+
+<tr>
+<th>Equipo</th>
+<td>${equipo.equipo}</td>
+</tr>
+
+<tr>
+<th>Marca</th>
+<td>${equipo.marca}</td>
+</tr>
+
+<tr>
+<th>Modelo</th>
+<td>${equipo.modelo}</td>
+</tr>
+
+<tr>
+<th>Serie</th>
+<td>${equipo.serie}</td>
+</tr>
+
+<tr>
+<th>Sede</th>
+<td>${equipo.sede}</td>
+</tr>
+
+</table>
+
+<br>
+
+<h3>
+Historial de mantenimiento
+</h3>
+
+<table>
+
+<tr>
+<th>Fecha</th>
+<th>Tipo</th>
+<th>Técnico</th>
+</tr>
+
+<tr>
+<td>Sin registros</td>
+<td>-</td>
+<td>-</td>
+</tr>
+
+</table>
+
+<br><br>
+
+<button onclick="window.print()">
+
+🖨 Imprimir PDF
+
+</button>
 
 </body>
 
 </html>
+
+`);
+
+}
