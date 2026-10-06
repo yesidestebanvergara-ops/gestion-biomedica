@@ -21,7 +21,7 @@
 .brand{padding:10px 8px 16px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:17px;margin:0 0 4px;color:#fff}.brand small{opacity:.65}
 .role-chip{display:inline-flex;margin-top:8px;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.12);font-size:10px;font-weight:700}
 .nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 10px 5px}
-.nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:9px;text-align:left;font-size:12px;font-weight:600}
+.nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:99px;text-align:left;font-size:12px;font-weight:600}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
 .logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;font-weight:700}
 
@@ -50,7 +50,7 @@
 
 /* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
-.table{width:100%;border-collapse:collapse;min-width:1050px}.table th,.table td{padding:9px 9px;border-bottom:1px solid #eef2f6;text-align:left;font-size:11.5px}
+.table{width:100%;border-collapse:collapse;min-width:1100px}.table th,.table td{padding:9px 9px;border-bottom:1px solid #eef2f6;text-align:left;font-size:11.5px}
 .table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:9.5px;text-transform:uppercase;font-weight:800}
 .table tr:hover td{background:#fbfdff}
 .eq-link{color:var(--blue);font-weight:750;cursor:pointer;text-decoration:none}.eq-link:hover{text-decoration:underline}
@@ -59,7 +59,7 @@
 .empty{padding:30px;text-align:center;color:var(--muted)}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-size:11.5px;color:var(--muted)}
 
-/* CRONOGRAMA CLARO Y VISIBLE */
+/* CRONOGRAMAS DESDE FECHA DE INICIO */
 .cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
 .cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
 .cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
@@ -149,9 +149,9 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page active" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar el inventario y cronograma.</p></div>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Haga clic en una sede para filtrar el inventario y cronograma calculados desde la fecha de inicio.</p></div>
   <div class="toolbar admin-only">
-   <button class="btn blue" onclick="openImport()">⇧ Importar Excel</button>
+   <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
    <button class="btn primary" onclick="openSedeModal()">+ Agregar Sede</button>
    <button class="btn primary" onclick="openEquipoModal()">+ Nuevo Equipo</button>
   </div>
@@ -166,7 +166,7 @@
    <div class="field"><label>Servicio / Área</label><select id="eqService" onchange="filterEquipos()"></select></div>
    <button class="btn" onclick="clearEqFilters()">Limpiar Filtros</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Sede</th><th>Servicio / Área</th><th>INVIMA</th><th>Riesgo</th><th>Cronograma Mantenimiento</th><th>Cronograma Calibración</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Fecha Inicio</th><th>Sede / Área</th><th>Riesgo</th><th>Cronograma Mantenimiento (6 Meses)</th><th>Cronograma Calibración (12 Meses)</th></tr></thead><tbody id="equiposTable"></tbody></table></div>
   <div class="pagination"><span id="eqPagInfo">Mostrando 0 de 0</span><div style="display:flex;gap:6px;align-items:center"><button class="btn small" onclick="changeEqPage(-1)">‹ Anterior</button><span id="eqPageNum" style="font-weight:800">1</span><button class="btn small" onclick="changeEqPage(1)">Siguiente ›</button></div></div>
  </div>
 </section>
@@ -219,7 +219,7 @@
    <h3>Datos del Técnico Responsable</h3>
    <div class="field" style="margin-top:8px"><label>Ingeniero Biomédico</label><input id="cfgName"></div>
    <div class="field" style="margin-top:8px"><label>Cargo</label><input id="cfgRole"></div>
-   <div class="field" style="margin-top:8px"><label>Empresa</label><input id="cfgCompany"></div>
+   <div class="field" style="margin-top:8px"><label>Empresa</label><input id="cfgCompany" value="CENDIATRA SAS" readonly></div>
    <button class="btn primary" style="margin-top:12px;width:100%" onclick="saveConfig()">Guardar Datos</button>
   </div>
   <div class="card panel">
@@ -230,7 +230,7 @@
   <div class="card panel">
    <h3>Respaldos</h3>
    <button class="btn blue" style="width:100%;margin-bottom:8px" onclick="exportBackup()">Exportar Respaldo JSON</button>
-   <label class="btn" style="width:100%;text-align:center;displayblock">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
+   <label class="btn" style="width:100%;text-align:center;display:block">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
   </div>
  </div>
 
@@ -249,7 +249,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v12_cendiatra';
+const KEY='gestion_biomedica_v13_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -266,7 +266,12 @@ const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const today = () => new Date().toISOString().slice(0, 10);
 const norm = s => String(s ?? '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-const fmtDate = s => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-CO') : '—';
+const fmtDate = s => {
+ if(!s) return '—';
+ let str = String(s).trim();
+ if(str.includes('T')) str = str.split('T')[0];
+ return new Date(str + 'T12:00:00').toLocaleDateString('es-CO');
+};
 
 function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
 function load() {
@@ -306,7 +311,7 @@ function applyPermissions() {
 }
 function canEdit() { return currentUser?.role === 'ADMIN'; }
 
-function sedeObj(id) { return state.sedes.find(s => s.id === id) || { nombre: 'SIN SEDE', direccion: 'N/R', ciudad: 'BOGOTA D.C.' }; }
+function sedeObj(id) { return state.sedes.find(s => s.id === id) || { nombre: 'CORPORATIVA', direccion: 'N/R', ciudad: 'BOGOTA D.C.' }; }
 function sedeName(id) { return sedeObj(id).nombre; }
 
 function matFor(tipoName) {
@@ -315,13 +320,22 @@ function matFor(tipoName) {
 }
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
+
+/* PROXIMO MANTENIMIENTO CALCULADO DESDE LA FECHA DE INICIO */
 function nextMaint(e) {
  const l = lastMaint(e.id);
- const freq = 6; // FIJO: Cada 6 meses
- const days = Math.round(freq * 30.43);
- const d = new Date((l?.fecha || today()) + 'T12:00:00');
- d.setDate(d.getDate() + days);
- return d.toISOString().slice(0, 10);
+ if (l) {
+  const d = new Date(l.fecha + 'T12:00:00');
+  d.setMonth(d.getMonth() + 6);
+  return d.toISOString().slice(0, 10);
+ }
+ const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
+ let nextD = new Date(initD);
+ const now = new Date();
+ while (nextD < now) {
+  nextD.setMonth(nextD.getMonth() + 6);
+ }
+ return nextD.toISOString().slice(0, 10);
 }
 
 function calState(e) {
@@ -435,7 +449,7 @@ function filterEquipos() {
  renderEquiposPage();
 }
 
-/* TABLA PRINCIPAL Y CRONOGRAMAS LEGIBLES */
+/* TABLA PRINCIPAL Y CRONOGRAMAS CALCULADOS DESDE FECHA DE INICIO */
 function renderEquiposPage() {
  const total = filteredEquiposCache.length;
  const start = (eqCurrentPage - 1) * PAGE_SIZE;
@@ -445,20 +459,26 @@ function renderEquiposPage() {
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
+  
+  // Cálculo de los dos meses del ciclo semestral partiendo de fechaInicio
+  let startMonthIdx = 11; // Diciembre por defecto
+  if (e.fechaInicio) {
+   startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
+  }
+  const secondMonthIdx = (startMonthIdx + 6) % 12;
+
   const nxtM = nextMaint(e);
-  const nxtMIndex = new Date(nxtM + 'T12:00:00').getMonth();
   const isOverM = nxtM < today();
-  const secondMIndex = (nxtMIndex + 6) % 12; // Mantenimiento Semestral (Cada 6 Meses)
 
   let cronMaintHtml = months.map((m, idx) => {
-   let act = (idx === nxtMIndex || idx === secondMIndex);
+   let act = (idx === startMonthIdx || idx === secondMonthIdx);
    let cls = act ? (isOverM ? 'cron-cell overdue' : 'cron-cell maint') : 'cron-cell';
    return `<div class="${cls}">${m}</div>`;
   }).join('');
 
   const cState = calState(e);
   const cs = cState[2];
-  let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : -1;
+  let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : startMonthIdx;
 
   let cronCalHtml = months.map((m, idx) => {
    let act = (norm(e.cal) === 'SI' && idx === calMonthIdx);
@@ -469,11 +489,13 @@ function renderEquiposPage() {
   return `<tr>
    <td><a class="eq-link" onclick="openEquipmentProfile('${e.id}')">${esc(e.equipo)}</a></td>
    <td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td class="mono">${esc(e.serie)}</td>
-   <td>${esc(sedeName(e.sedeId))}</td><td>${esc(e.servicio)}</td><td>${esc(e.invima)}</td><td>${esc(e.riesgo)}</td>
+   <td><span class="badge blue">${fmtDate(e.fechaInicio)}</span></td>
+   <td>${esc(sedeName(e.sedeId))}<br><small class="muted">${esc(e.servicio)}</small></td>
+   <td>${esc(e.riesgo)}</td>
    <td>
     <div class="cron-box">
      <div class="cron-row">${cronMaintHtml}</div>
-     <span class="cron-tag">${lm ? `Rep. N° ${lm.reporte}` : 'Cada 6 Meses'}</span>
+     <span class="cron-tag">${lm ? `Rep. N° ${lm.reporte}` : 'Cada 6 Meses desde ' + fmtDate(e.fechaInicio)}</span>
     </div>
    </td>
    <td>
@@ -483,7 +505,7 @@ function renderEquiposPage() {
     </div>
    </td>
   </tr>`;
- }).join('') : '<tr><td colspan="10"><div class="empty">No hay equipos registrados.</div></td></tr>';
+ }).join('') : '<tr><td colspan="9"><div class="empty">No hay equipos registrados.</div></td></tr>';
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
@@ -595,27 +617,33 @@ function lifeHtmlFormat(e) {
    <tr><th>EQUIPO</th><td>${esc(e.equipo)}</td><th>SERIE</th><td>${esc(e.serie)}</td></tr>
    <tr><th>MARCA</th><td>${esc(e.marca)}</td><th>ACTIVO</th><td>${esc(e.activo || 'N/A')}</td></tr>
    <tr><th>MODELO</th><td>${esc(e.modelo)}</td><th>INVIMA</th><td>${esc(e.invima || 'N/A')}</td></tr>
+   <tr><th>FECHA DE INICIO DE OPERACIÓN</th><td colspan="3"><b>${fmtDate(e.fechaInicio)}</b></td></tr>
   </table>
 
-  <div class="fmt-title">DESCRIPCION GENERAL</div>
+  <div class="fmt-title">DESCRIPCION Y CARACTERISTICAS DEL EQUIPO</div>
   <table class="fmt-table">
    <tr>
     <th>CLASIFICACION DE RIESGO:</th>
     <td colspan="5">CLASE I [ ${r.includes('I') && !r.includes('II')?'X':' '} ] &nbsp;&nbsp; CLASE IIA [ ${r.includes('IIA')?'X':' '} ] &nbsp;&nbsp; CLASE IIB [ ${r.includes('IIB')?'X':' '} ] &nbsp;&nbsp; CLASE III [ ${r.includes('III')?'X':' '} ]</td>
    </tr>
    <tr>
-    <th>MANUALES REGISTRADOS:</th>
-    <td colspan="5">USUARIO [ ${norm(e.manuales)==='NO'?' ':'X'} ] &nbsp;&nbsp; SERVICIO [ &nbsp; ] &nbsp;&nbsp; PLANOS [ &nbsp; ]</td>
+    <th>DOCUMENTACIÓN REGISTRADA:</th>
+    <td colspan="5">MANUAL DE USUARIO [ ${norm(e.manuales)==='NO'?' ':'X'} ] &nbsp;&nbsp; GUÍA RÁPIDA [ ${norm(e.guiaRapida)==='NO'?' ':'X'} ] &nbsp;&nbsp; PLANOS [ &nbsp; ]</td>
+   </tr>
+   <tr>
+    <th>INFORMACIÓN / DESCRIPCIÓN:</th>
+    <td colspan="5">${esc(e.info || 'EQUIPO BIOMÉDICO DEDICADO A ATENCIÓN EN SALUD')}</td>
    </tr>
   </table>
 
-  <div class="fmt-title">CARACTERISTICAS TECNICAS DE PLANILLA EXCEL</div>
+  <div class="fmt-title">ESPECIFICACIONES TÉCNICAS</div>
   <table class="fmt-table">
    <tr><th>VOLTAJE DE OPERACIÓN</th><td>${volt}</td><th>AMPERIOS (CORRIENTE)</th><td>${amp}</td></tr>
-   <tr><th>PESO DEL EQUIPO</th><td>${peso}</td><th>REQUIERE CALIBRACIÓN METROLÓGICA</th><td>SI [ ${calib?'X':' '} ] &nbsp; NO [ ${!calib?'X':' '} ]</td></tr>
+   <tr><th>PESO DEL EQUIPO</th><td>${peso}</td><th>FUENTE DE ALIMENTACIÓN</th><td>${esc(e.fuenteAlimentacion || 'ELÉCTRICA')}</td></tr>
+   <tr><th>REQUIERE CALIBRACIÓN METROLÓGICA</th><td colspan="3">SI [ ${calib?'X':' '} ] &nbsp; NO [ ${!calib?'X':' '} ]</td></tr>
   </table>
 
-  <div class="fmt-title">PERIODICIDADES DE MANTENIMIENTO Y CONTROL</div>
+  <div class="fmt-title">PROGRAMACIÓN Y CRONOGRAMA DESDE FECHA DE INICIO (${fmtDate(e.fechaInicio)})</div>
   <table class="fmt-table">
    <tr><th>FRECUENCIA MANTENIMIENTO PREVENTIVO</th><td><b>6 MESES (SEMESTRAL)</b></td><th>FRECUENCIA CALIBRACIÓN METROLÓGICA</th><td><b>12 MESES (ANUAL)</b></td></tr>
   </table>
@@ -930,11 +958,11 @@ function saveMatrix(id) {
  save(); closeModal(); renderMatrix();
 }
 
-/* IMPORTACIÓN DESDE EXCEL LEYENDO SEDE, DIRECCIÓN Y ÁREA */
+/* IMPORTACIÓN DESDE TU EXCEL (Mapeo Inteligente de Libro1.xlsx) */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
-   <p style="margin-bottom:8px"><b>Seleccione su archivo Excel</b></p>
+   <p style="margin-bottom:8px"><b>Seleccione su archivo Excel de Equipos</b></p>
    <input id="importExcel" type="file" accept=".xlsx,.xls" onchange="previewExcel(this.files[0])">
   </div>
   <div id="excelInfo" style="margin-top:10px"></div>
@@ -948,14 +976,36 @@ async function previewExcel(file) {
  const wb = XLSX.read(buf, { type: 'array' });
  const sheet = wb.Sheets[wb.SheetNames[0]];
  importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
- document.getElementById('excelInfo').innerHTML = `<div class="notice">✅ <b>${importData.length} registros listos para importar a CENDIATRA.</b></div>`;
+ document.getElementById('excelInfo').innerHTML = `<div class="notice">✅ <b>${importData.length} registros listos para procesar.</b></div>`;
+}
+
+function parseExcelDate(val) {
+ if (!val) return '2023-12-13';
+ if (val instanceof Date) return val.toISOString().slice(0, 10);
+ if (typeof val === 'number') {
+  const d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+  return d.toISOString().slice(0, 10);
+ }
+ let s = String(val).trim();
+ if (s.includes('T')) s = s.split('T')[0];
+ return s;
+}
+
+function getVal(row, keys) {
+ for (let k of Object.keys(row)) {
+  let nk = norm(k);
+  for (let searchKey of keys) {
+   if (nk.includes(norm(searchKey))) return row[k];
+  }
+ }
+ return '';
 }
 
 function doImportExcel() {
  if (!importData.length) return alert('Seleccione un Excel válido.');
  importData.forEach(r => {
-  let sName = String(r['SEDE'] || r['Sede'] || 'SEDE PRINCIPAL').trim();
-  let sDir = String(r['DIRECCIÓN SEDE'] || r['DIRECCION SEDE'] || r['DIRECCIÓN'] || r['DIRECCION'] || 'N/R').trim();
+  let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
+  let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
   
   let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
   if (!s) { 
@@ -965,31 +1015,38 @@ function doImportExcel() {
    s.direccion = sDir;
   }
 
-  let eqName = String(r['NOMBRE'] || r['EQUIPO'] || r['Nombre'] || '').trim();
+  let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
+  let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
   state.equipos.push({
-   id: uid(), equipo: eqName,
-   marca: String(r['MARCA'] || r['Marca'] || 'N/R').trim(),
-   modelo: String(r['MODELO'] || r['Modelo'] || 'N/R').trim(),
-   serie: String(r['SERIE'] || r['Serie'] || 'N/R').trim(),
-   activo: String(r['ACTIVO'] || r['Activo'] || 'AG 001').trim(),
+   id: uid(), 
+   equipo: eqName,
+   marca: String(getVal(r, ['MARCA']) || 'N/R').trim(),
+   modelo: String(getVal(r, ['MODELO']) || 'N/R').trim(),
+   serie: String(getVal(r, ['SERIE']) || 'N/R').trim(),
+   activo: String(getVal(r, ['ACTIVO']) || 'SA1564').trim(),
    sedeId: s.id,
-   servicio: String(r['ÁREA'] || r['AREA'] || r['SERVICIO'] || r['Servicio'] || 'LABORATORIO').trim(),
-   invima: String(r['INVIMA'] || r['Invima'] || 'N/A').trim(),
-   riesgo: String(r['CLASIFICACION DE RIESGO'] || r['RIESGO'] || 'CLASE IIA').trim(),
-   voltaje: String(r['VOLTAJE DE OPERACION'] || r['VOLTAJE'] || '110V').trim(),
-   amperios: String(r['AMPERIOS'] || r['Amperios'] || 'N/A').trim(),
-   peso: String(r['PESO'] || r['Peso'] || 'N/A').trim(),
-   cal: String(r['CALIBRACION'] || r['Calibración'] || 'NO').trim().toUpperCase(),
-   manuales: String(r['MANUALES'] || 'SI').trim(),
+   servicio: String(getVal(r, ['SERVICIO', 'AREA', 'ÁREA']) || 'FONOAUDIOLOGIA').trim(),
+   invima: String(getVal(r, ['INVIMA']) || 'DM202222').trim(),
+   riesgo: String(getVal(r, ['CLASIFICACION DE RIESGO', 'RIESGO']) || 'IIA').trim(),
+   voltaje: String(getVal(r, ['VOLTAJE']) || '110').trim(),
+   amperios: String(getVal(r, ['CORRIENTE', 'AMPERIOS']) || '1A').trim(),
+   peso: String(getVal(r, ['PESO DEL EQUIPO', 'PESO']) || '2KG').trim(),
+   fuenteAlimentacion: String(getVal(r, ['FUENTE DE ALIMENTACION', 'FUENTE']) || 'ELECTRICA').trim(),
+   cal: String(getVal(r, ['REQUIERE CALIBRACION', 'CALIBRACION']) || 'SI').trim().toUpperCase(),
+   manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
+   guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
+   info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
+   preventivo: String(getVal(r, ['PREVENTIVO']) || '').trim(),
+   fechaInicio: parseExcelDate(rawDate),
    estado: 'ACTIVO'
   });
  });
- save(); closeModal(); refreshAll(); alert(`¡Carga completada! Se añadieron ${importData.length} equipos para CENDIATRA SAS.`);
+ save(); closeModal(); refreshAll(); alert(`¡Carga exitosa! Se procesaron ${importData.length} equipos para CENDIATRA SAS.`);
 }
 
 function openSedeModal() {
- openModal('Agregar Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Dirección Sede</label><input id="sDir" placeholder="Ej. Calle 106 # 15-20"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
+ openModal('Agregar Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Dirección Sede</label><input id="sDir" placeholder="Ej. CARRERA 20 # 45 A 91"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
 }
 function saveSede() {
  const n = document.getElementById('sNombre').value; if (!n) return;
@@ -1005,9 +1062,10 @@ function openEquipoModal() {
    <div class="field"><label>Marca</label><input id="eMarca"></div>
    <div class="field"><label>Modelo</label><input id="eModelo"></div>
    <div class="field"><label>Serie</label><input id="eSerie"></div>
-   <div class="field"><label>Activo</label><input id="eActivo" value="AG 001"></div>
+   <div class="field"><label>Activo</label><input id="eActivo" value="SA1564"></div>
+   <div class="field"><label>Fecha de Inicio</label><input id="eFechaInicio" type="date" value="2023-12-13"></div>
    <div class="field"><label>Sede</label><select id="eSede">${sedes}</select></div>
-   <div class="field"><label>Área / Servicio</label><input id="eServicio"></div>
+   <div class="field"><label>Área / Servicio</label><input id="eServicio" value="FONOAUDIOLOGIA"></div>
    <div class="field"><label>INVIMA</label><input id="eInvima"></div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEquipo()">Guardar Equipo</button>`);
@@ -1017,8 +1075,9 @@ function saveEquipo() {
  state.equipos.push({
   id: uid(), equipo: document.getElementById('eEquipo').value, marca: document.getElementById('eMarca').value,
   modelo: document.getElementById('eModelo').value, serie: document.getElementById('eSerie').value,
-  activo: document.getElementById('eActivo').value, sedeId: document.getElementById('eSede').value,
-  servicio: document.getElementById('eServicio').value, invima: document.getElementById('eInvima').value, cal: 'SI', estado: 'ACTIVO'
+  activo: document.getElementById('eActivo').value, fechaInicio: document.getElementById('eFechaInicio').value || '2023-12-13',
+  sedeId: document.getElementById('eSede').value, servicio: document.getElementById('eServicio').value,
+  invima: document.getElementById('eInvima').value, cal: 'SI', estado: 'ACTIVO'
  });
  save(); closeModal(); refreshAll();
 }
