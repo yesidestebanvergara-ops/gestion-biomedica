@@ -232,6 +232,29 @@ equipos.map(e=>`
 }
 
 function nuevoEquipo(){
+
+let ref=prompt("REF-B");
+
+if(!ref) return;
+
+let equipo=prompt("Equipo");
+let marca=prompt("Marca");
+let modelo=prompt("Modelo");
+let serie=prompt("Serie");
+let sede=prompt("Sede");
+
+equipos.push({
+ref,
+equipo,
+marca,
+modelo,
+serie,
+sede
+});
+
+render();
+
+}
 function verHojaVida(ref){
 
 const equipo=
