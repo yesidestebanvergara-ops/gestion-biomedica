@@ -23,7 +23,7 @@
 .nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 10px 5px}
 .nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:9px;text-align:left;font-size:12px;font-weight:600}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
-.logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;font-weight:700}
+.logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:99px;font-weight:700}
 
 .main{margin-left:250px;flex:1;min-width:0}
 .topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:15}
@@ -63,9 +63,9 @@
 .cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
 .cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
 .cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
-.cron-cell.done{background:#168457;color:#fff;border-color:#168457} /* 🟢 VERDE: REALIZADO EN ESTE AÑO */
-.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43} /* 🔴 ROJO: VENCIDO EN ESTE AÑO */
-.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100} /* 🟡 AMARILLO: PROGRAMADO AÑO ACTUAL (FUTURO) */
+.cron-cell.done{background:#168457;color:#fff;border-color:#168457}
+.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43}
+.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100}
 .cron-tag{font-size:8px;font-weight:800;color:var(--navy);background:#e6f2fb;padding:2px 5px;border-radius:4px;display:inline-block;text-align:center}
 
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px}
@@ -190,18 +190,27 @@
  </div>
 </section>
 
-<!-- EJECUCIÓN MASIVA (ADMIN) -->
+<!-- EJECUCIÓN MASIVA CON FIRMAS INGENIERO Y COORDINADOR -->
 <section class="page" id="page-masiva">
  <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
- <div class="notice" style="margin:10px 0">Selecciona los equipos e ingresa el reporte masivo asignando las firmas.</div>
+ <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede, diligencia el nombre y firma del Ingeniero y Coordinador de Sede para aplicar la firma en lote a los reportes EV-INTER-03.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
    <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field"><label>Fecha</label><input id="massDate" type="date"></div>
+   <div class="field"><label>Fecha Mantenimiento</label><input id="massDate" type="date"></div>
    <button class="btn primary" onclick="runMass()">⚡ Generar Mantenimientos Seleccionados</button>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio / Área</th><th>Actividades de Matriz</th></tr></thead><tbody id="massTable"></tbody></table></div>
+
+  <!-- SECCIÓN DE FIRMAS Y DATOS MASIVOS -->
+  <div class="formgrid" style="margin:15px 0;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px">
+   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico"></div>
+   <div class="field span2"><label>Coordinador de Sede / Recibe a Conformidad</label><input id="massReceptor" placeholder="Nombre del Coordinador de Sede"></div>
+   <div class="field span2"><label>Firma Ingeniero Biomédico</label><div class="signature-box" id="massSigTechBox">Firma en Configuración</div></div>
+   <div class="field span2"><label>Firma Coordinador de Sede</label><div class="signature-box"><canvas id="canvasMassRec" width="260" height="60"></canvas><button class="btn small" onclick="clearCanvasMassRec()" style="margin-top:4px">Limpiar Firma Coordinador</button></div></div>
+  </div>
+
+  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Servicio / Área</th><th>Actividades Protocolarias</th></tr></thead><tbody id="massTable"></tbody></table></div>
  </div>
 </section>
 
@@ -268,7 +277,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v15_cendiatra';
+const KEY='gestion_biomedica_v16_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -711,7 +720,7 @@ function getDocsForEquipment(e) {
  return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
 }
 
-/* REPORTE EV-INTER-03 CENDIATRA SAS CON FIRMA DE COORDINADOR DE SEDE */
+/* REPORTE EV-INTER-03 CENDIATRA SAS CON LISTA DE CHEQUEO AUTOMÁTICA POR TIPO DE EQUIPO */
 let canvasRecCtx = null;
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
@@ -723,7 +732,7 @@ function openMaintenanceModal(equipId = '') {
    <div class="field span2"><label>Equipo</label><select id="mEquipo">${opts}</select></div>
    <div class="field"><label>Fecha Mantenimiento</label><input id="mFecha" type="date" value="${today()}"></div>
    <div class="field"><label>Tipo Mantenimiento</label><select id="mTipo"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field span2"><label>Técnico Responsable</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
+   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe</label><input id="mReceptor" placeholder="Nombre del coordinador de sede"></div>
    <div class="field span4"><label>Trabajo Realizado</label><textarea id="mTrabajo" rows="3">SE REALIZA INSPECCIÓN GENERAL, LIMPIEZA EXTERNA E INTERNA, REVISIÓN DE CABLES, PRUEBAS DE FUNCIONAMIENTO Y AJUSTES PROTOCOLARIOS DE MANTENIMIENTO PREVENTIVO (CADA 6 MESES).</textarea></div>
    <div class="field span2"><label>Firma Técnico Biomédico</label><div class="signature-box">${state.config.sigTech ? `<img src="${state.config.sigTech}" style="max-height:50px">` : 'Firma en configuración'}</div></div>
@@ -767,10 +776,12 @@ function openReport(id) {
  openModal(`Reporte de Mantenimiento N° ${r.reporte}`, reportHtmlFormat(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtmlFormat(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_${r.reporte}')">🖨 Imprimir EV-INTER-03</button>`);
 }
 
-function reportHtmlFormat(r) {
- const e = state.equipos.find(x => x.id === r.equipoId) || {};
- const sObj = sedeObj(e.sedeId);
- const chkList = [
+/* LÓGICA DE LISTA DE CHEQUEO DINÁMICA SEGÚN EL TIPO DE EQUIPO BIOMÉDICO */
+function getDynamicChecklist(eq) {
+ const name = norm(eq?.equipo || '');
+ const custom = norm(eq?.customChecklist || '');
+
+ const allItems = [
   "REVISION DE CARCASA", "REVISION CABLE DE PACIENTE", "REVISION DE OTOSCOPIO",
   "REVISION DE INDICADORES LUMINOSOS", "REVISION DE PALAS Y PARCHES", "REVISION DE OFTALMOSCOPIO",
   "REVISION DE PARTES MOVILES", "REVISION DE BATERIAS", "REVISION DE VASO SECRETOR",
@@ -789,6 +800,33 @@ function reportHtmlFormat(r) {
   "REVISION DE SISTEMA ELECTRONICO", "REVISION DE SISTEMA MECANICO", "LUBRICACION DE PARTES",
   "REVISION DE CABEZAL ULTRASONICO", "REVISION DE PANEL DE CONTROL", "LIMPIEZA GENERAL"
  ];
+
+ return allItems.map(item => {
+  let isChecked = false;
+  const nItem = norm(item);
+
+  if (custom) {
+   isChecked = custom.includes(nItem) || custom.split(',').some(c => nItem.includes(norm(c)));
+  } else if (name.includes('AUDIOMETRO')) {
+   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE PANTALLA", "REVISION DE PULSADORES", "REVISION DE CONECTORES", "REVISION DE PANEL DE CONTROL", "LIMPIEZA GENERAL"].includes(item);
+  } else if (name.includes('ESPIROMETRO')) {
+   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE MANGUERAS", "REVISION DE SENSORES", "REVISION DE TURBINA", "LIMPIEZA GENERAL"].includes(item);
+  } else if (name.includes('ELECTROCARDIOGRAFO') || name.includes('ECG')) {
+   isChecked = ["REVISION DE CARCASA", "REVISION CABLE DE PACIENTE", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE PANTALLA", "REVISION DE ELECTRODOS", "LIMPIEZA GENERAL"].includes(item);
+  } else if (name.includes('FONENDO') || name.includes('TENSOMETRO')) {
+   isChecked = ["REVISION DE BRAZALETE", "REVISION MANOMETRO", "REVISION DE OLIVAS", "REVISION DE TUBERIA", "LIMPIEZA GENERAL"].includes(item);
+  } else {
+   isChecked = ["REVISION DE CARCASA", "REVISION DE CABLE DE PODER", "CHEQUEO DE FUNCIONAMINETO", "REVISION DE SISTEMA ELECTRICO", "LIMPIEZA GENERAL"].includes(item);
+  }
+
+  return { label: item, checked: isChecked };
+ });
+}
+
+function reportHtmlFormat(r) {
+ const e = state.equipos.find(x => x.id === r.equipoId) || {};
+ const sObj = sedeObj(e.sedeId);
+ const chkList = getDynamicChecklist(e);
 
  return `
  <div style="padding:10px;background:#fff;color:#000">
@@ -813,12 +851,12 @@ function reportHtmlFormat(r) {
    <tr><th>SERIE</th><td>${esc(e.serie)}</td><th>ACTIVO</th><td>${esc(e.activo || 'N/A')}</td></tr>
   </table>
 
-  <div class="fmt-title">LISTA DE CHEQUEO</div>
+  <div class="fmt-title">LISTA DE CHEQUEO (DINÁMICA POR EQUIPO)</div>
   <div class="chk-grid">
    ${chkList.map(item => `
     <div class="chk-item">
-     <span>${item}</span>
-     <b>${(item.includes('CABLE')||item.includes('LIMPIEZA')||item.includes('PANTALLA')||item.includes('FUNCIONAM'))?'X':' '}</b>
+     <span>${item.label}</span>
+     <b>${item.checked ? 'X' : ' '}</b>
     </div>
    `).join('')}
   </div>
@@ -829,7 +867,7 @@ function reportHtmlFormat(r) {
   </div>
 
   <table class="fmt-table" style="margin-top:12px">
-   <tr><th style="width:50%">TECNICO RESPONSABLE BIOMÉDICO</th><th style="width:50%">COORDINADOR DE SEDE (RECIBE A CONFORMIDAD)</th></tr>
+   <tr><th style="width:50%">INGENIERO RESPONSABLE BIOMÉDICO</th><th style="width:50%">COORDINADOR DE SEDE (RECIBE A CONFORMIDAD)</th></tr>
    <tr>
     <td style="height:55px;vertical-align:bottom">
      <b>NOMBRE:</b> ${esc(r.tecnico)}<br>
@@ -846,14 +884,37 @@ function reportHtmlFormat(r) {
  </div>`;
 }
 
+/* EJECUCIÓN MASIVA CON FIRMAS E INGENIERO/COORDINADOR */
+let canvasMassRecCtx = null;
 function renderMass() {
  const sid = document.getElementById('massSede')?.value || '';
  const list = state.equipos.filter(e => !sid || e.sedeId === sid);
+ 
+ document.getElementById('massTecnico').value = state.config.name || 'ESTEBAN VERGARA';
+ if (state.config.sigTech) {
+  document.getElementById('massSigTechBox').innerHTML = `<img src="${state.config.sigTech}" style="max-height:50px">`;
+ }
+
  document.getElementById('massTable').innerHTML = list.slice(0, 200).map(e => `<tr>
   <td><input type="checkbox" class="mass-check" value="${e.id}"></td><td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td><td>${esc(e.servicio)}</td>
   <td style="font-size:10px">${esc(matFor(e.equipo)?.actividades || 'Mantenimiento Preventivo (Cada 6 Meses)')}</td>
  </tr>`).join('');
+
+ initCanvasMassRec();
 }
+
+function initCanvasMassRec() {
+ setTimeout(() => {
+  const c = document.getElementById('canvasMassRec'); if (!c) return;
+  canvasMassRecCtx = c.getContext('2d');
+  let draw = false;
+  c.onmousedown = e => { draw = true; canvasMassRecCtx.beginPath(); canvasMassRecCtx.moveTo(e.offsetX, e.offsetY); };
+  c.onmousemove = e => { if (draw) { canvasMassMassRecCtx.lineTo(e.offsetX, e.offsetY); canvasMassRecCtx.stroke(); } };
+  c.onmouseup = () => draw = false;
+ }, 150);
+}
+
+function clearCanvasMassRec() { const c = document.getElementById('canvasMassRec'); if (c) canvasMassRecCtx.clearRect(0, 0, c.width, c.height); }
 
 function toggleMass(v) { document.querySelectorAll('.mass-check').forEach(x => x.checked = v); }
 
@@ -861,8 +922,13 @@ function runMass() {
  if (!canEdit()) return;
  const ids = [...document.querySelectorAll('.mass-check:checked')].map(x => x.value);
  if (!ids.length) return alert('Seleccione al menos un equipo.');
+ 
  const date = document.getElementById('massDate').value || today();
  const type = document.getElementById('massType').value;
+ const tecName = document.getElementById('massTecnico').value || state.config.name;
+ const recName = document.getElementById('massReceptor').value || 'COORDINADOR DE SEDE';
+ const cMassRec = document.getElementById('canvasMassRec');
+ const massSigRecUrl = cMassRec ? cMassRec.toDataURL() : '';
 
  ids.forEach(eid => {
   const e = state.equipos.find(x => x.id === eid);
@@ -870,11 +936,11 @@ function runMass() {
   const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
   state.mantenimientos.push({
    id: uid(), numero: no, reporte: no, equipoId: eid, fecha: date, tipo: type,
-   tecnico: state.config.name, receptor: 'COORDINADOR DE SEDE', trabajo: m?.actividades || 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.',
-   sigTech: state.config.sigTech
+   tecnico: tecName, receptor: recName, trabajo: m?.actividades || 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.',
+   sigTech: state.config.sigTech, sigRec: massSigRecUrl
   });
  });
- save(); refreshAll(); alert(`Se generaron ${ids.length} reportes EV-INTER-03 para CENDIATRA SAS.`);
+ save(); refreshAll(); alert(`Se generaron ${ids.length} reportes EV-INTER-03 firmados por el Ing. ${tecName} y el Coordinador ${recName}.`);
 }
 
 function openCalibrationModal(equipId = '') {
@@ -1093,7 +1159,7 @@ function doImportExcel() {
    manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
    guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
    info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
-   preventivo: String(getVal(r, ['PREVENTIVO']) || '').trim(),
+   customChecklist: String(getVal(r, ['LISTA DE CHEQUEO', 'CHECKLIST']) || '').trim(),
    fechaInicio: parseExcelDate(rawDate),
    estado: 'ACTIVO'
   });
