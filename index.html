@@ -39,7 +39,7 @@
 
 /* COMPONENTS */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px;outline:0}
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}
 .btn.small{padding:4px 7px;font-size:10.5px}
@@ -47,6 +47,13 @@
 .notice{padding:11px 13px;border:1px solid #c9dfef;background:#eef7fd;border-radius:99px;color:#205b88;font-size:11.5px;line-height:1.4;display:inline-block}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
 .field{display:flex;flex-direction:column;gap:4px}.field label{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1}
+
+/* PROGRESS BARS */
+.progress-bar-bg{width:100%;height:14px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}
+.progress-bar-fill{height:100%;transition:width 0.4s ease}
+.progress-bar-fill.green{background:var(--green)}
+.progress-bar-fill.yellow{background:var(--yellow)}
+.progress-bar-fill.red{background:var(--red)}
 
 /* TABLES & TABS */
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
@@ -128,21 +135,27 @@
 </aside>
 
 <main class="main">
-<header class="topbar"><h1 id="pageTitle">Sedes e Inventario</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div></div></header>
+<header class="topbar"><h1 id="pageTitle">Panel de Indicadores</h1><div class="top-user"><span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div></div></header>
 
 <div class="content">
 
 <!-- DASHBOARD (SOLO ADMIN) -->
 <section class="page" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores Generales por Sede</h2><p>Estado global del plan de mantenimiento y calibraciones.</p></div>
-  <div class="toolbar">
+  <div><h2>Indicadores de Desempeño</h2><p>Estadísticas de mantenimiento y calibración, global o por sede.</p></div>
+  <div class="toolbar" style="align-items:center">
+   <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
+    <option value="">Todas las Sedes (General)</option>
+   </select>
    <button class="btn blue" onclick="exportBackup()">Respaldo JSON</button>
   </div>
  </div>
+ 
  <div id="stats" class="grid g4" style="margin-top:16px"></div>
+ <div id="indicators" class="grid g2" style="margin-top:16px"></div>
+ 
  <div class="card panel" style="margin-top:16px">
-  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas de Sedes Vencidas</h3>
+  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas</h3>
   <div id="alerts"></div>
  </div>
 </section>
@@ -277,7 +290,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v18_cendiatra';
+const KEY='gestion_biomedica_v19_cendiatra';
 
 let state = {
  sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [],
@@ -378,7 +391,7 @@ function go(page) {
  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
  document.getElementById('page-' + page).classList.add('active');
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === page));
- document.getElementById('pageTitle').textContent = (page==='sedes')?'Sedes e Inventario':(page==='documentos')?'Manuales y Documentos':(page==='dashboard')?'Inicio / Indicadores':page.toUpperCase();
+ document.getElementById('pageTitle').textContent = (page==='sedes')?'Sedes e Inventario':(page==='documentos')?'Manuales y Documentos':(page==='dashboard')?'Panel de Indicadores':page.toUpperCase();
  renderPage(page);
 }
 
@@ -398,45 +411,89 @@ function fillSelects() {
  const opts = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
  ['dashSedeFilter', 'eqSede', 'calSedeFilter', 'massSede', 'docSedeFilter'].forEach(id => {
   const x = document.getElementById(id); if (!x) return;
-  const old = x.value; x.innerHTML = '<option value="">Todas las Sedes</option>' + opts; x.value = old;
+  const old = x.value; 
+  x.innerHTML = (id==='dashSedeFilter' ? '<option value="">Todas las Sedes (General)</option>' : '<option value="">Todas las Sedes</option>') + opts; 
+  x.value = old;
  });
  const servs = [...new Set(state.equipos.map(e => e.servicio).filter(Boolean))].sort();
  const eqS = document.getElementById('eqService');
  if (eqS) { const old = eqS.value; eqS.innerHTML = '<option value="">Todos los Servicios / Áreas</option>' + servs.map(s => `<option>${esc(s)}</option>`).join(''); eqS.value = old; }
 }
 
+/* LÓGICA DE INDICADORES EN EL DASHBOARD */
 function renderDashboard() {
  if (!canEdit()) return;
  const todayStr = today();
- const totalSedes = state.sedes.length;
- const totalEquipos = state.equipos.length;
+ const sid = document.getElementById('dashSedeFilter')?.value || '';
+ const targetSedes = sid ? state.sedes.filter(s => s.id === sid) : state.sedes;
+ const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
- const sedesVencidas = state.sedes.filter(s => {
+ const totalEquipos = eqs.length;
+ let mTotal = totalEquipos;
+ let mAlDia = 0, cTotal = 0, cAlDia = 0, mVencidos = 0, cVencidos = 0;
+
+ eqs.forEach(e => {
+  if (nextMaint(e) >= todayStr) mAlDia++; else mVencidos++;
+  
+  if (norm(e.cal) === 'SI') {
+   cTotal++;
+   const cs = calState(e)[0];
+   if (cs === 'VIGENTE' || cs === 'PRÓXIMA') cAlDia++; else cVencidos++;
+  }
+ });
+
+ const pctM = mTotal ? Math.round((mAlDia / mTotal) * 100) : 100;
+ const pctC = cTotal ? Math.round((cAlDia / cTotal) * 100) : 100;
+ const colorM = pctM >= 90 ? 'green' : (pctM >= 70 ? 'yellow' : 'red');
+ const colorC = pctC >= 90 ? 'green' : (pctC >= 70 ? 'yellow' : 'red');
+
+ let sedesVencidas = targetSedes.filter(s => {
   const eqSede = state.equipos.filter(e => e.sedeId === s.id);
   return eqSede.some(e => nextMaint(e) < todayStr || calState(e)[0] === 'VENCIDA');
  });
 
- const totalMVenc = state.equipos.filter(e => nextMaint(e) < todayStr).length;
- const totalCVenc = state.equipos.filter(e => calState(e)[0] === 'VENCIDA').length;
-
+ // Render Tarjetas Superiores
  document.getElementById('stats').innerHTML = [
-  [totalSedes, 'SEDES TOTALES', 'Puntos registrados'],
-  [totalEquipos, 'EQUIPOS REGISTRADOS', 'Inventario CENDIATRA'],
-  [sedesVencidas.length, 'SEDES VENCIDAS', 'Requieren atención'],
-  [totalMVenc + totalCVenc, 'EQUIPOS PENDIENTES', 'Mantenimiento / Calibración']
- ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${x[1].includes('VENCIDAS') || x[1].includes('PENDIENTES') ? (x[0]>0?'color:var(--red)':'') : ''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
+  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En la sede seleccionada' : 'Inventario global total'],
+  [`${mAlDia} / ${mTotal}`, 'MANTENIMIENTOS AL DÍA', 'Preventivos vigentes'],
+  [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente'],
+  [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
+ ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${(String(x[1]).includes('VENCID') && x[0]>0)?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
+ // Render Barras de Porcentaje
+ document.getElementById('indicators').innerHTML = `
+  <div class="card panel">
+   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+    <b style="color:var(--navy);font-size:14px">Cumplimiento de Mantenimiento Preventivo</b>
+    <span style="font-weight:850;font-size:16px;color:var(--${colorM})">${pctM}%</span>
+   </div>
+   <div class="progress-bar-bg"><div class="progress-bar-fill ${colorM}" style="width:${pctM}%"></div></div>
+   <small class="muted" style="margin-top:10px;display:block"><b>${mAlDia}</b> equipos con mantenimiento vigente de <b>${mTotal}</b> registrados.</small>
+  </div>
+  
+  <div class="card panel">
+   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+    <b style="color:var(--navy);font-size:14px">Cumplimiento de Calibración Metrológica</b>
+    <span style="font-weight:850;font-size:16px;color:var(--${colorC})">${pctC}%</span>
+   </div>
+   <div class="progress-bar-bg"><div class="progress-bar-fill ${colorC}" style="width:${pctC}%"></div></div>
+   <small class="muted" style="margin-top:10px;display:block"><b>${cAlDia}</b> equipos calibrados de <b>${cTotal}</b> que requieren metrología.</small>
+  </div>
+ `;
+
+ // Render Alertas
  let alertHtml = '';
  if (sedesVencidas.length > 0) {
   alertHtml = sedesVencidas.map(s => {
    const eqSede = state.equipos.filter(e => e.sedeId === s.id);
    const mV = eqSede.filter(e => nextMaint(e) < todayStr).length;
    const cV = eqSede.filter(e => calState(e)[0] === 'VENCIDA').length;
+   if (mV === 0 && cV === 0) return '';
    return `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">
-    <b>📍 Sede Vencida: ${esc(s.nombre)}</b> (${esc(s.direccion || 'Sin dirección')}) — Con <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas.
+    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas en su inventario.
    </div>`;
   }).join('');
- } else alertHtml = '<div class="notice">✅ Todas las sedes al día.</div>';
+ } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día en cronograma.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
  document.getElementById('alerts').innerHTML = alertHtml;
 }
 
