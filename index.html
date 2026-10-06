@@ -43,18 +43,20 @@
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}
 .btn.red{background:#fdeced;border-color:#f2c9cc;color:#a32d35}
+.btn.green{background:#e8f7ef;border-color:#bbf0d4;color:#168457}
 .btn.small{padding:4px 7px;font-size:10.5px}
 .stat{padding:15px}.stat .label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:24px;color:var(--navy);font-weight:850;margin-top:3px}.stat small{color:var(--muted)}
 .notice{padding:11px 13px;border:1px solid #c9dfef;background:#eef7fd;border-radius:99px;color:#205b88;font-size:11.5px;line-height:1.4;display:inline-block}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
 .field{display:flex;flex-direction:column;gap:4px}.field label{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1}
 
-/* PROGRESS BARS & CHARTS */
-.progress-bar-bg{width:100%;height:14px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}
-.progress-bar-fill{height:100%;transition:width 0.4s ease}
-.progress-bar-fill.green{background:var(--green)}
-.progress-bar-fill.yellow{background:var(--yellow)}
-.progress-bar-fill.red{background:var(--red)}
+/* GAUGES & CHARTS */
+.gauge-wrap{display:flex;align-items:center;gap:20px;padding:10px 0}
+.gauge-svg{width:110px;height:110px;transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:#eef2f6;stroke-width:11}
+.gauge-fill{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke-dashoffset 1s ease-in-out}
+.gauge-text{font-size:20px;font-weight:850;fill:var(--navy);transform:translateY(6px)}
+.gauge-info{flex:1}
 
 .month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
 .month-card{border:1px solid var(--line);background:#fbfdff;border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s}
@@ -104,7 +106,7 @@
 .chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}
 
 @media print{.sidebar,.topbar,.btn,.filters,.pagination,.no-print{display:none!important}.main{margin:0}.content{padding:0}.card{box-shadow:none;border:0}.page{display:none!important}.modal-head,.modal-foot{display:none!important}.modal{box-shadow:none;border:0;width:100%}}
-@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.main{margin-left:0}.app{display:block}.g4,.g3,.g2{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.main{margin-left:0}.app{display:block}.g4,.g3,.g2{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.gauge-wrap{flex-direction:column;text-align:center}}
 </style>
 </head>
 <body>
@@ -114,7 +116,7 @@
  <div class="login-card">
   <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de Control e Inventario por Sede</p></div>
   <div class="login-body">
-   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Auditoría (Solo Lectura)</option></select></div>
+   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Auditoría (Lectura y Análisis)</option></select></div>
    <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="loginPass" type="password" value="admin123" onkeydown="if(event.key==='Enter')login()"></div>
    <div id="loginError" class="badge red hidden" style="margin-top:11px">Usuario o contraseña incorrectos</div>
    <div class="login-actions"><button class="btn primary" onclick="login()">Ingresar al Sistema</button></div>
@@ -127,7 +129,7 @@
 <aside class="sidebar">
  <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS</small><br><div id="roleChip" class="role-chip"></div></div>
  <div class="nav" id="nav">
-  <button class="admin-only" data-page="dashboard" id="btnNavDash">⌂ <span>Inicio / Indicadores</span></button>
+  <button data-page="dashboard" id="btnNavDash">⌂ <span>Inicio / Indicadores</span></button>
   <button data-page="sedes" id="btnNavSedes">▦ <span>Sedes e Inventario</span></button>
   <div class="nav-group admin-only">Mantenimiento</div>
   <button class="admin-only" data-page="masiva">⚡ <span>Ejecución masiva</span></button>
@@ -135,7 +137,7 @@
   <div class="nav-group">Documentación</div>
   <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
   <div class="nav-group admin-only">Configuración</div>
-  <button class="admin-only" data-page="config">⚙ <span>Matriz y Firma</span></button>
+  <button class="admin-only" data-page="config">⚙ <span>Datos y Firma</span></button>
  </div>
  <button class="logout" onclick="logout()">Cerrar sesión</button>
 </aside>
@@ -145,15 +147,15 @@
 
 <div class="content">
 
-<!-- DASHBOARD (SOLO ADMIN) -->
+<!-- DASHBOARD (VISIBLE PARA ADMIN Y CONSULTA) -->
 <section class="page" id="page-dashboard">
  <div class="hero">
-  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas y gestión de desviaciones mes a mes.</p></div>
+  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas visuales y gestión de desviaciones mes a mes.</p></div>
   <div class="toolbar" style="align-items:center">
    <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
     <option value="">Todas las Sedes (General)</option>
    </select>
-   <button class="btn blue" onclick="exportBackup()">Respaldo JSON</button>
+   <button class="btn blue admin-only" onclick="exportBackup()">Respaldo JSON</button>
   </div>
  </div>
  
@@ -161,8 +163,8 @@
  <div id="indicators" class="grid g2" style="margin-top:16px"></div>
 
  <div class="card panel" style="margin-top:16px">
-  <h3 style="color:var(--navy);margin-bottom:8px">Indicadores y Análisis por Mes (Año Actual)</h3>
-  <p class="muted">Seleccione un mes para registrar qué pasó, análisis de causas y planes de acción:</p>
+  <h3 style="color:var(--navy);margin-bottom:8px">Análisis e Indicador Mensual (Año Actual)</h3>
+  <p class="muted">Seleccione un mes para ver su indicador específico y documentar planes de acción:</p>
   <div id="monthGrid" class="month-grid"></div>
   <div id="monthAnalysisContainer" style="margin-top:14px"></div>
  </div>
@@ -178,6 +180,7 @@
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
   <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Anual en Curso: 🟢 Realizado este año | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
   <div class="toolbar admin-only">
+   <button class="btn green" onclick="exportCronogramaExcel()">📊 Exportar Cronograma a Excel</button>
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
    <button class="btn primary" onclick="openSedeModal()">+ Agregar Sede</button>
    <button class="btn primary" onclick="openEquipoModal()">+ Nuevo Equipo</button>
@@ -208,7 +211,7 @@
       <th>FECHA INICIO</th>
       <th>CRONOGRAMA MANTENIMIENTO (AÑO ACTUAL)</th>
       <th>CRONOGRAMA CALIBRACIÓN (AÑO ACTUAL)</th>
-      <th>ACCIÓN</th>
+      <th class="admin-only">ACCIÓN</th>
      </tr>
     </thead>
     <tbody id="equiposTable"></tbody>
@@ -267,9 +270,9 @@
  </div>
 </section>
 
-<!-- CONFIGURACIÓN -->
+<!-- CONFIGURACIÓN (LIMPIA SIN MATRIZ) -->
 <section class="page" id="page-config">
- <h3>Configuración de Datos, Firma y Matriz Biomédica</h3>
+ <h3>Configuración de Datos y Firma Técnica</h3>
  <div class="grid g3" style="margin-top:14px">
   <div class="card panel">
    <h3>Datos del Técnico Responsable</h3>
@@ -290,14 +293,6 @@
    <button class="btn red" style="width:100%" onclick="resetDatabase()">Borrar Todo y Empezar de Cero</button>
   </div>
  </div>
-
- <div class="card panel" style="margin-top:16px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-   <h3>Matriz Biomédica Protocolaria</h3>
-   <button class="btn primary" onclick="openMatrixModal()">+ Configurar Nuevo Tipo</button>
-  </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Tipo de Equipo</th><th>Frecuencia Mantenimiento</th><th>Voltaje / Amperios</th><th>Riesgo</th><th>Protocolo de Trabajo</th><th>Acción</th></tr></thead><tbody id="matrixTable"></tbody></table></div>
- </div>
 </section>
 
 </div></main></div>
@@ -306,10 +301,10 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v21_cendiatra';
+const KEY='gestion_biomedica_v22_cendiatra';
 
 let state = {
- sedes: [], equipos: [], matriz: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
+ sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
  config: { name: 'ESTEBAN VERGARA', role: 'Ingeniero Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
  users: { admin: { password: 'admin123', role: 'ADMIN' }, consulta: { password: 'consulta123', role: 'CONSULTA' } }
 };
@@ -345,10 +340,10 @@ function login() {
   currentUser = { username: u, ...state.users[u] };
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITOR (SOLO CONSULTA)';
-  document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Consulta';
+  document.getElementById('roleChip').textContent = currentUser.role === 'ADMIN' ? 'ADMINISTRADOR BIOMÉDICO' : 'AUDITORÍA (CONSULTA)';
+  document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Auditor';
   applyPermissions();
-  if (currentUser.role === 'CONSULTA') go('sedes'); else go('dashboard');
+  go('dashboard'); // Dashboard es visible para todos ahora
  } else document.getElementById('loginError').classList.remove('hidden');
 }
 
@@ -357,20 +352,11 @@ function logout() { currentUser = null; document.getElementById('app').style.dis
 function applyPermissions() {
  const isConsult = (currentUser?.role === 'CONSULTA');
  document.querySelectorAll('.admin-only').forEach(x => x.classList.toggle('hidden', isConsult));
- if (isConsult) {
-  const dashBtn = document.getElementById('btnNavDash');
-  if (dashBtn) dashBtn.classList.add('hidden');
- }
 }
 function canEdit() { return currentUser?.role === 'ADMIN'; }
 
 function sedeObj(id) { return state.sedes.find(s => s.id === id) || { nombre: 'CORPORATIVA', direccion: 'N/R', ciudad: 'BOGOTA D.C.' }; }
 function sedeName(id) { return sedeObj(id).nombre; }
-
-function matFor(tipoName) {
- return state.matriz.find(m => norm(m.tipo) === norm(tipoName)) ||
-        state.matriz.find(m => norm(tipoName).includes(norm(m.tipo)) || norm(m.tipo).includes(norm(tipoName))) || null;
-}
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
@@ -399,7 +385,6 @@ function calState(e) {
 }
 
 function go(page) {
- if (currentUser?.role === 'CONSULTA' && page === 'dashboard') page = 'sedes';
  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
  document.getElementById('page-' + page).classList.add('active');
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === page));
@@ -417,7 +402,7 @@ function renderPage(page) {
  if (page === 'config') fillConfig();
 }
 
-function refreshAll() { fillSelects(); filterEquipos(); if (canEdit()) renderDashboard(); }
+function refreshAll() { fillSelects(); filterEquipos(); renderDashboard(); }
 
 function fillSelects() {
  const opts = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
@@ -448,8 +433,20 @@ function calculateExpectedMaints(eqList) {
  return Math.max(1, totalExpected);
 }
 
+/* GENERADOR DE GAUGE SVG */
+function getGaugeSvg(pct, color) {
+ const r = 40, c = 2 * Math.PI * r;
+ const offset = c - (pct / 100) * c;
+ return `
+  <svg class="gauge-svg" viewBox="0 0 100 100">
+   <circle class="gauge-bg" cx="50" cy="50" r="${r}"></circle>
+   <circle class="gauge-fill" cx="50" cy="50" r="${r}" style="stroke:var(--${color});stroke-dasharray:${c};stroke-dashoffset:${offset}"></circle>
+   <text x="50" y="50" text-anchor="middle" class="gauge-text" transform="rotate(90 50 50)">${pct}%</text>
+  </svg>
+ `;
+}
+
 function renderDashboard() {
- if (!canEdit()) return;
  const todayStr = today();
  const sid = document.getElementById('dashSedeFilter')?.value || '';
  const targetSedes = sid ? state.sedes.filter(s => s.id === sid) : state.sedes;
@@ -459,7 +456,7 @@ function renderDashboard() {
  const expectedMaints = calculateExpectedMaints(eqs);
  const eqIds = new Set(eqs.map(e => e.id));
  const actualMaints = state.mantenimientos.filter(m => eqIds.has(m.equipoId)).length;
- const pctM = Math.min(100, Math.round((actualMaints / expectedMaints) * 100));
+ const pctM = Math.min(100, Math.round((actualMaints / expectedMaints) * 100)) || 0;
 
  let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
  eqs.forEach(e => {
@@ -471,7 +468,7 @@ function renderDashboard() {
   }
  });
 
- const pctC = cTotal ? Math.round((cAlDia / cTotal) * 100) : 100;
+ const pctC = cTotal ? Math.round((cAlDia / cTotal) * 100) : (cTotal === 0 ? 100 : 0);
  const colorM = pctM >= 90 ? 'green' : (pctM >= 70 ? 'yellow' : 'red');
  const colorC = pctC >= 90 ? 'green' : (pctC >= 70 ? 'yellow' : 'red');
 
@@ -487,23 +484,22 @@ function renderDashboard() {
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
  ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${(String(x[1]).includes('VENCID') && x[0]>0)?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
+ // Renderización de los Gauge Circulares
  document.getElementById('indicators').innerHTML = `
-  <div class="card panel">
-   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-    <b style="color:var(--navy);font-size:14px">Cumplimiento Histórico de Mantenimiento Preventivo</b>
-    <span style="font-weight:850;font-size:16px;color:var(--${colorM})">${pctM}%</span>
+  <div class="card panel gauge-wrap">
+   ${getGaugeSvg(pctM, colorM)}
+   <div class="gauge-info">
+    <b style="color:var(--navy);font-size:14px;display:block">Cumplimiento Acumulado de Mantenimiento Preventivo</b>
+    <small class="muted" style="margin-top:8px;display:block"><b>${actualMaints}</b> mantenimientos ejecutados frente a una meta acumulada desde la fecha de instalación de <b>${expectedMaints}</b> reportes.</small>
    </div>
-   <div class="progress-bar-bg"><div class="progress-bar-fill ${colorM}" style="width:${pctM}%"></div></div>
-   <small class="muted" style="margin-top:10px;display:block"><b>${actualMaints}</b> mantenimientos realizados frente a meta acumulada de <b>${expectedMaints}</b>.</small>
   </div>
   
-  <div class="card panel">
-   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-    <b style="color:var(--navy);font-size:14px">Cumplimiento de Calibración Metrológica</b>
-    <span style="font-weight:850;font-size:16px;color:var(--${colorC})">${pctC}%</span>
+  <div class="card panel gauge-wrap">
+   ${getGaugeSvg(pctC, colorC)}
+   <div class="gauge-info">
+    <b style="color:var(--navy);font-size:14px;display:block">Cumplimiento de Calibración Metrológica</b>
+    <small class="muted" style="margin-top:8px;display:block"><b>${cAlDia}</b> equipos al día y calibrados, de un total de <b>${cTotal}</b> que requieren metrología obligatoria.</small>
    </div>
-   <div class="progress-bar-bg"><div class="progress-bar-fill ${colorC}" style="width:${pctC}%"></div></div>
-   <small class="muted" style="margin-top:10px;display:block"><b>${cAlDia}</b> equipos calibrados de <b>${cTotal}</b> que requieren metrología.</small>
   </div>
  `;
 
@@ -537,7 +533,7 @@ function renderMonthGrid() {
 
   return `<div class="month-card ${selectedMonthIdx === idx ? 'active' : ''}" onclick="selectMonth(${idx})">
    <div style="font-weight:800;font-size:13px">${m}</div>
-   <div style="font-size:11px;margin-top:4px">${maintsMonth} Mantenimientos</div>
+   <div style="font-size:11px;margin-top:4px">${maintsMonth} Hechos</div>
   </div>`;
  }).join('');
 
@@ -553,37 +549,64 @@ function renderMonthAnalysis() {
  const currentYear = new Date().getFullYear();
  const mKey = `${currentYear}-${selectedMonthIdx}`;
  const analysis = state.analyses[mKey] || { whatHappened: '', whatWasDone: '', analist: state.config.name };
+ const readOnlyProp = canEdit() ? '' : 'readonly';
 
- const maintsThisMonth = state.mantenimientos.filter(item => {
-  if (!item.fecha) return false;
-  const d = new Date(item.fecha + 'T12:00:00');
-  return d.getFullYear() === currentYear && d.getMonth() === selectedMonthIdx;
+ const sid = document.getElementById('dashSedeFilter')?.value || '';
+ const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
+
+ // Cálculo estricto para el mes seleccionado
+ let expThisMonth = 0;
+ let actThisMonth = 0;
+ 
+ eqs.forEach(e => {
+  if(!e.fechaInicio) return;
+  const sDate = new Date(e.fechaInicio + 'T12:00:00');
+  const sMonth = sDate.getMonth();
+  const sYear = sDate.getFullYear();
+  
+  // Si en el año actual, el mes seleccionado es el mismo del inicio o 6 meses después, toca mantenimiento
+  if (currentYear >= sYear && (selectedMonthIdx === sMonth || selectedMonthIdx === (sMonth + 6) % 12)) {
+   expThisMonth++;
+   const isDone = state.mantenimientos.some(m => m.equipoId === e.id && new Date(m.fecha+'T12:00:00').getFullYear() === currentYear && new Date(m.fecha+'T12:00:00').getMonth() === selectedMonthIdx);
+   if (isDone) actThisMonth++;
+  }
  });
 
+ const pctMonth = expThisMonth ? Math.round((actThisMonth / expThisMonth) * 100) : (actThisMonth > 0 ? 100 : 0);
+ const colorM = pctMonth >= 90 ? 'green' : (pctMonth >= 70 ? 'yellow' : 'red');
+
  document.getElementById('monthAnalysisContainer').innerHTML = `
-  <div style="background:#f8fafc;border:1px solid var(--line);padding:14px;border-radius:10px">
-   <h4 style="color:var(--navy);margin-bottom:8px">Análisis Gerencial para el mes de ${monthNames[selectedMonthIdx]} ${currentYear}</h4>
-   <p class="muted" style="margin-bottom:10px">Total de mantenimientos ejecutados en este mes: <b>${maintsThisMonth.length}</b></p>
+  <div style="background:#f8fafc;border:1px solid var(--line);padding:14px;border-radius:10px;display:flex;gap:20px;flex-wrap:wrap">
    
-   <div class="formgrid">
-    <div class="field span2">
-     <label>¿Qué pasó / Análisis de Desviaciones o Causas?</label>
-     <textarea id="anWhat" rows="3" placeholder="Ej. Retraso en programación por disponibilidad de equipos en la sede o cumplimiento al 100%..." oninput="saveMonthAnalysis()">${esc(analysis.whatHappened)}</textarea>
-    </div>
-    <div class="field span2">
-     <label>¿Qué se hizo / Plan de Acción y Acciones Correctivas?</label>
-     <textarea id="anDone" rows="3" placeholder="Ej. Se programaron jornadas dobles de fin de semana para ponerse al día..." oninput="saveMonthAnalysis()">${esc(analysis.whatWasDone)}</textarea>
-    </div>
+   <div style="flex:0 0 auto;text-align:center">
+    <b style="font-size:12px;color:var(--navy);display:block;margin-bottom:5px">Indicador del Mes</b>
+    ${getGaugeSvg(pctMonth, colorM)}
+    <div style="font-size:10px;color:var(--muted);margin-top:2px"><b>${actThisMonth}</b> hechos de <b>${expThisMonth}</b> progr.</div>
    </div>
-   <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
-    <small class="muted">Responsable del Análisis: <b>${esc(analysis.analist)}</b></small>
-    <span class="badge green">Datos Guardados Automáticamente</span>
+
+   <div style="flex:1;min-width:300px">
+    <h4 style="color:var(--navy);margin-bottom:8px">Análisis Gerencial · ${monthNames[selectedMonthIdx]} ${currentYear}</h4>
+    <div class="formgrid">
+     <div class="field span2">
+      <label>¿Qué pasó / Causas de Desviación?</label>
+      <textarea id="anWhat" rows="3" placeholder="Ej. Retrasos por disponibilidad..." oninput="saveMonthAnalysis()" ${readOnlyProp}>${esc(analysis.whatHappened)}</textarea>
+     </div>
+     <div class="field span2">
+      <label>¿Qué se hizo / Planes de Acción?</label>
+      <textarea id="anDone" rows="3" placeholder="Ej. Jornada extra de fin de semana..." oninput="saveMonthAnalysis()" ${readOnlyProp}>${esc(analysis.whatWasDone)}</textarea>
+     </div>
+    </div>
+    <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+     <small class="muted">Análisis documentado por: <b>${esc(analysis.analist)}</b></small>
+     ${canEdit() ? '<span class="badge green">Datos Guardados Automáticamente</span>' : '<span class="badge yellow">Solo Lectura</span>'}
+    </div>
    </div>
   </div>
  `;
 }
 
 function saveMonthAnalysis() {
+ if (!canEdit()) return;
  const currentYear = new Date().getFullYear();
  const mKey = `${currentYear}-${selectedMonthIdx}`;
  state.analyses[mKey] = {
@@ -609,9 +632,10 @@ function renderSedes() {
     </div>
     <small class="muted" style="margin-top:6px;display:block">Ver inventario de esta sede</small>
    </div>
-   <button class="btn small red" style="margin-top:8px;width:100%" onclick="deleteSede('${s.id}')">🗑 Eliminar Sede</button>
+   <button class="btn small red admin-only" style="margin-top:8px;width:100%" onclick="deleteSede('${s.id}')">🗑 Eliminar Sede</button>
   </div>`;
  }).join('');
+ applyPermissions();
 }
 
 function deleteSede(sid) {
@@ -713,7 +737,7 @@ function renderEquiposPage() {
      <span class="cron-tag" style="${norm(e.cal)==='SI'?'background:#e8f7ef;color:#176e45':''}">${norm(e.cal)==='SI'?(cs?`Vence: ${fmtDate(cs.vencimiento)}`:'Cada 12 Meses'):'N/A'}</span>
     </div>
    </td>
-   <td>
+   <td class="admin-only">
     <button class="btn small red" onclick="deleteEquipo('${e.id}')">Eliminar</button>
    </td>
   </tr>`;
@@ -721,6 +745,7 @@ function renderEquiposPage() {
 
  document.getElementById('eqPagInfo').textContent = `Mostrando ${total ? start + 1 : 0} - ${end} de ${total} equipos`;
  document.getElementById('eqPageNum').textContent = `${eqCurrentPage} / ${Math.ceil(total / PAGE_SIZE) || 1}`;
+ applyPermissions();
 }
 
 function changeEqPage(delta) {
@@ -733,6 +758,49 @@ function changeEqPage(delta) {
 function clearEqFilters() {
  ['eqSearch', 'eqSede', 'eqService'].forEach(id => { const x = document.getElementById(id); if (x) x.value = ''; });
  filterEquipos();
+}
+
+/* EXPORTAR CRONOGRAMA A EXCEL */
+function exportCronogramaExcel() {
+ const currentYear = new Date().getFullYear();
+ const monthsArr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+ 
+ const rows = state.equipos.map(e => {
+  let row = {
+   "SEDE": sedeName(e.sedeId),
+   "SERVICIO": e.servicio,
+   "EQUIPO": e.equipo,
+   "MARCA": e.marca,
+   "SERIE": e.serie,
+   "ACTIVO": e.activo,
+   "FECHA INICIO": e.fechaInicio,
+  };
+
+  const eqMaintsCurrentYear = state.mantenimientos.filter(m => {
+   if (m.equipoId !== e.id || !m.fecha) return false;
+   return new Date(m.fecha + 'T12:00:00').getFullYear() === currentYear;
+  });
+
+  let startMonthIdx = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00').getMonth() : 11;
+  const secondMonthIdx = (startMonthIdx + 6) % 12;
+
+  monthsArr.forEach((mName, idx) => {
+   let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
+   if (!isScheduled) {
+    row[mName] = ''; 
+   } else {
+    let hasReport = eqMaintsCurrentYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
+    row[mName] = hasReport ? 'OK (REALIZADO)' : (idx < new Date().getMonth() ? 'VENCIDO' : 'PROGRAMADO');
+   }
+  });
+  
+  return row;
+ });
+
+ const ws = XLSX.utils.json_to_sheet(rows);
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, "Cronograma " + currentYear);
+ XLSX.writeFile(wb, `Cronograma_General_${currentYear}_CENDIATRA.xlsx`);
 }
 
 function openEquipmentProfile(id) {
@@ -1053,8 +1121,7 @@ function runMass() {
 
  ids.forEach(eid => {
   const e = state.equipos.find(x => x.id === eid);
-  const m = matFor(e?.equipo);
-  const trabajoDesc = m?.actividades || 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
+  const trabajoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.'; // Simplificado, sin matriz
 
   if (mode === 'retro' && e.fechaInicio) {
    let start = new Date(e.fechaInicio + 'T12:00:00');
@@ -1144,9 +1211,10 @@ function renderCalibraciones() {
    <td><b>${esc(e.equipo)}</b></td><td class="mono">${esc(e.serie)}</td><td>${esc(sedeName(e.sedeId))}</td>
    <td>${d ? fmtDate(d.fecha) : '—'}</td><td>${d ? fmtDate(d.vencimiento) : '—'}</td><td>${btnDoc}</td>
    <td><span class="badge ${c[1]}">${c[0]}</span></td>
-   <td><button class="btn small" onclick="openCalibrationModal('${e.id}')">Registrar</button></td>
+   <td><button class="btn small admin-only" onclick="openCalibrationModal('${e.id}')">Registrar</button></td>
   </tr>`;
  }).join('');
+ applyPermissions();
 }
 
 function openDocModal() {
@@ -1193,7 +1261,6 @@ function fillConfig() {
  document.getElementById('cfgRole').value = state.config.role || '';
  document.getElementById('cfgCompany').value = 'CENDIATRA SAS';
  if (state.config.sigTech) document.getElementById('sigCfgPrev').innerHTML = `<img src="${state.config.sigTech}" style="max-height:50px">`;
- renderMatrix();
 }
 
 function saveConfig() {
@@ -1218,38 +1285,6 @@ function resetDatabase() {
  if (!confirm('¿ESTÁ SEGURO DE BORRAR TODO? Se eliminarán todas las sedes, equipos y reportes para empezar desde cero.')) return;
  localStorage.removeItem(KEY);
  location.reload();
-}
-
-function renderMatrix() {
- document.getElementById('matrixTable').innerHTML = state.matriz.map(m => `<tr>
-  <td><b>${esc(m.tipo)}</b></td><td>6 Meses (Semestral)</td><td>${esc(m.voltaje || '110V')} / ${esc(m.amperios || 'N/A')}</td>
-  <td>${esc(m.riesgo || 'CLASE IIA')}</td><td style="font-size:10px;white-space:pre-line">${esc(m.actividades)}</td>
-  <td><button class="btn small" onclick="openMatrixModal('${m.id}')">Editar</button></td>
- </tr>`).join('');
-}
-
-function openMatrixModal(id = '') {
- const m = state.matriz.find(x => x.id === id) || {};
- openModal('Editar Matriz Biomédica', `
-  <div class="formgrid">
-   <div class="field span2"><label>Tipo de Equipo</label><input id="mxTipo" value="${esc(m.tipo || '')}"></div>
-   <div class="field"><label>Riesgo</label><input id="mxRiesgo" value="${esc(m.riesgo || 'CLASE IIA')}"></div>
-   <div class="field"><label>Voltaje</label><input id="mxVolt" value="${esc(m.voltaje || '110V')}"></div>
-   <div class="field"><label>Amperios</label><input id="mxAmp" value="${esc(m.amperios || 'N/A')}"></div>
-   <div class="field span4"><label>Protocolo de Trabajo</label><textarea id="mxActs" rows="4">${esc(m.actividades || '')}</textarea></div>
-  </div>
- `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMatrix('${id}')">Guardar</button>`);
-}
-
-function saveMatrix(id) {
- const obj = {
-  id: id || uid(), tipo: document.getElementById('mxTipo').value, frecMaint: '6',
-  riesgo: document.getElementById('mxRiesgo').value, voltaje: document.getElementById('mxVolt').value, amperios: document.getElementById('mxAmp').value,
-  actividades: document.getElementById('mxActs').value
- };
- const idx = state.matriz.findIndex(x => x.id === id);
- if (idx >= 0) state.matriz[idx] = obj; else state.matriz.push(obj);
- save(); closeModal(); renderMatrix();
 }
 
 function openImport() {
