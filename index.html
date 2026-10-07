@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v33_cendiatra';
+const KEY='gestion_biomedica_v34_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -1646,173 +1646,93 @@ function getVal(row, keys) {
 }
 
 function doImportExcel() {
- const fileInput = document.getElementById('importExcel');
- if (!importData.length && fileInput && fileInput.files[0]) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-   try {
-    const data = new Uint8Array(e.target.result);
-    const wb = XLSX.read(data, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    processImportRows();
-   } catch(err) {
-    alert('Error al procesar el archivo Excel.');
-   }
-  };
-  reader.readAsArrayBuffer(fileInput.files[0]);
- } else if (importData.length > 0) {
-  processImportRows();
- } else {
-  alert('Por favor seleccione un archivo Excel válido primero.');
+ if (!importData || importData.length === 0) {
+  return alert('Por favor, asegúrese de seleccionar el archivo y esperar a que aparezca el mensaje de listos para procesar.');
  }
-}
+ 
+ let processedCount = 0;
+ 
+ importData.forEach(r => {
+  let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
+  let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
+  
+  let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
+  if (!s) { 
+   s = { id: uid(), nombre: sName, direccion: sDir, ciudad: 'BOGOTA D.C.' }; 
+   state.sedes.push(s); 
+  } else if (sDir !== 'N/R') {
+   s.direccion = sDir;
+  }
 
-function processImportRows() {
- try {
-  importData.forEach(r => {
-   let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
-   let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
-   
-   let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
-   if (!s) { 
-    s = { id: uid(), nombre: sName, direccion: sDir, ciudad: 'BOGOTA D.C.' }; 
-    state.sedes.push(s); 
-   } else if (sDir !== 'N/R') {
-    s.direccion = sDir;
-   }
+  let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
+  let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
-   let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
-   let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
-
-   let defaultItems = [
-     "LIMPIEZA GENERAL", "REV. DEL SISTEMA DE REFRIGERACIÓN", "REVISIÓN DE MÓDULOS",
-     "REVISIÓN DE PARTES FÍSICAS", "REV. DE TEMPERATURA Y HUMEDAD", "REVISIÓN DE EMPAQUES",
-     "REVISIÓN DE SISTEMA ELECTRÓNICO", "VERIFICACIÓN DE VOLTAJE", "VERIFICACIÓN DE ALARMAS",
-     "REVISIÓN DE SISTEMA ELÉCTRICO", "VERIFICACIÓN DE CORRIENTE", "REVISIÓN DE SOFTWARE",
-     "REVISIÓN DE SISTEMA NEUMÁTICO", "VERIFICACIÓN DE PRESIÓN", "CONFIGURACIÓN DEL EQUIPO",
-     "REVISIÓN DE SISTEMA HIDRÁULICO", "REV. DEL SISTEMA ÓPTICO", "VERIFICACIÓN DE VELOCIDAD",
-     "REVISIÓN DEL SISTEMA MECÁNICO", "REV. DE LUCES E INDICADORES", "OTROS"
-   ];
-
-   let eqChecklist = defaultItems.map(item => {
-     let checked = false;
-     for (let k of Object.keys(r)) {
-       let nk = norm(k);
-       let sk = norm(item);
-       if (nk.includes(sk) || sk.includes(nk)) {
-         let v = norm(String(r[k]));
-         if (v === 'X' || v === 'SI' || v === 'V') checked = true;
-       }
-     }
-     return { label: item, checked };
-   });
-
-   state.equipos.push({
-    id: uid(), 
-    equipo: eqName,
-    marca: String(getVal(r, ['MARCA']) || 'N/R').trim(),
-    modelo: String(getVal(r, ['MODELO']) || 'N/R').trim(),
-    serie: String(getVal(r, ['SERIE']) || 'N/R').trim(),
-    activo: String(getVal(r, ['ACTIVO']) || 'SA1564').trim(),
-    sedeId: s.id,
-    servicio: String(getVal(r, ['SERVICIO', 'AREA', 'ÁREA']) || 'FONOAUDIOLOGIA').trim(),
-    invima: String(getVal(r, ['INVIMA']) || 'DM202222').trim(),
-    riesgo: String(getVal(r, ['CLASIFICACION DE RIESGO', 'RIESGO']) || 'IIA').trim(),
-    voltaje: String(getVal(r, ['VOLTAJE']) || '110').trim(),
-    amperios: String(getVal(r, ['CORRIENTE', 'AMPERIOS']) || '1A').trim(),
-    peso: String(getVal(r, ['PESO DEL EQUIPO', 'PESO']) || '2KG').trim(),
-    fuenteAlimentacion: String(getVal(r, ['FUENTE DE ALIMENTACION', 'FUENTE']) || 'ELECTRICA').trim(),
-    cal: String(getVal(r, ['REQUIERE CALIBRACION', 'CALIBRACION']) || 'SI').trim().toUpperCase(),
-    manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
-    guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
-    info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
-    checklist: eqChecklist,
-    fechaInicio: parseExcelDate(rawDate),
-    estado: 'ACTIVO'
-   });
+  let eqChecklist = [
+    { label: "LIMPIEZA GENERAL", keys: ['limpieza gen'] },
+    { label: "REV. DEL SISTEMA DE REFRIGERACIÓN", keys: ['refrigeraci'] },
+    { label: "REVISIÓN DE MÓDULOS", keys: ['modulos', 'módulos'] },
+    { label: "REVISIÓN DE PARTES FÍSICAS", keys: ['partes fisicas', 'partes físicas'] },
+    { label: "REV. DE TEMPERATURA Y HUMEDAD", keys: ['temperatura y humedad', 'temperatura'] },
+    { label: "REVISIÓN DE EMPAQUES", keys: ['empaques'] },
+    { label: "REVISIÓN DE SISTEMA ELECTRÓNICO", keys: ['sistema electronico', 'sistema electrónico'] },
+    { label: "VERIFICACIÓN DE VOLTAJE", keys: ['verificacion de voltaje', 'verificación de voltaje'] },
+    { label: "VERIFICACIÓN DE ALARMAS", keys: ['alarmas'] },
+    { label: "REVISIÓN DE SISTEMA ELÉCTRICO", keys: ['sistema electrico', 'sistema eléctrico'] },
+    { label: "VERIFICACIÓN DE CORRIENTE", keys: ['verificacion de corriente', 'verificación de corriente'] },
+    { label: "REVISIÓN DE SOFTWARE", keys: ['software'] },
+    { label: "REVISIÓN DE SISTEMA NEUMÁTICO", keys: ['sistema neumatico', 'sistema neumático'] },
+    { label: "VERIFICACIÓN DE PRESIÓN", keys: ['verificacion de presion', 'verificación de presión'] },
+    { label: "CONFIGURACIÓN DEL EQUIPO", keys: ['configuracion del', 'configuración del'] },
+    { label: "REVISIÓN DE SISTEMA HIDRÁULICO", keys: ['sistema hidraulico', 'sistema hidráulico'] },
+    { label: "REV. DEL SISTEMA ÓPTICO", keys: ['sistema optico', 'sistema óptico'] },
+    { label: "VERIFICACIÓN DE VELOCIDAD", keys: ['verificacion de velocidad', 'verificación de velocidad'] },
+    { label: "REVISIÓN DEL SISTEMA MECÁNICO", keys: ['sistema mecanico', 'sistema mecánico'] },
+    { label: "REV. DE LUCES E INDICADORES", keys: ['luces', 'indicacores', 'indicadores'] },
+    { label: "OTROS", keys: ['otros'] }
+  ].map(item => {
+    let checked = false;
+    for (let k of Object.keys(r)) {
+      let nk = norm(k);
+      for (let sk of item.keys) {
+        if (nk.includes(norm(sk))) {
+          let v = norm(String(r[k]));
+          if (v === 'X' || v === 'SI' || v === 'V') checked = true;
+        }
+      }
+    }
+    return { label: item.label, checked };
   });
-  save(); 
-  closeModal(); 
-  refreshAll(); 
-  alert(`¡Carga exitosa! Se procesaron ${importData.length} equipos para CENDIATRA SAS.`);
- } catch (err) {
-  alert('Ocurrió un error al procesar las filas del Excel. Verifique la consola.');
- }
-}
 
-function openSedeModal() {
- openModal('Agregar Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Dirección Sede</label><input id="sDir" placeholder="Ej. CARRERA 20 # 45 A 91"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
-}
-function saveSede() {
- const n = document.getElementById('sNombre').value; if (!n) return;
- state.sedes.push({ id: uid(), nombre: n, direccion: document.getElementById('sDir').value, ciudad: document.getElementById('sCiudad').value });
- save(); closeModal(); refreshAll();
-}
-
-function openEquipoModal() {
- const sedes = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
- openModal('Nuevo Equipo Biomédico', `
-  <div class="formgrid">
-   <div class="field"><label>Equipo</label><input id="eEquipo"></div>
-   <div class="field"><label>Marca</label><input id="eMarca"></div>
-   <div class="field"><label>Modelo</label><input id="eModelo"></div>
-   <div class="field"><label>Serie</label><input id="eSerie"></div>
-   <div class="field"><label>Activo</label><input id="eActivo" value="SA1564"></div>
-   <div class="field"><label>Fecha de Inicio</label><input id="eFechaInicio" type="date" value="${today()}"></div>
-   <div class="field"><label>Sede</label><select id="eSede">${sedes}</select></div>
-   <div class="field"><label>Área / Servicio</label><input id="eServicio" value="FONOAUDIOLOGIA"></div>
-   <div class="field"><label>INVIMA</label><input id="eInvima"></div>
-  </div>
- `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEquipo()">Guardar Equipo</button>`);
-}
-
-function saveEquipo() {
- state.equipos.push({
-  id: uid(), equipo: document.getElementById('eEquipo').value, marca: document.getElementById('eMarca').value,
-  modelo: document.getElementById('eModelo').value, serie: document.getElementById('eSerie').value,
-  activo: document.getElementById('eActivo').value, fechaInicio: document.getElementById('eFechaInicio').value || today(),
-  sedeId: document.getElementById('eSede').value, servicio: document.getElementById('eServicio').value,
-  invima: document.getElementById('eInvima').value, cal: 'SI', estado: 'ACTIVO'
+  state.equipos.push({
+   id: uid(), 
+   equipo: eqName,
+   marca: String(getVal(r, ['MARCA']) || 'N/R').trim(),
+   modelo: String(getVal(r, ['MODELO']) || 'N/R').trim(),
+   serie: String(getVal(r, ['SERIE']) || 'N/R').trim(),
+   activo: String(getVal(r, ['ACTIVO']) || 'SA1564').trim(),
+   sedeId: s.id,
+   servicio: String(getVal(r, ['SERVICIO', 'AREA', 'ÁREA']) || 'FONOAUDIOLOGIA').trim(),
+   invima: String(getVal(r, ['INVIMA']) || 'DM202222').trim(),
+   riesgo: String(getVal(r, ['CLASIFICACION DE RIESGO', 'RIESGO']) || 'IIA').trim(),
+   voltaje: String(getVal(r, ['VOLTAJE']) || '110').trim(),
+   amperios: String(getVal(r, ['CORRIENTE', 'AMPERIOS']) || '1A').trim(),
+   peso: String(getVal(r, ['PESO DEL EQUIPO', 'PESO']) || '2KG').trim(),
+   fuenteAlimentacion: String(getVal(r, ['FUENTE DE ALIMENTACION', 'FUENTE']) || 'ELECTRICA').trim(),
+   cal: String(getVal(r, ['REQUIERE CALIBRACION', 'CALIBRACION']) || 'SI').trim().toUpperCase(),
+   manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
+   guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
+   info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
+   checklist: eqChecklist,
+   fechaInicio: parseExcelDate(rawDate),
+   estado: 'ACTIVO'
+  });
+  processedCount++;
  });
- save(); closeModal(); refreshAll();
-}
-
-function openModal(title, body, foot) {
- document.getElementById('modalTitle').innerHTML = title;
- document.getElementById('modalBody').innerHTML = body;
- document.getElementById('modalFoot').innerHTML = foot;
- document.getElementById('modalBg').classList.add('open');
-}
-function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
-
-function printEqProfile(id) {
- const e = state.equipos.find(x => x.id === id);
- if(e) printHtmlDoc(lifeHtmlFormat(e), 'Hoja_De_Vida_' + norm(e.serie));
-}
-function printReport(id) {
- const r = state.mantenimientos.find(x => x.id === id);
- if(r) printHtmlDoc(reportHtmlFormat(r), 'Reporte_' + r.reporte);
-}
-
-function printHtmlDoc(inner, title) {
- const w = window.open('', '_blank'); if (!w) return;
- w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:8mm}body{font-family:Segoe UI,Arial,sans-serif;color:#000;margin:0;padding:0}.fmt-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px}.fmt-table td,.fmt-table th{border:1px solid #000;padding:4px;vertical-align:middle}.fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}.fmt-header{text-align:center;font-weight:bold;font-size:12px}.fmt-title{font-weight:bold;background:#eef4f8;padding:3px;border:1px solid #000;margin-top:6px;font-size:9.5px;text-transform:uppercase}.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}.chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}.chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}</style></head><body>${inner}</body></html>`);
- w.document.close();
- setTimeout(() => w.print(), 300);
-}
-
-function exportBackup() {
- const a = document.createElement('a');
- a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
- a.download = `Respaldo_CENDIATRA_${today()}.json`;
- a.click();
-}
-
-async function importBackup(file) {
- if (!file) return;
- state = JSON.parse(await file.text());
- save(); refreshAll(); alert('Respaldo cargado correctamente.');
+ 
+ save(); 
+ closeModal(); 
+ refreshAll(); 
+ alert(`¡Carga exitosa! Se procesaron ${processedCount} equipos para CENDIATRA SAS.`);
 }
 
 function checkUrlParams() {
