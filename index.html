@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v34_cendiatra';
+const KEY='gestion_biomedica_v35_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -996,6 +996,7 @@ function openEquipmentProfile(id) {
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
    <div><h2 style="color:var(--navy);margin:0">${esc(e.equipo)}</h2><p class="muted">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</p></div>
    <div style="display:flex;gap:8px;align-items:center">
+    <!-- BOTÓN PARA GENERAR EL CÓDIGO QR -->
     <button class="btn blue small" onclick="openQrLabel('${id}')">📱 Generar Etiqueta QR</button>
     <span class="badge blue" style="font-size:11px;padding:5px 10px">${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</span>
    </div>
@@ -1015,10 +1016,12 @@ function openEquipmentProfile(id) {
  `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
 }
 
+/* FUNCIÓN DE CÓDIGO QR */
 function openQrLabel(id) {
  const e = state.equipos.find(x => x.id === id); if(!e) return;
  const sObj = sedeObj(e.sedeId);
 
+ // Crea el enlace único para este equipo
  const baseUrl = window.location.href.split('#')[0];
  const qrTargetUrl = `${baseUrl}#qr=${id}`;
 
@@ -1595,6 +1598,7 @@ function resetDatabase() {
  location.reload();
 }
 
+/* CARGA DEL EXCEL TOTALMENTE FUNCIONAL */
 function openImport() {
  openModal('Importar Excel CENDIATRA', `
   <div style="border:2px dashed var(--line);padding:20px;text-align:center;border-radius:12px;background:#fbfdff">
@@ -1646,12 +1650,25 @@ function getVal(row, keys) {
 }
 
 function doImportExcel() {
- if (!importData || importData.length === 0) {
-  return alert('Por favor, asegúrese de seleccionar el archivo y esperar a que aparezca el mensaje de listos para procesar.');
- }
- 
- let processedCount = 0;
- 
+  const fileInput = document.getElementById('importExcel');
+  if (!importData.length && fileInput && fileInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      processImportRows();
+    };
+    reader.readAsArrayBuffer(fileInput.files[0]);
+  } else if (importData.length > 0) {
+    processImportRows();
+  } else {
+    alert('Por favor seleccione un archivo Excel válido primero.');
+  }
+}
+
+function processImportRows() {
  importData.forEach(r => {
   let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
   let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
@@ -1667,6 +1684,7 @@ function doImportExcel() {
   let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
   let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
+  // Checklists con mapeo amplio (tal como funcionaba original y perfectamente antes)
   let eqChecklist = [
     { label: "LIMPIEZA GENERAL", keys: ['limpieza gen'] },
     { label: "REV. DEL SISTEMA DE REFRIGERACIÓN", keys: ['refrigeraci'] },
@@ -1726,15 +1744,85 @@ function doImportExcel() {
    fechaInicio: parseExcelDate(rawDate),
    estado: 'ACTIVO'
   });
-  processedCount++;
  });
- 
- save(); 
- closeModal(); 
- refreshAll(); 
- alert(`¡Carga exitosa! Se procesaron ${processedCount} equipos para CENDIATRA SAS.`);
+ save(); closeModal(); refreshAll(); alert(`¡Carga exitosa! Se procesaron ${importData.length} equipos.`);
 }
 
+function openSedeModal() {
+ openModal('Agregar Nueva Sede', `<div class="field"><label>Nombre Sede</label><input id="sNombre"><label style="margin-top:8px">Dirección Sede</label><input id="sDir" placeholder="Ej. CARRERA 20 # 45 A 91"><label style="margin-top:8px">Ciudad</label><input id="sCiudad" value="BOGOTA D.C."></div>`, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSede()">Guardar Sede</button>`);
+}
+function saveSede() {
+ const n = document.getElementById('sNombre').value; if (!n) return;
+ state.sedes.push({ id: uid(), nombre: n, direccion: document.getElementById('sDir').value, ciudad: document.getElementById('sCiudad').value });
+ save(); closeModal(); refreshAll();
+}
+
+function openEquipoModal() {
+ const sedes = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
+ openModal('Nuevo Equipo Biomédico', `
+  <div class="formgrid">
+   <div class="field"><label>Equipo</label><input id="eEquipo"></div>
+   <div class="field"><label>Marca</label><input id="eMarca"></div>
+   <div class="field"><label>Modelo</label><input id="eModelo"></div>
+   <div class="field"><label>Serie</label><input id="eSerie"></div>
+   <div class="field"><label>Activo</label><input id="eActivo" value="SA1564"></div>
+   <div class="field"><label>Fecha de Inicio</label><input id="eFechaInicio" type="date" value="${today()}"></div>
+   <div class="field"><label>Sede</label><select id="eSede">${sedes}</select></div>
+   <div class="field"><label>Área / Servicio</label><input id="eServicio" value="FONOAUDIOLOGIA"></div>
+   <div class="field"><label>INVIMA</label><input id="eInvima"></div>
+  </div>
+ `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEquipo()">Guardar Equipo</button>`);
+}
+
+function saveEquipo() {
+ state.equipos.push({
+  id: uid(), equipo: document.getElementById('eEquipo').value, marca: document.getElementById('eMarca').value,
+  modelo: document.getElementById('eModelo').value, serie: document.getElementById('eSerie').value,
+  activo: document.getElementById('eActivo').value, fechaInicio: document.getElementById('eFechaInicio').value || today(),
+  sedeId: document.getElementById('eSede').value, servicio: document.getElementById('eServicio').value,
+  invima: document.getElementById('eInvima').value, cal: 'SI', estado: 'ACTIVO'
+ });
+ save(); closeModal(); refreshAll();
+}
+
+function openModal(title, body, foot) {
+ document.getElementById('modalTitle').innerHTML = title;
+ document.getElementById('modalBody').innerHTML = body;
+ document.getElementById('modalFoot').innerHTML = foot;
+ document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+function printEqProfile(id) {
+ const e = state.equipos.find(x => x.id === id);
+ if(e) printHtmlDoc(lifeHtmlFormat(e), 'Hoja_De_Vida_' + norm(e.serie));
+}
+function printReport(id) {
+ const r = state.mantenimientos.find(x => x.id === id);
+ if(r) printHtmlDoc(reportHtmlFormat(r), 'Reporte_' + r.reporte);
+}
+
+function printHtmlDoc(inner, title) {
+ const w = window.open('', '_blank'); if (!w) return;
+ w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:8mm}body{font-family:Segoe UI,Arial,sans-serif;color:#000;margin:0;padding:0}.fmt-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px}.fmt-table td,.fmt-table th{border:1px solid #000;padding:4px;vertical-align:middle}.fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}.fmt-header{text-align:center;font-weight:bold;font-size:12px}.fmt-title{font-weight:bold;background:#eef4f8;padding:3px;border:1px solid #000;margin-top:6px;font-size:9.5px;text-transform:uppercase}.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}.chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}.chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}</style></head><body>${inner}</body></html>`);
+ w.document.close();
+ setTimeout(() => w.print(), 300);
+}
+
+function exportBackup() {
+ const a = document.createElement('a');
+ a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
+ a.download = `Respaldo_CENDIATRA_${today()}.json`;
+ a.click();
+}
+
+async function importBackup(file) {
+ if (!file) return;
+ state = JSON.parse(await file.text());
+ save(); refreshAll(); alert('Respaldo cargado correctamente.');
+}
+
+/* LECTOR DE CÓDIGO QR - INTERCEPTO DE URL PÚBLICA */
 function checkUrlParams() {
  const hash = window.location.hash;
  if (hash.includes('qr=')) {
@@ -1782,6 +1870,7 @@ function checkUrlParams() {
 
 function init() {
  load();
+ // SI ENCUENTRA UN CÓDIGO QR EN LA URL, BLOQUEA EL LOGIN Y MUESTRA LA HOJA DE VIDA
  if (checkUrlParams()) return;
 
  fillYearSelect();
