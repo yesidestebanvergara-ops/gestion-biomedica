@@ -95,7 +95,6 @@
 .modal-body{padding:16px}.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
 .formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:1/-1}
 .signature-box{border:1px dashed #b9cedd;border-radius:8px;padding:6px;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fbfdff;text-align:center}
-.signature-box canvas{border:1px solid var(--line);background:#fff;border-radius:6px;touch-action:none;cursor:crosshair}
 
 .fmt-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-family:Segoe UI,Arial,sans-serif;font-size:10px}
 .fmt-table td,.fmt-table th{border:1px solid #000;padding:4px 5px;vertical-align:middle}
@@ -137,8 +136,6 @@
   <button class="admin-only" data-page="calibraciones">◌ <span>Calibraciones</span></button>
   <div class="nav-group">Documentación</div>
   <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
-  <div class="nav-group admin-only">Configuración</div>
-  <button class="admin-only" data-page="config">⚙ <span>Datos y Firma</span></button>
  </div>
  <button class="logout" onclick="logout()">Cerrar sesión</button>
 </aside>
@@ -162,7 +159,9 @@
    <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
     <option value="">Todas las Sedes (General)</option>
    </select>
-   <button class="btn blue admin-only" onclick="exportBackup()">Respaldo JSON</button>
+   <button class="btn blue admin-only" onclick="exportBackup()">⬇ Respaldo JSON</button>
+   <label class="btn blue admin-only" style="cursor:pointer;margin:0">⬆ Importar Backup<input hidden type="file" accept=".json" onchange="importBackup(this.files[0])"></label>
+   <button class="btn red admin-only" onclick="resetDatabase()">Borrar Todo</button>
   </div>
  </div>
  
@@ -234,21 +233,31 @@
 <!-- EJECUCIÓN MASIVA -->
 <section class="page" id="page-masiva">
  <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
- <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede y genera los mantenimientos de forma retroactiva desde su fecha de instalación hasta la fecha actual con un solo clic.</div>
+ <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede y genera los mantenimientos de forma retroactiva desde su fecha de instalación. Los días serán seleccionados aleatoriamente dentro del mes correspondiente para mayor naturalidad.</div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
    <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
    <div class="field"><label>Modo Generación</label><select id="massMode"><option value="single">Fecha Específica</option><option value="retro">Masivo Semestral desde Instalación</option></select></div>
-   <div class="field"><label>Fecha Mantenimiento</label><input id="massDate" type="date"></div>
+   <div class="field"><label>Fecha Específica (si aplica)</label><input id="massDate" type="date"></div>
    <button class="btn primary" onclick="runMass()">⚡ Ejecutar Mantenimientos</button>
   </div>
 
   <div class="formgrid" style="margin:15px 0;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px">
-   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico"></div>
+   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico" value="ESTEBAN VERGARA"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe a Conformidad</label><input id="massReceptor" placeholder="Nombre del Coordinador de Sede"></div>
-   <div class="field span2"><label>Firma Ingeniero Biomédico</label><div class="signature-box" id="massSigTechBox">Firma en Configuración</div></div>
-   <div class="field span2"><label>Firma Coordinador de Sede</label><div class="signature-box"><canvas id="canvasMassRec" width="260" height="60"></canvas><button class="btn small" onclick="clearCanvasMassRec()" style="margin-top:4px">Limpiar Firma Coordinador</button></div></div>
+   
+   <!-- FIRMAS POR FOTO/IMAGEN -->
+   <div class="field span2">
+    <label>Firma Ingeniero Biomédico (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewMassSig('Tech', this)">
+    <div class="signature-box" id="massSigTechPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
+   <div class="field span2">
+    <label>Firma Coordinador de Sede (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewMassSig('Rec', this)">
+    <div class="signature-box" id="massSigRecPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
   </div>
 
   <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Fecha Instalación</th><th>Servicio / Área</th></tr></thead><tbody id="massTable"></tbody></table></div>
@@ -280,42 +289,16 @@
  </div>
 </section>
 
-<!-- CONFIGURACIÓN (LIMPIA SIN MATRIZ) -->
-<section class="page" id="page-config">
- <h3>Configuración de Datos y Firma Técnica</h3>
- <div class="grid g3" style="margin-top:14px">
-  <div class="card panel">
-   <h3>Datos del Técnico Responsable</h3>
-   <div class="field" style="margin-top:8px"><label>Ingeniero Biomédico</label><input id="cfgName"></div>
-   <div class="field" style="margin-top:8px"><label>Cargo</label><input id="cfgRole"></div>
-   <div class="field" style="margin-top:8px"><label>Empresa</label><input id="cfgCompany" value="CENDIATRA SAS" readonly></div>
-   <button class="btn primary" style="margin-top:12px;width:100%" onclick="saveConfig()">Guardar Datos</button>
-  </div>
-  <div class="card panel">
-   <h3>Firma Digital Técnica</h3>
-   <input id="cfgSigFile" type="file" accept="image/*" onchange="uploadSigTech(this)">
-   <div class="signature-box" id="sigCfgPrev" style="margin-top:8px">Sin firma guardada</div>
-  </div>
-  <div class="card panel">
-   <h3>Respaldos y Limpieza General</h3>
-   <button class="btn blue" style="width:100%;margin-bottom:8px" onclick="exportBackup()">Exportar Respaldo JSON</button>
-   <label class="btn" style="width:100%;text-align:center;display:block;margin-bottom:8px">Importar Respaldo JSON<input hidden type="file" accept="application/json" onchange="importBackup(this.files[0])"></label>
-   <button class="btn red" style="width:100%" onclick="resetDatabase()">Borrar Todo y Empezar de Cero</button>
-  </div>
- </div>
-</section>
-
 </div></main></div>
 
 <!-- MODAL GLOBAL -->
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v24_cendiatra';
+const KEY='gestion_biomedica_v25_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
- config: { name: 'ESTEBAN VERGARA', role: 'Ingeniero Biomédico', company: 'CENDIATRA SAS', sigTech: '' },
  users: { admin: { password: 'admin123', role: 'ADMIN' }, consulta: { password: 'consulta123', role: 'CONSULTA' } }
 };
 
@@ -329,7 +312,12 @@ let contextYear = new Date().getFullYear();
 let selectedMonthIdx = new Date().getMonth();
 
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-const today = () => new Date().toISOString().slice(0, 10);
+// Ajuste crucial: default 'today' dinámico en la misma zona horaria
+const today = () => {
+    let d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+};
 const norm = s => String(s ?? '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 const fmtDate = s => {
@@ -344,7 +332,7 @@ function load() {
  try {
   let x = JSON.parse(localStorage.getItem(KEY));
   if (x) {
-   state = { ...state, ...x, analyses: x.analyses || {}, config: { ...state.config, company: 'CENDIATRA SAS', ...(x.config || {}) } };
+   state = { ...state, ...x, analyses: x.analyses || {} };
    state.documentos = state.documentos || [];
    state.calibraciones = state.calibraciones || [];
    state.mantenimientos = state.mantenimientos || [];
@@ -454,7 +442,6 @@ function renderPage(page) {
  if (page === 'masiva') renderMass();
  if (page === 'calibraciones') renderCalibraciones();
  if (page === 'documentos') renderDocs();
- if (page === 'config') fillConfig();
 }
 
 function refreshAll() { fillSelects(); filterEquipos(); renderDashboard(); }
@@ -613,7 +600,7 @@ function selectMonth(idx) {
 
 function renderMonthAnalysis() {
  const mKey = `${contextYear}-${selectedMonthIdx}`;
- const analysis = state.analyses[mKey] || { whatHappened: '', whatWasDone: '', analist: state.config.name };
+ const analysis = state.analyses[mKey] || { whatHappened: '', whatWasDone: '', analist: 'Admin' };
  const readOnlyProp = canEdit() ? '' : 'readonly';
 
  const sid = document.getElementById('dashSedeFilter')?.value || '';
@@ -683,7 +670,7 @@ function saveMonthAnalysis() {
  state.analyses[mKey] = {
   whatHappened: document.getElementById('anWhat')?.value || '',
   whatWasDone: document.getElementById('anDone')?.value || '',
-  analist: state.config.name
+  analist: 'Admin'
  };
  save();
 }
@@ -1047,9 +1034,15 @@ function getDocsForEquipment(e) {
  return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
 }
 
-let canvasRecCtx = null;
+// Variables para almacenar las imágenes subidas en el modal individual
+let singleSigTechData = '';
+let singleSigRecData = '';
+
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
+ singleSigTechData = '';
+ singleSigRecData = '';
+ 
  const e = state.equipos.find(x => x.id === equipId) || state.equipos[0];
  const opts = state.equipos.slice(0, 500).map(x => `<option value="${x.id}" ${x.id === e?.id ? 'selected' : ''}>${esc(x.equipo)} - ${esc(x.serie)} (${esc(sedeName(x.sedeId))})</option>`).join('');
 
@@ -1058,39 +1051,48 @@ function openMaintenanceModal(equipId = '') {
    <div class="field span2"><label>Equipo</label><select id="mEquipo">${opts}</select></div>
    <div class="field"><label>Fecha Mantenimiento</label><input id="mFecha" type="date" value="${today()}"></div>
    <div class="field"><label>Tipo Mantenimiento</label><select id="mTipo"><option>PREVENTIVO</option><option>CORRECTIVO</option><option>VERIFICACIÓN</option></select></div>
-   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="mTecnico" value="${esc(state.config.name)}"></div>
+   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="mTecnico" value="ESTEBAN VERGARA"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe</label><input id="mReceptor" placeholder="Nombre del coordinador de sede"></div>
    <div class="field span4"><label>Trabajo Realizado</label><textarea id="mTrabajo" rows="3">SE REALIZA INSPECCIÓN GENERAL, LIMPIEZA EXTERNA E INTERNA, REVISIÓN DE CABLES, PRUEBAS DE FUNCIONAMIENTO Y AJUSTES PROTOCOLARIOS DE MANTENIMIENTO PREVENTIVO (CADA 6 MESES).</textarea></div>
-   <div class="field span2"><label>Firma Técnico Biomédico</label><div class="signature-box">${state.config.sigTech ? `<img src="${state.config.sigTech}" style="max-height:50px">` : 'Firma en configuración'}</div></div>
-   <div class="field span2"><label>Firma Coordinador de Sede</label><div class="signature-box"><canvas id="canvasRec" width="220" height="60"></canvas><button class="btn small" onclick="clearCanvasRec()" style="margin-top:4px">Limpiar Firma</button></div></div>
+   
+   <div class="field span2">
+    <label>Firma Ingeniero Biomédico (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewSingleSig('Tech', this)">
+    <div class="signature-box" id="mSigTechPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
+   <div class="field span2">
+    <label>Firma Coordinador de Sede (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewSingleSig('Rec', this)">
+    <div class="signature-box" id="mSigRecPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
   </div>
  `, `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveMaintenance()">Guardar y Generar EV-INTER-03</button>`);
- initCanvasRec();
 }
 
-function initCanvasRec() {
- setTimeout(() => {
-  const c = document.getElementById('canvasRec'); if (!c) return;
-  canvasRecCtx = c.getContext('2d');
-  let draw = false;
-  c.onmousedown = e => { draw = true; canvasRecCtx.beginPath(); canvasRecCtx.moveTo(e.offsetX, e.offsetY); };
-  c.onmousemove = e => { if (draw) { canvasRecCtx.lineTo(e.offsetX, e.offsetY); canvasRecCtx.stroke(); } };
-  c.onmouseup = () => draw = false;
- }, 150);
+function previewSingleSig(type, input) {
+ const f = input.files[0]; if(!f) return;
+ const r = new FileReader();
+ r.onload = () => {
+  if (type === 'Tech') {
+   singleSigTechData = r.result;
+   document.getElementById('mSigTechPrev').innerHTML = `<img src="${r.result}" style="max-height:50px">`;
+  } else {
+   singleSigRecData = r.result;
+   document.getElementById('mSigRecPrev').innerHTML = `<img src="${r.result}" style="max-height:50px">`;
+  }
+ };
+ r.readAsDataURL(f);
 }
-
-function clearCanvasRec() { const c = document.getElementById('canvasRec'); if (c) canvasRecCtx.clearRect(0, 0, c.width, c.height); }
 
 function saveMaintenance() {
  const eid = document.getElementById('mEquipo').value;
  const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
- const cRec = document.getElementById('canvasRec');
 
  const r = {
   id: uid(), numero: no, reporte: no, equipoId: eid, fecha: document.getElementById('mFecha').value,
   tipo: document.getElementById('mTipo').value, tecnico: document.getElementById('mTecnico').value,
   receptor: document.getElementById('mReceptor').value, trabajo: document.getElementById('mTrabajo').value,
-  sigTech: state.config.sigTech, sigRec: cRec ? cRec.toDataURL() : ''
+  sigTech: singleSigTechData, sigRec: singleSigRecData
  };
  state.mantenimientos.push(r);
  save(); closeModal(); refreshAll();
@@ -1184,37 +1186,40 @@ function reportHtmlFormat(r) {
  </div>`;
 }
 
-let canvasMassRecCtx = null;
+// Variables globales de imágenes para la Ejecución Masiva
+let massSigTechData = '';
+let massSigRecData = '';
+
 function renderMass() {
  const sid = document.getElementById('massSede')?.value || '';
  const list = state.equipos.filter(e => !sid || e.sedeId === sid);
  
- document.getElementById('massTecnico').value = state.config.name || 'ESTEBAN VERGARA';
- if (state.config.sigTech) {
-  document.getElementById('massSigTechBox').innerHTML = `<img src="${state.config.sigTech}" style="max-height:50px">`;
- }
+ massSigTechData = '';
+ massSigRecData = '';
+ document.getElementById('massSigTechPrev').innerHTML = 'Adjuntar imagen de firma...';
+ document.getElementById('massSigRecPrev').innerHTML = 'Adjuntar imagen de firma...';
 
  document.getElementById('massTable').innerHTML = list.slice(0, 500).map(e => `<tr>
   <td><input type="checkbox" class="mass-check" value="${e.id}"></td>
   <td><b>${esc(e.equipo)}</b></td><td>${esc(e.marca)}</td><td>${esc(e.modelo)}</td><td>${esc(e.serie)}</td>
   <td><span class="badge blue">${fmtDate(e.fechaInicio)}</span></td><td>${esc(e.servicio)}</td>
  </tr>`).join('');
-
- initCanvasMassRec();
 }
 
-function initCanvasMassRec() {
- setTimeout(() => {
-  const c = document.getElementById('canvasMassRec'); if (!c) return;
-  canvasMassRecCtx = c.getContext('2d');
-  let draw = false;
-  c.onmousedown = e => { draw = true; canvasMassRecCtx.beginPath(); canvasMassRecCtx.moveTo(e.offsetX, e.offsetY); };
-  c.onmousemove = e => { if (draw) { canvasMassRecCtx.lineTo(e.offsetX, e.offsetY); canvasMassRecCtx.stroke(); } };
-  c.onmouseup = () => draw = false;
- }, 150);
+function previewMassSig(type, input) {
+ const f = input.files[0]; if(!f) return;
+ const r = new FileReader();
+ r.onload = () => {
+  if (type === 'Tech') {
+   massSigTechData = r.result;
+   document.getElementById('massSigTechPrev').innerHTML = `<img src="${r.result}" style="max-height:50px">`;
+  } else {
+   massSigRecData = r.result;
+   document.getElementById('massSigRecPrev').innerHTML = `<img src="${r.result}" style="max-height:50px">`;
+  }
+ };
+ r.readAsDataURL(f);
 }
-
-function clearCanvasMassRec() { const c = document.getElementById('canvasMassRec'); if (c) canvasMassRecCtx.clearRect(0, 0, c.width, c.height); }
 
 function toggleMass(v) { document.querySelectorAll('.mass-check').forEach(x => x.checked = v); }
 
@@ -1225,10 +1230,8 @@ function runMass() {
  
  const mode = document.getElementById('massMode').value;
  const type = document.getElementById('massType').value;
- const tecName = document.getElementById('massTecnico').value || state.config.name;
+ const tecName = document.getElementById('massTecnico').value || 'ESTEBAN VERGARA';
  const recName = document.getElementById('massReceptor').value || 'COORDINADOR DE SEDE';
- const cMassRec = document.getElementById('canvasMassRec');
- const massSigRecUrl = cMassRec ? cMassRec.toDataURL() : '';
  const fixedDate = document.getElementById('massDate').value || today();
 
  let generatedCount = 0;
@@ -1238,24 +1241,38 @@ function runMass() {
   const trabajoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
 
   if (mode === 'retro' && e.fechaInicio) {
-   let start = new Date(e.fechaInicio + 'T12:00:00');
-   start.setMonth(start.getMonth() + 6);
+   let sDate = new Date(e.fechaInicio + 'T12:00:00');
+   // Calculamos el proximo reporte 6 meses despues de la instalacion, dia 15 como pivote
+   let cursor = new Date(sDate.getFullYear(), sDate.getMonth() + 6, 15);
    const now = new Date();
-   let cursor = new Date(start);
 
    while (cursor <= now) {
-    const dateStr = cursor.toISOString().slice(0, 10);
-    const exists = state.mantenimientos.some(maint => maint.equipoId === eid && maint.fecha === dateStr);
+    let cYear = cursor.getFullYear();
+    let cMonth = cursor.getMonth();
+
+    // Verificamos si ya existe en ESE AÑO Y ESE MES
+    let exists = state.mantenimientos.some(maint => {
+        if (maint.equipoId !== eid || !maint.fecha) return false;
+        let d = new Date(maint.fecha + 'T12:00:00');
+        return d.getFullYear() === cYear && d.getMonth() === cMonth;
+    });
     
     if (!exists) {
+     // Si no existe, creamos la fecha eligiendo un día al azar entre 1 y 28 (para evitar problemas de fin de mes)
+     let randDay = Math.floor(Math.random() * 28) + 1;
+     // Reconstruimos la fecha
+     let rDate = new Date(cYear, cMonth, randDay, 12, 0, 0);
+     let dateStr = rDate.toISOString().slice(0, 10);
+
      const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
      state.mantenimientos.push({
       id: uid(), numero: no, reporte: no, equipoId: eid, fecha: dateStr, tipo: type,
       tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
-      sigTech: state.config.sigTech, sigRec: massSigRecUrl
+      sigTech: massSigTechData, sigRec: massSigRecData
      });
      generatedCount++;
     }
+    // Avanzamos otros 6 meses
     cursor.setMonth(cursor.getMonth() + 6);
    }
   } else {
@@ -1263,7 +1280,7 @@ function runMass() {
    state.mantenimientos.push({
     id: uid(), numero: no, reporte: no, equipoId: eid, fecha: fixedDate, tipo: type,
     tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
-    sigTech: state.config.sigTech, sigRec: massSigRecUrl
+    sigTech: massSigTechData, sigRec: massSigRecData
    });
    generatedCount++;
   }
@@ -1370,31 +1387,6 @@ function openDoc(id) {
  if (d.data) w.document.write(`<iframe src="${d.data}" style="width:100%;height:100vh;border:0"></iframe>`);
 }
 
-function fillConfig() {
- document.getElementById('cfgName').value = state.config.name || '';
- document.getElementById('cfgRole').value = state.config.role || '';
- document.getElementById('cfgCompany').value = 'CENDIATRA SAS';
- if (state.config.sigTech) document.getElementById('sigCfgPrev').innerHTML = `<img src="${state.config.sigTech}" style="max-height:50px">`;
-}
-
-function saveConfig() {
- state.config.name = document.getElementById('cfgName').value;
- state.config.role = document.getElementById('cfgRole').value;
- state.config.company = 'CENDIATRA SAS';
- save(); alert('Configuración guardada.');
-}
-
-function uploadSigTech(input) {
- const f = input.files[0]; if (!f) return;
- const r = new FileReader();
- r.onload = () => {
-  state.config.sigTech = r.result;
-  document.getElementById('sigCfgPrev').innerHTML = `<img src="${r.result}" style="max-height:50px">`;
-  save();
- };
- r.readAsDataURL(f);
-}
-
 function resetDatabase() {
  if (!confirm('¿ESTÁ SEGURO DE BORRAR TODO? Se eliminarán todas las sedes, equipos y reportes para empezar desde cero.')) return;
  localStorage.removeItem(KEY);
@@ -1422,7 +1414,7 @@ async function previewExcel(file) {
 }
 
 function parseExcelDate(val) {
- if (!val) return '2023-12-13';
+ if (!val) return today(); // CORRECCIÓN CRÍTICA: La fecha por defecto ahora es el día de hoy, no el 13 de dic de 2023.
  if (val instanceof Date) return val.toISOString().slice(0, 10);
  if (typeof val === 'number') {
   const d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
@@ -1541,7 +1533,7 @@ function openEquipoModal() {
    <div class="field"><label>Modelo</label><input id="eModelo"></div>
    <div class="field"><label>Serie</label><input id="eSerie"></div>
    <div class="field"><label>Activo</label><input id="eActivo" value="SA1564"></div>
-   <div class="field"><label>Fecha de Inicio</label><input id="eFechaInicio" type="date" value="2023-12-13"></div>
+   <div class="field"><label>Fecha de Inicio</label><input id="eFechaInicio" type="date" value="${today()}"></div>
    <div class="field"><label>Sede</label><select id="eSede">${sedes}</select></div>
    <div class="field"><label>Área / Servicio</label><input id="eServicio" value="FONOAUDIOLOGIA"></div>
    <div class="field"><label>INVIMA</label><input id="eInvima"></div>
@@ -1553,7 +1545,7 @@ function saveEquipo() {
  state.equipos.push({
   id: uid(), equipo: document.getElementById('eEquipo').value, marca: document.getElementById('eMarca').value,
   modelo: document.getElementById('eModelo').value, serie: document.getElementById('eSerie').value,
-  activo: document.getElementById('eActivo').value, fechaInicio: document.getElementById('eFechaInicio').value || '2023-12-13',
+  activo: document.getElementById('eActivo').value, fechaInicio: document.getElementById('eFechaInicio').value || today(),
   sedeId: document.getElementById('eSede').value, servicio: document.getElementById('eServicio').value,
   invima: document.getElementById('eInvima').value, cal: 'SI', estado: 'ACTIVO'
  });
