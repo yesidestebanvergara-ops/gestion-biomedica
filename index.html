@@ -188,7 +188,7 @@
 <!-- SEDES E INVENTARIO -->
 <section class="page active" id="page-sedes">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Evaluado: 🟢 Realizado | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Dinámico: 🟢 Realizado | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
   <div class="toolbar admin-only">
    <button class="btn green" onclick="exportCronogramaExcel()">📊 Exportar Cronograma a Excel</button>
    <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
@@ -311,7 +311,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v23_cendiatra';
+const KEY='gestion_biomedica_v24_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -343,7 +343,14 @@ function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
 function load() {
  try {
   let x = JSON.parse(localStorage.getItem(KEY));
-  if (x) state = { ...state, ...x, analyses: x.analyses || {}, config: { ...state.config, company: 'CENDIATRA SAS', ...(x.config || {}) } };
+  if (x) {
+   state = { ...state, ...x, analyses: x.analyses || {}, config: { ...state.config, company: 'CENDIATRA SAS', ...(x.config || {}) } };
+   state.documentos = state.documentos || [];
+   state.calibraciones = state.calibraciones || [];
+   state.mantenimientos = state.mantenimientos || [];
+   state.equipos = state.equipos || [];
+   state.sedes = state.sedes || [];
+  }
  } catch (e) {}
 }
 
@@ -387,26 +394,47 @@ function sedeName(id) { return sedeObj(id).nombre; }
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
-function nextMaint(e) {
- const l = lastMaint(e.id);
- if (l) {
-  const d = new Date(l.fecha + 'T12:00:00');
-  d.setMonth(d.getMonth() + 6);
-  return d.toISOString().slice(0, 10);
- }
- const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
- let nextD = new Date(initD);
+function isMaintOverdue(e) {
  const now = new Date();
- while (nextD < now) {
-  nextD.setMonth(nextD.getMonth() + 6);
+ const year = now.getFullYear();
+ const m = now.getMonth();
+ 
+ let evalDate = new Date(year, m, 28);
+ if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return false;
+ 
+ let pastMaints = state.mantenimientos
+     .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+     .map(x => x.fecha)
+     .sort();
+ 
+ if (pastMaints.length > 0) {
+     let lastDate = pastMaints[pastMaints.length - 1];
+     let d = new Date(lastDate+'T12:00:00');
+     if (d.getFullYear() === year && d.getMonth() === m) return false;
  }
- return nextD.toISOString().slice(0, 10);
+ 
+ let lastDate = e.fechaInicio || `${year}-01-01`;
+ if (pastMaints.length > 0) lastDate = pastMaints[pastMaints.length - 1];
+ 
+ let lastD = new Date(lastDate+'T12:00:00');
+ let monthDiff = (year - lastD.getFullYear()) * 12 + (m - lastD.getMonth());
+ 
+ return monthDiff >= 6;
 }
 
 function calState(e) {
  if (norm(e.cal) !== 'SI') return ['N/A', 'gray', null];
  const cs = state.calibraciones.filter(c => c.equipoId === e.id).sort((a, b) => (b.vencimiento || b.fecha).localeCompare(a.vencimiento || a.fecha))[0];
- if (!cs) return ['SIN REGISTRO', 'yellow', null];
+ if (!cs) {
+  if (e.fechaInicio) {
+   const d = new Date(e.fechaInicio+'T12:00:00');
+   const now = new Date();
+   let diff = (now.getFullYear() - d.getFullYear())*12 + (now.getMonth() - d.getMonth());
+   if (diff >= 12) return ['VENCIDA', 'red', null];
+   if (diff === 11) return ['PRÓXIMA', 'yellow', null];
+  }
+  return ['SIN REGISTRO', 'yellow', null];
+ }
  const n = Math.ceil((new Date(cs.vencimiento + 'T12:00:00') - new Date(today() + 'T12:00:00')) / 86400000);
  return n < 0 ? ['VENCIDA', 'red', cs] : n <= 30 ? ['PRÓXIMA', 'yellow', cs] : ['VIGENTE', 'green', cs];
 }
@@ -447,21 +475,29 @@ function fillSelects() {
 function calculateExpectedMaintsForYear(eqList, year) {
  let total = 0;
  eqList.forEach(e => {
-  if (!e.fechaInicio) return;
-  const d = new Date(e.fechaInicio + 'T12:00:00');
-  const m1 = d.getMonth();
-  const m2 = (m1 + 6) % 12;
-  
-  const eval1 = new Date(year, m1, 28);
-  if (eval1 > d) total++;
-  
-  const eval2 = new Date(year, m2, 28);
-  if (eval2 > d) total++;
+  for (let m = 0; m < 12; m++) {
+   let evalDate = new Date(year, m, 28);
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) continue;
+   
+   let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === year && new Date(x.fecha+'T12:00:00').getMonth() === m);
+   if (hasMaint) {
+    total++;
+   } else {
+    let pastMaints = state.mantenimientos
+        .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+        .map(x => x.fecha)
+        .sort();
+    let lastDate = e.fechaInicio || `${year}-01-01`;
+    if (pastMaints.length > 0) lastDate = pastMaints[pastMaints.length - 1];
+    let lastD = new Date(lastDate+'T12:00:00');
+    let monthDiff = (year - lastD.getFullYear()) * 12 + (m - lastD.getMonth());
+    if (monthDiff > 0 && monthDiff % 6 === 0) total++;
+   }
+  }
  });
  return total;
 }
 
-/* GENERADOR DE GAUGE SVG */
 function getGaugeSvg(pct, color) {
  const r = 40, c = 2 * Math.PI * r;
  const offset = c - (pct / 100) * c;
@@ -475,7 +511,6 @@ function getGaugeSvg(pct, color) {
 }
 
 function renderDashboard() {
- const todayStr = today();
  const sid = document.getElementById('dashSedeFilter')?.value || '';
  const targetSedes = sid ? state.sedes.filter(s => s.id === sid) : state.sedes;
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
@@ -492,7 +527,7 @@ function renderDashboard() {
 
  let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
  eqs.forEach(e => {
-  if (nextMaint(e) < todayStr) mVencidos++;
+  if (isMaintOverdue(e)) mVencidos++;
   if (norm(e.cal) === 'SI') {
    cTotal++;
    const cs = calState(e)[0];
@@ -506,7 +541,7 @@ function renderDashboard() {
 
  let sedesVencidas = targetSedes.filter(s => {
   const eqSede = state.equipos.filter(e => e.sedeId === s.id);
-  return eqSede.some(e => nextMaint(e) < todayStr || calState(e)[0] === 'VENCIDA');
+  return eqSede.some(e => isMaintOverdue(e) || calState(e)[0] === 'VENCIDA');
  });
 
  document.getElementById('stats').innerHTML = [
@@ -541,7 +576,7 @@ function renderDashboard() {
  if (sedesVencidas.length > 0) {
   alertHtml = sedesVencidas.map(s => {
    const eqSede = state.equipos.filter(e => e.sedeId === s.id);
-   const mV = eqSede.filter(e => nextMaint(e) < todayStr).length;
+   const mV = eqSede.filter(e => isMaintOverdue(e)).length;
    const cV = eqSede.filter(e => calState(e)[0] === 'VENCIDA').length;
    if (mV === 0 && cV === 0) return '';
    return `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">
@@ -588,17 +623,24 @@ function renderMonthAnalysis() {
  let actThisMonth = 0;
  
  eqs.forEach(e => {
-  if(!e.fechaInicio) return;
-  const sDate = new Date(e.fechaInicio + 'T12:00:00');
-  const sMonth = sDate.getMonth();
+  let evalDate = new Date(contextYear, selectedMonthIdx, 28);
+  if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return;
   
-  if (selectedMonthIdx === sMonth || selectedMonthIdx === (sMonth + 6) % 12) {
-   const evalD = new Date(contextYear, selectedMonthIdx, 28);
-   if (evalD > sDate) {
-    expThisMonth++;
-    const isDone = state.mantenimientos.some(m => m.equipoId === e.id && new Date(m.fecha+'T12:00:00').getFullYear() === contextYear && new Date(m.fecha+'T12:00:00').getMonth() === selectedMonthIdx);
-    if (isDone) actThisMonth++;
-   }
+  let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === contextYear && new Date(x.fecha+'T12:00:00').getMonth() === selectedMonthIdx);
+  
+  if (hasMaint) {
+   expThisMonth++;
+   actThisMonth++;
+  } else {
+   let pastMaints = state.mantenimientos
+       .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+       .map(x => x.fecha)
+       .sort();
+   let lastDate = e.fechaInicio || `${contextYear}-01-01`;
+   if (pastMaints.length > 0) lastDate = pastMaints[pastMaints.length - 1];
+   let lastD = new Date(lastDate+'T12:00:00');
+   let monthDiff = (contextYear - lastD.getFullYear()) * 12 + (selectedMonthIdx - lastD.getMonth());
+   if (monthDiff > 0 && monthDiff % 6 === 0) expThisMonth++;
   }
  });
 
@@ -710,68 +752,67 @@ function renderEquiposPage() {
  const end = Math.min(start + PAGE_SIZE, total);
  const pageItems = filteredEquiposCache.slice(start, end);
  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
- 
  const now = new Date();
 
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
   
-  const eqMaintsThisYear = state.mantenimientos.filter(m => {
-   if (m.equipoId !== e.id || !m.fecha) return false;
-   return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
-  });
-
-  let startMonthIdx = 11;
-  if (e.fechaInicio) startMonthIdx = new Date(e.fechaInicio + 'T12:00:00').getMonth();
-  const secondMonthIdx = (startMonthIdx + 6) % 12;
-  const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
-
-  let cronMaintHtml = months.map((m, idx) => {
-   let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
-   if (isScheduled) {
-       const evalDate = new Date(contextYear, idx, 28);
-       if (evalDate <= initD) isScheduled = false; // No programado si es antes de que se instale
-   }
-
-   if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
+  // LOGICA CRONOGRAMA DINAMICO MANTENIMIENTO
+  let cronMaintHtml = months.map((mName, m) => {
+   let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === contextYear && new Date(x.fecha+'T12:00:00').getMonth() === m);
+   if (hasMaint) return `<div class="cron-cell done">${mName}</div>`;
    
-   let hasReportInMonth = eqMaintsThisYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
-   let cls = 'cron-cell pending';
+   let evalDate = new Date(contextYear, m, 28);
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`;
    
-   if (hasReportInMonth) {
-       cls = 'cron-cell done';
-   } else {
-       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth())) {
-           cls = 'cron-cell overdue';
+   let pastMaints = state.mantenimientos
+       .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+       .map(x => x.fecha).sort();
+       
+   let lastDate = e.fechaInicio || `${contextYear}-01-01`;
+   if (pastMaints.length > 0) lastDate = pastMaints[pastMaints.length - 1];
+   
+   let lastD = new Date(lastDate+'T12:00:00');
+   let monthDiff = (contextYear - lastD.getFullYear()) * 12 + (m - lastD.getMonth());
+   
+   if (monthDiff > 0 && monthDiff % 6 === 0) {
+       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && m < now.getMonth())) {
+           return `<div class="cron-cell overdue">${mName}</div>`;
+       } else {
+           return `<div class="cron-cell pending">${mName}</div>`;
        }
    }
-   return `<div class="${cls}">${m}</div>`;
+   return `<div class="cron-cell">${mName}</div>`;
   }).join('');
 
-  const cState = calState(e);
-  const cs = cState[2];
-  let calMonthIdx = cs ? new Date(cs.vencimiento + 'T12:00:00').getMonth() : startMonthIdx;
-
-  let cronCalHtml = months.map((m, idx) => {
-   let isScheduled = (norm(e.cal) === 'SI' && idx === calMonthIdx);
-   if (isScheduled) {
-       const evalDate = new Date(contextYear, idx, 28);
-       if (evalDate <= initD) isScheduled = false;
-   }
-
-   if (!isScheduled) return `<div class="cron-cell">${m}</div>`;
+  // LOGICA CRONOGRAMA DINAMICO CALIBRACION
+  let cronCalHtml = months.map((mName, m) => {
+   if (norm(e.cal) !== 'SI') return `<div class="cron-cell">${mName}</div>`;
    
-   let isCalInCurrentYear = cs && new Date((cs.fecha || cs.vencimiento) + 'T12:00:00').getFullYear() === contextYear;
-   let cls = 'cron-cell pending';
-
-   if (isCalInCurrentYear && cState[0] === 'VIGENTE') {
-       cls = 'cron-cell done';
-   } else {
-       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth()) || cState[0] === 'VENCIDA') {
-           cls = 'cron-cell overdue';
+   let hasCal = state.calibraciones.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === contextYear && new Date(x.fecha+'T12:00:00').getMonth() === m);
+   if (hasCal) return `<div class="cron-cell done">${mName}</div>`;
+   
+   let evalDate = new Date(contextYear, m, 28);
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`;
+   
+   let pastCals = state.calibraciones
+       .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+       .map(x => x.fecha).sort();
+       
+   let lastDate = e.fechaInicio || `${contextYear}-01-01`;
+   if (pastCals.length > 0) lastDate = pastCals[pastCals.length - 1];
+   
+   let lastD = new Date(lastDate+'T12:00:00');
+   let monthDiff = (contextYear - lastD.getFullYear()) * 12 + (m - lastD.getMonth());
+   
+   if (monthDiff > 0 && monthDiff % 12 === 0) {
+       if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && m < now.getMonth())) {
+           return `<div class="cron-cell overdue">${mName}</div>`;
+       } else {
+           return `<div class="cron-cell pending">${mName}</div>`;
        }
    }
-   return `<div class="${cls}">${m}</div>`;
+   return `<div class="cron-cell">${mName}</div>`;
   }).join('');
 
   return `<tr>
@@ -787,13 +828,13 @@ function renderEquiposPage() {
    <td>
     <div class="cron-box">
      <div class="cron-row">${cronMaintHtml}</div>
-     <span class="cron-tag">${lm ? `Último Rep. N° ${lm.reporte}` : 'Cada 6 Meses'}</span>
+     <span class="cron-tag">${lm ? `Último Rep. ${fmtDate(lm.fecha)}` : 'Cada 6 Meses'}</span>
     </div>
    </td>
    <td>
     <div class="cron-box">
      <div class="cron-row">${cronCalHtml}</div>
-     <span class="cron-tag" style="${norm(e.cal)==='SI'?'background:#e8f7ef;color:#176e45':''}">${norm(e.cal)==='SI'?(cs?`Vence: ${fmtDate(cs.vencimiento)}`:'Cada 12 Meses'):'N/A'}</span>
+     <span class="cron-tag" style="${norm(e.cal)==='SI'?'background:#e8f7ef;color:#176e45':''}">${norm(e.cal)==='SI'?'Cada 12 Meses':'N/A'}</span>
     </div>
    </td>
    <td class="admin-only">
@@ -819,7 +860,7 @@ function clearEqFilters() {
  filterEquipos();
 }
 
-/* EXPORTAR CRONOGRAMA A EXCEL BASADO EN EL AÑO SELECCIONADO */
+/* EXPORTAR CRONOGRAMA A EXCEL DINAMICO */
 function exportCronogramaExcel() {
  const monthsArr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
  const now = new Date();
@@ -835,35 +876,35 @@ function exportCronogramaExcel() {
    "FECHA INICIO": e.fechaInicio,
   };
 
-  const eqMaintsThisYear = state.mantenimientos.filter(m => {
-   if (m.equipoId !== e.id || !m.fecha) return false;
-   return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
-  });
-
-  let startMonthIdx = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00').getMonth() : 11;
-  const secondMonthIdx = (startMonthIdx + 6) % 12;
-  const initD = e.fechaInicio ? new Date(e.fechaInicio + 'T12:00:00') : new Date();
-
-  monthsArr.forEach((mName, idx) => {
-   let isScheduled = (idx === startMonthIdx || idx === secondMonthIdx);
-   if (isScheduled) {
-       const evalDate = new Date(contextYear, idx, 28);
-       if (evalDate <= initD) isScheduled = false;
-   }
-
-   if (!isScheduled) {
-    row[mName] = ''; 
+  monthsArr.forEach((mName, m) => {
+   let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === contextYear && new Date(x.fecha+'T12:00:00').getMonth() === m);
+   if (hasMaint) {
+       row[mName] = 'OK (REALIZADO)';
    } else {
-    let hasReport = eqMaintsThisYear.some(maint => new Date(maint.fecha + 'T12:00:00').getMonth() === idx);
-    if (hasReport) {
-        row[mName] = 'OK (REALIZADO)';
-    } else {
-        if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && idx < now.getMonth())) {
-            row[mName] = 'VENCIDO';
-        } else {
-            row[mName] = 'PROGRAMADO';
-        }
-    }
+       let evalDate = new Date(contextYear, m, 28);
+       if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) {
+           row[mName] = '';
+       } else {
+           let pastMaints = state.mantenimientos
+               .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+               .map(x => x.fecha).sort();
+               
+           let lastDate = e.fechaInicio || `${contextYear}-01-01`;
+           if (pastMaints.length > 0) lastDate = pastMaints[pastMaints.length - 1];
+           
+           let lastD = new Date(lastDate+'T12:00:00');
+           let monthDiff = (contextYear - lastD.getFullYear()) * 12 + (m - lastD.getMonth());
+           
+           if (monthDiff > 0 && monthDiff % 6 === 0) {
+               if (contextYear < now.getFullYear() || (contextYear === now.getFullYear() && m < now.getMonth())) {
+                   row[mName] = 'VENCIDO';
+               } else {
+                   row[mName] = 'PROGRAMADO';
+               }
+           } else {
+               row[mName] = '';
+           }
+       }
    }
   });
   
@@ -878,7 +919,7 @@ function exportCronogramaExcel() {
 
 function openEquipmentProfile(id) {
  const e = state.equipos.find(x => x.id === id); if (!e) return;
- openModal(`Perfil de Equipo · ${e.equipo}`, `
+ openModal(`Perfil de Equipo · ${esc(e.equipo)}`, `
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
    <div><h2 style="color:var(--navy);margin:0">${esc(e.equipo)}</h2><p class="muted">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</p></div>
    <span class="badge blue" style="font-size:11px;padding:5px 10px">${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</span>
@@ -895,7 +936,7 @@ function openEquipmentProfile(id) {
   <div id="tab-maint" class="eq-tab-content hidden">${maintTabHtml(e)}</div>
   <div id="tab-cal" class="eq-tab-content hidden">${calTabHtml(e)}</div>
   <div id="tab-docs" class="eq-tab-content hidden">${docsTabHtml(e)}</div>
- `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(lifeHtmlFormat(state.equipos.find(x=>x.id==='${id}')),'Hoja_De_Vida_${e.serie}')">🖨 Imprimir Hoja de Vida</button>`);
+ `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
 }
 
 function switchEqTab(tabId, btn) {
@@ -1001,6 +1042,11 @@ function lifeHtmlFormat(e) {
  </div>`;
 }
 
+function getDocsForEquipment(e) {
+ const sid = document.getElementById('docSedeFilter')?.value || '';
+ return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
+}
+
 let canvasRecCtx = null;
 function openMaintenanceModal(equipId = '') {
  if (!canEdit()) return;
@@ -1053,11 +1099,11 @@ function saveMaintenance() {
 
 function openReport(id) {
  const r = state.mantenimientos.find(x => x.id === id); if (!r) return;
- openModal(`Reporte de Mantenimiento N° ${r.reporte}`, reportHtmlFormat(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printHtmlDoc(reportHtmlFormat(state.mantenimientos.find(x=>x.id==='${id}')),'Reporte_${r.reporte}')">🖨 Imprimir EV-INTER-03</button>`);
+ openModal(`Reporte de Mantenimiento N° ${r.reporte}`, reportHtmlFormat(r), `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printReport('${id}')">🖨 Imprimir EV-INTER-03</button>`);
 }
 
 function getDynamicChecklist(eq) {
- if (eq && eq.checklist && eq.checklist.length === 21) {
+ if (eq && Array.isArray(eq.checklist) && eq.checklist.length >= 20) {
   return eq.checklist;
  }
  const defaultItems = [
@@ -1515,12 +1561,22 @@ function saveEquipo() {
 }
 
 function openModal(title, body, foot) {
- document.getElementById('modalTitle').textContent = title;
+ document.getElementById('modalTitle').innerHTML = title;
  document.getElementById('modalBody').innerHTML = body;
  document.getElementById('modalFoot').innerHTML = foot;
  document.getElementById('modalBg').classList.add('open');
 }
 function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+/* Funciones Seguras de Impresión */
+function printEqProfile(id) {
+ const e = state.equipos.find(x => x.id === id);
+ if(e) printHtmlDoc(lifeHtmlFormat(e), 'Hoja_De_Vida_' + norm(e.serie));
+}
+function printReport(id) {
+ const r = state.mantenimientos.find(x => x.id === id);
+ if(r) printHtmlDoc(reportHtmlFormat(r), 'Reporte_' + r.reporte);
+}
 
 function printHtmlDoc(inner, title) {
  const w = window.open('', '_blank'); if (!w) return;
