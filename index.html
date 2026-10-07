@@ -1,3 +1,358 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión Biomédica | CENDIATRA SAS</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Librería para crear archivos ZIP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#d99b00;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:12.5px}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+
+/* LOGIN */
+.login{position:fixed;inset:0;background:linear-gradient(135deg,#082640,#123f68 55%,#eaf3fa);display:flex;align-items:center;justify-content:center;padding:22px;z-index:200}
+.login-card{width:min(420px,100%);background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);overflow:hidden}
+.login-head{padding:26px;background:linear-gradient(135deg,#0d3558,#1d6b9f);color:#fff}.login-head h1{margin:0;font-size:22px}.login-head p{margin:6px 0 0;opacity:.8;font-size:12px}
+.login-body{padding:24px}.login-actions{display:grid;gap:10px;margin-top:15px}
+
+/* APP LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:linear-gradient(180deg,#0b2945,#0e3d63);color:#fff;padding:18px 12px;position:fixed;height:100vh;left:0;top:0;z-index:20;display:flex;flex-direction:column}
+.brand{padding:10px 8px 16px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}.brand h2{font-size:17px;margin:0 0 4px;color:#fff}.brand small{opacity:.65}
+.role-chip{display:inline-flex;margin-top:8px;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.12);font-size:10px;font-weight:700}
+.nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#99bad4;padding:14px 10px 5px}
+.nav button{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:0;color:#d9e8f5;padding:10px 10px;border-radius:9px;text-align:left;font-size:12px;font-weight:600}
+.nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
+.logout{margin-top:auto;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:99px;font-weight:700}
+
+.main{margin-left:250px;flex:1;min-width:0}
+.topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:15}
+.topbar h1{font-size:18px;margin:0;color:var(--navy)}.top-user{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#e6f2fb;display:grid;place-items:center;color:var(--navy);font-weight:800}
+.year-select{border:1px solid var(--line);background:#f4f7fb;color:var(--navy);font-weight:800;border-radius:8px;padding:6px 10px;outline:0;font-size:12px;cursor:pointer}
+
+.content{padding:22px}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;gap:14px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel{padding:16px}
+.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{font-size:22px;margin:0;color:var(--navy)}
+
+/* COMPONENTS */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px;outline:0}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.blue{background:#e9f4fc;border-color:#c8e0f2;color:#1d5f91}
+.btn.red{background:#fdeced;border-color:#f2c9cc;color:#a32d35}
+.btn.green{background:#e8f7ef;border-color:#bbf0d4;color:#168457}
+.btn.small{padding:4px 7px;font-size:10.5px}
+.stat{padding:15px}.stat .label{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase}.stat .value{font-size:24px;color:var(--navy);font-weight:850;margin-top:3px}.stat small{color:var(--muted)}
+.notice{padding:11px 13px;border:1px solid #c9dfef;background:#eef7fd;border-radius:99px;color:#205b88;font-size:11.5px;line-height:1.4;display:inline-block}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase}.field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8ab3d1}
+
+/* GAUGES & CHARTS */
+.gauge-wrap{display:flex;align-items:center;gap:20px;padding:10px 0}
+.gauge-svg{width:110px;height:110px;transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:#eef2f6;stroke-width:11}
+.gauge-fill{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke-dashoffset 1s ease-in-out}
+.gauge-text{font-size:20px;font-weight:850;fill:var(--navy);transform:translateY(6px)}
+.gauge-info{flex:1}
+
+.month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
+.month-card{border:1px solid var(--line);background:#fbfdff;border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all 0.2s}
+.month-card:hover{border-color:var(--blue);background:#f2f8fc}
+.month-card.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* TABLES & TABS */
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+.table{width:100%;border-collapse:collapse;min-width:1200px}.table th,.table td{padding:9px 8px;border-bottom:1px solid #eef2f6;text-align:left;font-size:11.5px}
+.table th{background:#f8fafc;position:sticky;top:0;color:#64748b;font-size:9.5px;text-transform:uppercase;font-weight:800}
+.table tr:hover td{background:#fbfdff}
+.eq-link{color:var(--blue);font-weight:750;cursor:pointer;text-decoration:none}.eq-link:hover{text-decoration:underline}
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;font-size:9.5px;font-weight:850}
+.badge.green{background:#e8f7ef;color:#176e45}.badge.yellow{background:#fff4da;color:#8d6500}.badge.red{background:#fdeced;color:#a32d35}.badge.blue{background:#e9f3fb;color:#1d5f91}.badge.gray{background:#eef2f6;color:#526273}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-size:11.5px;color:var(--muted)}
+
+/* CRONOGRAMAS SEMÁFORO */
+.cron-box{display:flex;flex-direction:column;gap:3px;width:210px}
+.cron-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;text-align:center;font-size:8px;font-weight:800}
+.cron-cell{padding:3px 0;background:#f0f4f8;border-radius:3px;color:#64748b;border:1px solid #e1e8ed}
+.cron-cell.done{background:#168457;color:#fff;border-color:#168457}
+.cron-cell.overdue{background:#c13b43;color:#fff;border-color:#c13b43}
+.cron-cell.pending{background:#e6a100;color:#fff;border-color:#e6a100}
+.cron-tag{font-size:8px;font-weight:800;color:var(--navy);background:#e6f2fb;padding:2px 5px;border-radius:4px;display:inline-block;text-align:center}
+
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab-btn{border:0;background:transparent;padding:8px 12px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}
+
+/* MODALS & FORMATOS IMPRESOS */
+.modal-bg{position:fixed;inset:0;background:rgba(7,22,36,.55);display:none;align-items:center;justify-content:center;padding:15px;z-index:100}.modal-bg.open{display:flex}
+.modal{width:min(1000px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.23)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;color:var(--navy)}
+.modal-body{padding:16px}.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:1/-1}
+.signature-box{border:1px dashed #b9cedd;border-radius:8px;padding:6px;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fbfdff;text-align:center}
+
+.fmt-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-family:Segoe UI,Arial,sans-serif;font-size:10px}
+.fmt-table td,.fmt-table th{border:1px solid #000;padding:4px 5px;vertical-align:middle}
+.fmt-table th{background:#f2f2f2;text-align:center;font-weight:bold;text-transform:uppercase}
+.fmt-header{text-align:center;font-weight:bold;font-size:13px}
+.fmt-title{font-weight:bold;background:#eef4f8;padding:4px;border:1px solid #000;margin-top:8px;font-size:10px;text-transform:uppercase}
+.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#000;border:1px solid #000}
+.chk-item{background:#fff;padding:4px 5px;font-size:9px;display:flex;justify-content:flex-start;align-items:center}
+.chk-box{display:inline-flex;width:12px;height:12px;border:1px solid #000;align-items:center;justify-content:center;font-weight:bold;font-size:10px;margin-right:6px}
+
+@media print{.sidebar,.topbar,.btn,.filters,.pagination,.no-print{display:none!important}.main{margin:0}.content{padding:0}.card{box-shadow:none;border:0}.page{display:none!important}.modal-head,.modal-foot{display:none!important}.modal{box-shadow:none;border:0;width:100%}}
+@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.main{margin-left:0}.app{display:block}.g4,.g3,.g2{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.gauge-wrap{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+ <div class="login-card">
+  <div class="login-head"><h1>Gestión Biomédica CENDIATRA</h1><p>Sistema de Control e Inventario por Sede (IndexedDB)</p></div>
+  <div class="login-body">
+   <div class="field"><label>Usuario</label><select id="loginUser"><option value="admin">admin — Administrador Biomédico</option><option value="consulta">consulta — Auditoría (Lectura y Análisis)</option></select></div>
+   <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="loginPass" type="password" value="admin123" onkeydown="if(event.key==='Enter')login()"></div>
+   <div id="loginError" class="badge red hidden" style="margin-top:11px">Usuario o contraseña incorrectos</div>
+   <div class="login-actions"><button class="btn primary" onclick="login()">Ingresar al Sistema</button></div>
+  </div>
+ </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+<aside class="sidebar">
+ <div class="brand"><h2>GESTIÓN BIOMÉDICA</h2><small>CENDIATRA SAS</small><br><div id="roleChip" class="role-chip"></div></div>
+ <div class="nav" id="nav">
+  <button data-page="dashboard" id="btnNavDash">⌂ <span>Inicio / Indicadores</span></button>
+  <button data-page="sedes" id="btnNavSedes">▦ <span>Sedes e Inventario</span></button>
+  <div class="nav-group admin-only">Mantenimiento</div>
+  <button class="admin-only" data-page="masiva">⚡ <span>Ejecución masiva</span></button>
+  <button data-page="calibraciones">◌ <span>Calibraciones</span></button>
+  <div class="nav-group">Documentación</div>
+  <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
+ </div>
+ <button class="logout" onclick="logout()">Cerrar sesión</button>
+</aside>
+
+<main class="main">
+<header class="topbar">
+ <h1 id="pageTitle">Panel de Indicadores</h1>
+ <div class="top-user">
+  <select id="globalYear" class="year-select" onchange="changeGlobalYear()"></select>
+  <span id="topRole" class="muted"></span><div class="avatar" id="avatar">AD</div>
+ </div>
+</header>
+
+<div class="content">
+
+<!-- DASHBOARD -->
+<section class="page" id="page-dashboard">
+ <div class="hero">
+  <div><h2>Indicadores de Desempeño y Análisis Mensual</h2><p>Estadísticas visuales evaluadas según el año seleccionado.</p></div>
+  <div class="toolbar" style="align-items:center">
+   <select id="dashSedeFilter" class="btn" style="padding:8px 12px;background:#fff;border-color:var(--line)" onchange="renderDashboard()">
+    <option value="">Todas las Sedes (General)</option>
+   </select>
+   <button class="btn blue admin-only" onclick="exportBackup()">⬇ Respaldo JSON</button>
+   <label class="btn blue admin-only" style="cursor:pointer;margin:0">⬆ Importar Backup<input hidden type="file" accept=".json" onchange="importBackup(this.files[0])"></label>
+   <button class="btn red admin-only" onclick="resetDatabase()">Borrar Todo</button>
+  </div>
+ </div>
+ 
+ <div id="stats" class="grid g4" style="margin-top:16px"></div>
+ <div id="indicators" class="grid g2" style="margin-top:16px"></div>
+
+ <div class="card panel" style="margin-top:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+   <h3 style="color:var(--navy)">Análisis e Indicador Mensual</h3>
+   <span class="badge blue" id="lblMonthYear"></span>
+  </div>
+  <p class="muted">Seleccione un mes para ver su indicador específico y documentar planes de acción en el año elegido:</p>
+  <div id="monthGrid" class="month-grid"></div>
+  <div id="monthAnalysisContainer" style="margin-top:14px"></div>
+ </div>
+ 
+ <div class="card panel" style="margin-top:16px">
+  <h3 style="color:var(--navy);margin-bottom:8px">Panel de Alertas y Vencimientos</h3>
+  <div id="alerts"></div>
+ </div>
+</section>
+
+<!-- SEDES E INVENTARIO -->
+<section class="page active" id="page-sedes">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <div><h3>Control por Sedes e Inventario General</h3><p class="muted">Cronograma Dinámico: 🟢 Realizado | 🟡 Programado Pendiente | 🔴 Vencido sin Reporte</p></div>
+  <div class="toolbar admin-only">
+   <button class="btn green" onclick="exportCronogramaExcel()">📊 Exportar Cronograma a Excel</button>
+   <button class="btn blue" onclick="openImport()">⇧ Importar Excel CENDIATRA</button>
+   <button class="btn primary" onclick="openSedeModal()">+ Agregar Sede</button>
+   <button class="btn primary" onclick="openEquipoModal()">+ Nuevo Equipo</button>
+  </div>
+ </div>
+
+ <div id="sedeCards" class="grid g4" style="margin-bottom:16px"></div>
+
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar (Equipo, Marca, Serie, Activo...)</label><input id="eqSearch" placeholder="Buscar..." oninput="filterEquipos()"></div>
+   <div class="field"><label>Sede Seleccionada</label><select id="eqSede" onchange="filterEquipos()"></select></div>
+   <div class="field"><label>Servicio / Área</label><select id="eqService" onchange="filterEquipos()"></select></div>
+   <button class="btn" onclick="clearEqFilters()">Limpiar Filtros</button>
+  </div>
+  <div class="table-wrap">
+   <table class="table">
+    <thead>
+     <tr>
+      <th>NOMBRE</th>
+      <th>MARCA</th>
+      <th>MODELO</th>
+      <th>SERIE</th>
+      <th>RIESGO</th>
+      <th>INVIMA</th>
+      <th>SERVICIO</th>
+      <th>ACTIVO</th>
+      <th>FECHA INICIO</th>
+      <th id="thMaint">CRONOGRAMA MANTENIMIENTO</th>
+      <th id="thCal">CRONOGRAMA CALIBRACIÓN</th>
+      <th class="admin-only">ACCIÓN</th>
+     </tr>
+    </thead>
+    <tbody id="equiposTable"></tbody>
+   </table>
+  </div>
+  <div class="pagination"><span id="eqPagInfo">Mostrando 0 de 0</span><div style="display:flex;gap:6px;align-items:center"><button class="btn small" onclick="changeEqPage(-1)">‹ Anterior</button><span id="eqPageNum" style="font-weight:800">1</span><button class="btn small" onclick="changeEqPage(1)">Siguiente ›</button></div></div>
+ </div>
+</section>
+
+<!-- EJECUCIÓN MASIVA -->
+<section class="page" id="page-masiva">
+ <h3>Ejecución Masiva de Mantenimientos por Sede</h3>
+ <div class="notice" style="margin:10px 0">Selecciona los equipos de la sede y genera los mantenimientos de forma retroactiva desde su fecha de instalación. Los días serán seleccionados aleatoriamente dentro del mes correspondiente para mayor naturalidad.</div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Sede</label><select id="massSede" onchange="renderMass()"></select></div>
+   <div class="field"><label>Tipo Servicio</label><select id="massType"><option>PREVENTIVO</option><option>VERIFICACIÓN</option></select></div>
+   <div class="field"><label>Modo Generación</label><select id="massMode"><option value="single">Fecha Específica</option><option value="retro">Masivo Semestral desde Instalación</option></select></div>
+   <div class="field"><label>Fecha Específica (si aplica)</label><input id="massDate" type="date"></div>
+   <button class="btn primary" onclick="runMass()">⚡ Ejecutar Mantenimientos</button>
+  </div>
+
+  <div class="formgrid" style="margin:15px 0;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px">
+   <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico" value="ESTEBAN VERGARA"></div>
+   <div class="field span2"><label>Coordinador de Sede / Recibe a Conformidad</label><input id="massReceptor" placeholder="Nombre del Coordinador de Sede"></div>
+   
+   <div class="field span2">
+    <label>Firma Ingeniero Biomédico (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewMassSig('Tech', this)">
+    <div class="signature-box" id="massSigTechPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
+   <div class="field span2">
+    <label>Firma Coordinador de Sede (Imagen)</label>
+    <input type="file" accept="image/*" onchange="previewMassSig('Rec', this)">
+    <div class="signature-box" id="massSigRecPrev" style="color:#a0b2c3;font-size:11px">Adjuntar imagen de firma...</div>
+   </div>
+  </div>
+
+  <div class="table-wrap"><table class="table"><thead><tr><th><input type="checkbox" id="massAll" onchange="toggleMass(this.checked)"></th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Fecha Instalación</th><th>Servicio / Área</th></tr></thead><tbody id="massTable"></tbody></table></div>
+ </div>
+</section>
+
+<!-- CALIBRACIONES -->
+<section class="page" id="page-calibraciones">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <h3>Control Metrológico y Calibraciones</h3>
+  <div class="toolbar">
+   <button class="btn blue" onclick="downloadAllCalibrations()">⬇ Descargar ZIP de Calibraciones</button>
+   <button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar Calibración</button>
+  </div>
+ </div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field"><label>Buscar</label><input id="calSearch" oninput="renderCalibraciones()" placeholder="Equipo, serie..."></div>
+   <div class="field"><label>Sede (Filtra visualización y descarga)</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
+   <div class="field"><label>Estado</label><select id="calState" onchange="renderCalibraciones()"><option value="">Todos</option><option value="VIGENTE">VIGENTE</option><option value="PRÓXIMA">PRÓXIMA</option><option value="VENCIDA">VENCIDA</option><option value="SIN REGISTRO">SIN REGISTRO</option></select></div>
+   <button class="btn" onclick="document.getElementById('calSearch').value='';renderCalibraciones()">Limpiar</button>
+  </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Equipo</th><th>Serie</th><th>Sede</th><th>Última Calibración</th><th>Fecha Vencimiento</th><th>Documento</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="calTable"></tbody></table></div>
+ </div>
+</section>
+
+<!-- MANUALES -->
+<section class="page" id="page-documentos">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Manuales de Usuario y Documentos por Sede</h3><button class="btn primary admin-only" onclick="openDocModal()">+ Cargar Manual por Tipo/Marca</button></div>
+ <div class="card panel">
+  <div class="filters">
+   <div class="field span2"><label>Filtrar por Sede</label><select id="docSedeFilter" onchange="renderDocs()"></select></div>
+  </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Nombre Documento</th><th>Tipo</th><th>Tipo de Equipo</th><th>Marca</th><th>Fecha Carga</th><th>Acción</th></tr></thead><tbody id="docsTable"></tbody></table></div>
+ </div>
+</section>
+
+</div></main></div>
+
+<!-- MODAL GLOBAL -->
+<div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+
+<script>
+const DB_NAME = 'CendiatraBiomedicalDB';
+const STORE_NAME = 'appStateStore';
+const DB_VERSION = 1;
+
+let state = {
+ sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
+ users: { admin: { password: 'admin123', role: 'ADMIN' }, consulta: { password: 'consulta123', role: 'CONSULTA' } }
+};
+
+let currentUser = null;
+let filteredEquiposCache = [];
+let eqCurrentPage = 1;
+const PAGE_SIZE = 50;
+
+let contextYear = new Date().getFullYear();
+let selectedMonthIdx = new Date().getMonth();
+
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const today = () => {
+    let d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+};
+const norm = s => String(s ?? '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const fmtDate = s => {
+ if(!s) return '—';
+ let str = String(s).trim();
+ if(str.includes('T')) str = str.split('T')[0];
+ return new Date(str + 'T12:00:00').toLocaleDateString('es-CO');
+};
+
+/* INDEXEDDB STORAGE INTEGRATION */
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+    });
+}
+
+async function save() {
+    try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, 'readwrite');
             const store = tx.objectStore(STORE_NAME);
             const request = store.put(state, 'currentState');
