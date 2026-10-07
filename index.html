@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v30_cendiatra';
+const KEY='gestion_biomedica_v31_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -386,7 +386,6 @@ function login() {
   document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Auditor';
   applyPermissions();
   go('dashboard');
-  checkUrlParams(); // Verificar si viene de un QR tras hacer login
  } else document.getElementById('loginError').classList.remove('hidden');
 }
 
@@ -576,7 +575,7 @@ function renderDashboard() {
  });
 
  document.getElementById('stats').innerHTML = [
-  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? `En sede seleccionada a final de ${contextYear}` : `Inventario global evaluado en ${contextYear}`],
+  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? `En sede seleccionada a final de ${contextYear}` : `Inventario global evaluado in ${contextYear}`],
   [`${actualMaints} / ${expectedMaints}`, `MANTENIMIENTOS EN ${contextYear}`, 'Ejecutados / Programados'],
   [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', `Metrología vigente en base a ${contextYear}`],
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? `Mantenimiento o calibración en ${contextYear}` : `Con equipos vencidos en ${contextYear}`]
@@ -1019,14 +1018,13 @@ function openEquipmentProfile(id) {
  `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
 }
 
-/* MODAL DE ETIQUETA QR CON ENLACE DIRECTO AL EQUIPO */
+/* MODAL DE ETIQUETA QR CON ACCESO PÚBLICO */
 function openQrLabel(id) {
  const e = state.equipos.find(x => x.id === id); if(!e) return;
  const sObj = sedeObj(e.sedeId);
 
- // Construir URL directa incluyendo la ruta exacta hacia la vista de inventario y el ID del equipo
  const baseUrl = window.location.href.split('#')[0];
- const qrTargetUrl = `${baseUrl}#page=sedes&eq=${id}`;
+ const qrTargetUrl = `${baseUrl}#qr=${id}`;
 
  openModal(`Etiqueta QR Auditoría · ${esc(e.equipo)}`, `
   <div style="text-align:center;padding:20px;background:#fff;border:2px dashed var(--line);border-radius:12px;max-width:380px;margin:0 auto">
@@ -1799,35 +1797,65 @@ async function importBackup(file) {
  save(); refreshAll(); alert('Respaldo cargado correctamente.');
 }
 
-/* LECTOR AUTOMÁTICO DE PARÁMETROS QR EN URL */
+/* LECTOR PÚBLICO DE QR (OMITE LOGIN Y MUESTRA SOLO EL EQUIPO) */
 function checkUrlParams() {
  const hash = window.location.hash;
- if (hash.includes('eq=')) {
-  const parts = hash.split('&');
-  let eqId = '';
-  let targetPage = 'sedes';
-  
-  parts.forEach(p => {
-   if (p.includes('eq=')) eqId = p.split('eq=')[1];
-   if (p.includes('page=')) targetPage = p.split('page=')[1];
-  });
-
+ if (hash.includes('qr=')) {
+  const eqId = hash.split('qr=')[1];
   if (eqId) {
-   setTimeout(() => {
-    go(targetPage);
-    openEquipmentProfile(eqId);
-   }, 600);
+   // Ocultar login por completo
+   document.getElementById('login').style.display = 'none';
+   document.getElementById('app').style.display = 'none';
+
+   // Cargar datos si están en localStorage
+   load();
+
+   const e = state.equipos.find(x => x.id === eqId);
+   
+   // Crear una pantalla limpia de solo lectura para auditoría
+   const publicContainer = document.createElement('div');
+   publicContainer.style.cssText = 'position:fixed;inset:0;background:#f4f7fb;z-index:9999;overflow:auto;padding:20px;font-family:Segoe UI,sans-serif';
+   
+   if (e) {
+    publicContainer.innerHTML = `
+     <div style="max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid #ddd;padding-bottom:10px">
+       <div>
+        <h2 style="color:#0b2f52;margin:0">CENDIATRA SAS · Consulta Pública de Equipo</h2>
+        <small style="color:#64748b">Modo Auditoría / Inspección In Situ</small>
+       </div>
+       <button class="btn primary" onclick="window.print()">🖨 Imprimir Hoja de Vida</button>
+      </div>
+      ${lifeHtmlFormat(e)}
+      <div style="margin-top:20px;text-align:center">
+       <button class="btn blue" onclick="window.location.hash='';location.reload()">Ir al Sistema Principal (Login)</button>
+      </div>
+     </div>
+    `;
+   } else {
+    publicContainer.innerHTML = `
+     <div style="max-width:400px;margin:100px auto;text-align:center;background:#fff;padding:30px;border-radius:12px">
+      <h3 style="color:#c13b43">Equipo no encontrado</h3>
+      <p style="color:#64748b;margin:10px 0">El código QR escaneado no corresponde a ningún equipo activo en esta base de datos.</p>
+      <button class="btn primary" onclick="window.location.hash='';location.reload()">Ir al Sistema</button>
+     </div>
+    `;
+   }
+   document.body.appendChild(publicContainer);
+   return true;
   }
  }
+ return false;
 }
 
 function init() {
  load();
+ if (checkUrlParams()) return; // Si es acceso por QR, detener ejecución normal
+
  fillYearSelect();
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
  document.getElementById('massDate').value = today();
  filterEquipos();
- checkUrlParams();
 }
 init();
 </script>
