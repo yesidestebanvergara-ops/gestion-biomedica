@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gestión Biomédica | CENDIATRA SAS</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Librería para crear archivos ZIP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#d99b00;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:14px}
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:12.5px}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
@@ -247,7 +249,6 @@
    <div class="field span2"><label>Ingeniero Biomédico Responsable</label><input id="massTecnico" value="ESTEBAN VERGARA"></div>
    <div class="field span2"><label>Coordinador de Sede / Recibe a Conformidad</label><input id="massReceptor" placeholder="Nombre del Coordinador de Sede"></div>
    
-   <!-- FIRMAS POR FOTO/IMAGEN -->
    <div class="field span2">
     <label>Firma Ingeniero Biomédico (Imagen)</label>
     <input type="file" accept="image/*" onchange="previewMassSig('Tech', this)">
@@ -266,11 +267,17 @@
 
 <!-- CALIBRACIONES -->
 <section class="page" id="page-calibraciones">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3>Control Metrológico y Calibraciones</h3><button class="btn primary" onclick="openCalibrationModal()">+ Registrar Calibración</button></div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <h3>Control Metrológico y Calibraciones</h3>
+  <div class="toolbar">
+   <button class="btn blue admin-only" onclick="downloadAllCalibrations()">⬇ Descargar ZIP de Calibraciones</button>
+   <button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar Calibración</button>
+  </div>
+ </div>
  <div class="card panel">
   <div class="filters">
    <div class="field"><label>Buscar</label><input id="calSearch" oninput="renderCalibraciones()" placeholder="Equipo, serie..."></div>
-   <div class="field"><label>Sede</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
+   <div class="field"><label>Sede (Filtra visualización y descarga)</label><select id="calSedeFilter" onchange="renderCalibraciones()"></select></div>
    <div class="field"><label>Estado</label><select id="calState" onchange="renderCalibraciones()"><option value="">Todos</option><option value="VIGENTE">VIGENTE</option><option value="PRÓXIMA">PRÓXIMA</option><option value="VENCIDA">VENCIDA</option><option value="SIN REGISTRO">SIN REGISTRO</option></select></div>
    <button class="btn" onclick="document.getElementById('calSearch').value='';renderCalibraciones()">Limpiar</button>
   </div>
@@ -295,7 +302,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v25_cendiatra';
+const KEY='gestion_biomedica_v26_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -312,7 +319,6 @@ let contextYear = new Date().getFullYear();
 let selectedMonthIdx = new Date().getMonth();
 
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-// Ajuste crucial: default 'today' dinámico en la misma zona horaria
 const today = () => {
     let d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -744,7 +750,6 @@ function renderEquiposPage() {
  document.getElementById('equiposTable').innerHTML = pageItems.length ? pageItems.map(e => {
   const lm = lastMaint(e.id);
   
-  // LOGICA CRONOGRAMA DINAMICO MANTENIMIENTO
   let cronMaintHtml = months.map((mName, m) => {
    let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === contextYear && new Date(x.fecha+'T12:00:00').getMonth() === m);
    if (hasMaint) return `<div class="cron-cell done">${mName}</div>`;
@@ -772,7 +777,6 @@ function renderEquiposPage() {
    return `<div class="cron-cell">${mName}</div>`;
   }).join('');
 
-  // LOGICA CRONOGRAMA DINAMICO CALIBRACION
   let cronCalHtml = months.map((mName, m) => {
    if (norm(e.cal) !== 'SI') return `<div class="cron-cell">${mName}</div>`;
    
@@ -1029,11 +1033,6 @@ function lifeHtmlFormat(e) {
  </div>`;
 }
 
-function getDocsForEquipment(e) {
- const sid = document.getElementById('docSedeFilter')?.value || '';
- return state.documentos.filter(d => (!sid || d.sedeId === sid) && (d.equipoId === e.id || (d.tipoEquipo && norm(d.tipoEquipo) === norm(e.equipo))));
-}
-
 // Variables para almacenar las imágenes subidas en el modal individual
 let singleSigTechData = '';
 let singleSigRecData = '';
@@ -1242,7 +1241,6 @@ function runMass() {
 
   if (mode === 'retro' && e.fechaInicio) {
    let sDate = new Date(e.fechaInicio + 'T12:00:00');
-   // Calculamos el proximo reporte 6 meses despues de la instalacion, dia 15 como pivote
    let cursor = new Date(sDate.getFullYear(), sDate.getMonth() + 6, 15);
    const now = new Date();
 
@@ -1250,7 +1248,6 @@ function runMass() {
     let cYear = cursor.getFullYear();
     let cMonth = cursor.getMonth();
 
-    // Verificamos si ya existe en ESE AÑO Y ESE MES
     let exists = state.mantenimientos.some(maint => {
         if (maint.equipoId !== eid || !maint.fecha) return false;
         let d = new Date(maint.fecha + 'T12:00:00');
@@ -1258,9 +1255,7 @@ function runMass() {
     });
     
     if (!exists) {
-     // Si no existe, creamos la fecha eligiendo un día al azar entre 1 y 28 (para evitar problemas de fin de mes)
      let randDay = Math.floor(Math.random() * 28) + 1;
-     // Reconstruimos la fecha
      let rDate = new Date(cYear, cMonth, randDay, 12, 0, 0);
      let dateStr = rDate.toISOString().slice(0, 10);
 
@@ -1272,7 +1267,6 @@ function runMass() {
      });
      generatedCount++;
     }
-    // Avanzamos otros 6 meses
     cursor.setMonth(cursor.getMonth() + 6);
    }
   } else {
@@ -1287,6 +1281,70 @@ function runMass() {
  });
 
  save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
+}
+
+/* LÓGICA DESCARGA MASIVA CALIBRACIONES */
+function downloadAllCalibrations() {
+ if (typeof JSZip === 'undefined') {
+  return alert('La librería para comprimir archivos no se ha cargado. Verifique su conexión a internet.');
+ }
+ 
+ const sid = document.getElementById('calSedeFilter').value;
+ let list = state.calibraciones.filter(c => c.fileData);
+ 
+ if (sid) {
+  list = list.filter(c => {
+   const eq = state.equipos.find(e => e.id === c.equipoId);
+   return eq && eq.sedeId === sid;
+  });
+ }
+ 
+ if (!list.length) {
+  return alert('No hay certificados de calibración adjuntos para descargar con los filtros actuales.');
+ }
+
+ const zip = new JSZip();
+ let validCount = 0;
+
+ list.forEach(c => {
+  const eq = state.equipos.find(e => e.id === c.equipoId);
+  if (!eq) return;
+  const sede = sedeObj(eq.sedeId).nombre;
+  
+  const parts = c.fileData.split(',');
+  if (parts.length === 2) {
+   const mimeMatch = parts[0].match(/:(.*?);/);
+   if (mimeMatch) {
+    const mime = mimeMatch[1];
+    const ext = mime === 'application/pdf' ? 'pdf' : (mime.split('/')[1] || 'bin');
+    
+    // Nombres seguros para carpetas y archivos dentro del ZIP
+    const safeSede = norm(sede).replace(/[^a-z0-9]/gi, '_');
+    const safeEq = norm(eq.equipo).replace(/[^a-z0-9]/gi, '_');
+    const safeSerie = norm(eq.serie).replace(/[^a-z0-9]/gi, '_');
+    
+    const fileName = `${safeSede}/${safeEq}_${safeSerie}_${c.fecha}.${ext}`;
+    
+    zip.file(fileName, parts[1], {base64: true});
+    validCount++;
+   }
+  }
+ });
+
+ if (validCount === 0) return alert('No se encontraron archivos válidos.');
+
+ const zipName = sid ? `Calibraciones_${norm(sedeObj(sid).nombre).replace(/[^a-z0-9]/gi, '_')}.zip` : 'Todas_Las_Calibraciones.zip';
+ 
+ zip.generateAsync({type:"blob"}).then(function(content) {
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = zipName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+ });
 }
 
 function openCalibrationModal(equipId = '') {
@@ -1334,7 +1392,21 @@ function openCalFile(id) {
 }
 
 function renderCalibraciones() {
- const list = state.equipos.filter(e => norm(e.cal) === 'SI');
+ const sid = document.getElementById('calSedeFilter')?.value || '';
+ const search = norm(document.getElementById('calSearch')?.value || '');
+ const stateFilt = document.getElementById('calState')?.value || '';
+
+ const list = state.equipos.filter(e => {
+  if (norm(e.cal) !== 'SI') return false;
+  if (sid && e.sedeId !== sid) return false;
+  if (search && !norm(e.equipo).includes(search) && !norm(e.serie).includes(search)) return false;
+  
+  const c = calState(e);
+  if (stateFilt && c[0] !== stateFilt) return false;
+  
+  return true;
+ });
+
  document.getElementById('calTable').innerHTML = list.slice(0, 200).map(e => {
   const c = calState(e), d = c[2];
   const btnDoc = d && d.fileData ? `<button class="btn small blue" onclick="openCalFile('${d.id}')">Ver PDF</button>` : '—';
@@ -1414,7 +1486,7 @@ async function previewExcel(file) {
 }
 
 function parseExcelDate(val) {
- if (!val) return today(); // CORRECCIÓN CRÍTICA: La fecha por defecto ahora es el día de hoy, no el 13 de dic de 2023.
+ if (!val) return today();
  if (val instanceof Date) return val.toISOString().slice(0, 10);
  if (typeof val === 'number') {
   const d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
