@@ -135,7 +135,8 @@
   <button data-page="sedes" id="btnNavSedes">▦ <span>Sedes e Inventario</span></button>
   <div class="nav-group admin-only">Mantenimiento</div>
   <button class="admin-only" data-page="masiva">⚡ <span>Ejecución masiva</span></button>
-  <button class="admin-only" data-page="calibraciones">◌ <span>Calibraciones</span></button>
+  <!-- Calibraciones ahora es accesible para consulta para ver y descargar los ZIP -->
+  <button data-page="calibraciones">◌ <span>Calibraciones</span></button>
   <div class="nav-group">Documentación</div>
   <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
  </div>
@@ -303,7 +304,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v27_cendiatra';
+const KEY='gestion_biomedica_v28_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -392,11 +393,8 @@ function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoI
 /* MOTOR DE CÁLCULO HISTÓRICO Y PROYECTADO (MÁQUINA DEL TIEMPO) */
 function getEvalDate() {
     const now = new Date();
-    // Si analizamos el año actual, vemos el avance hasta HOY.
     if (contextYear === now.getFullYear()) return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
-    // Si analizamos un año pasado, vemos cómo terminó ese año al 31 de Diciembre.
     if (contextYear < now.getFullYear()) return { y: contextYear, m: 11, d: 31 };
-    // Si analizamos un año futuro, nos paramos el 1 de Enero (mostrará programados pendientes).
     return { y: contextYear, m: 0, d: 1 };
 }
 
@@ -404,7 +402,6 @@ function isMaintOverdue(e) {
  const {y: year, m, d} = getEvalDate();
  let evalDateObj = new Date(year, m, d, 23, 59, 59);
  
- // Si el equipo ni siquiera había sido instalado en esa fecha, ignorar
  if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDateObj) return false;
  
  let pastMaints = state.mantenimientos
@@ -414,7 +411,6 @@ function isMaintOverdue(e) {
  
  if (pastMaints.length > 0) {
      let ld = new Date(pastMaints[pastMaints.length - 1]+'T12:00:00');
-     // Si el último mantenimiento fue hecho este mismo mes evaluado, no está vencido
      if (ld.getFullYear() === year && ld.getMonth() === m) return false;
  }
  
@@ -432,7 +428,6 @@ function calState(e) {
  const {y: year, m, d} = getEvalDate();
  const evalDateObj = new Date(year, m, d, 23, 59, 59);
 
- // Buscar la calibración válida MÁS RECIENTE ANTES de la fecha de evaluación histórica
  const cs = state.calibraciones
      .filter(c => c.fecha && new Date(c.fecha+'T12:00:00') <= evalDateObj && c.equipoId === e.id)
      .sort((a, b) => (b.vencimiento || b.fecha).localeCompare(a.vencimiento || a.fecha))[0];
@@ -440,7 +435,6 @@ function calState(e) {
  if (!cs) {
   if (e.fechaInicio) {
    const fd = new Date(e.fechaInicio+'T12:00:00');
-   // Si en la fecha de evaluación el equipo no había iniciado operación
    if (fd > evalDateObj) return ['SIN REGISTRO', 'yellow', null];
    let diff = (year - fd.getFullYear())*12 + (m - fd.getMonth());
    if (diff >= 12) return ['VENCIDA', 'red', null];
@@ -496,7 +490,7 @@ function calculateExpectedMaintsForYear(eqList, year) {
  eqList.forEach(e => {
   for (let m = 0; m < 12; m++) {
    let evalDate = new Date(year, m, 28);
-   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) continue; // Si no estaba instalado en ese mes, no lo cuenta
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) continue;
    
    let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === year && new Date(x.fecha+'T12:00:00').getMonth() === m);
    if (hasMaint) {
@@ -537,7 +531,6 @@ function renderDashboard() {
  const {y: evY, m: evM, d: evD} = getEvalDate();
  const evalDateObjDash = new Date(evY, evM, evD, 23, 59, 59);
 
- // EXCLUIR equipos que aún no se habían comprado/instalado en la fecha del año evaluado
  const activeEqs = eqs.filter(e => !(e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDateObjDash));
 
  const totalEquipos = activeEqs.length;
@@ -787,7 +780,7 @@ function renderEquiposPage() {
    if (hasMaint) return `<div class="cron-cell done">${mName}</div>`;
    
    let evalDate = new Date(contextYear, m, 28);
-   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`; // Aún no comprado/instalado
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`;
    
    let pastMaints = state.mantenimientos
        .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
@@ -967,6 +960,15 @@ function switchEqTab(tabId, btn) {
  document.querySelectorAll('.eq-tab-content').forEach(c => c.classList.add('hidden'));
  btn.classList.add('active');
  document.getElementById(tabId).classList.remove('hidden');
+}
+
+function getDocsForEquipment(e) {
+ return state.documentos.filter(d => {
+  if (d.sedeId && d.sedeId !== e.sedeId) return false;
+  if (d.tipoEquipo && norm(d.tipoEquipo) !== norm(e.equipo)) return false;
+  if (d.marca && norm(d.marca) !== norm(e.marca)) return false;
+  return true;
+ });
 }
 
 function maintTabHtml(e) {
@@ -1315,7 +1317,7 @@ function runMass() {
  save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
 }
 
-/* LÓGICA DESCARGA MASIVA CALIBRACIONES (DISPONIBLE PARA AUDITORÍA) */
+/* LÓGICA DESCARGA MASIVA CALIBRACIONES */
 function downloadAllCalibrations() {
  if (typeof JSZip === 'undefined') {
   return alert('La librería para comprimir archivos no se ha cargado. Verifique su conexión a internet.');
@@ -1350,7 +1352,6 @@ function downloadAllCalibrations() {
     const mime = mimeMatch[1];
     const ext = mime === 'application/pdf' ? 'pdf' : (mime.split('/')[1] || 'bin');
     
-    // Nombres seguros para carpetas y archivos dentro del ZIP
     const safeSede = norm(sede).replace(/[^a-z0-9]/gi, '_');
     const safeEq = norm(eq.equipo).replace(/[^a-z0-9]/gi, '_');
     const safeSerie = norm(eq.serie).replace(/[^a-z0-9]/gi, '_');
@@ -1434,7 +1435,6 @@ function renderCalibraciones() {
   if (search && !norm(e.equipo).includes(search) && !norm(e.serie).includes(search)) return false;
   
   const c = calState(e);
-  // Si estamos evaluando un año anterior y el equipo no existía ese año, no mostrarlo en estado
   if (c[0] === 'SIN REGISTRO' && stateFilt && stateFilt !== 'SIN REGISTRO') return false;
   if (stateFilt && c[0] !== stateFilt) return false;
   
