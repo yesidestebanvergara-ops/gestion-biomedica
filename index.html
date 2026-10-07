@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v31_cendiatra';
+const KEY='gestion_biomedica_v32_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -575,7 +575,7 @@ function renderDashboard() {
  });
 
  document.getElementById('stats').innerHTML = [
-  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? `En sede seleccionada a final de ${contextYear}` : `Inventario global evaluado in ${contextYear}`],
+  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? `En sede seleccionada a final de ${contextYear}` : `Inventario global evaluado en ${contextYear}`],
   [`${actualMaints} / ${expectedMaints}`, `MANTENIMIENTOS EN ${contextYear}`, 'Ejecutados / Programados'],
   [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', `Metrología vigente en base a ${contextYear}`],
   [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? `Mantenimiento o calibración en ${contextYear}` : `Con equipos vencidos en ${contextYear}`]
@@ -1372,7 +1372,7 @@ function runMass() {
 
  ids.forEach(eid => {
   const e = state.equipos.find(x => x.id === eid);
-  const trabajoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
+  const trabalhoDesc = 'INSPECCIÓN, LIMPIEZA Y PRUEBAS FUNCIONALES PREVENTIVAS.';
 
   if (mode === 'retro' && e.fechaInicio) {
    let sDate = new Date(e.fechaInicio + 'T12:00:00');
@@ -1397,7 +1397,7 @@ function runMass() {
      const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
      state.mantenimientos.push({
       id: uid(), numero: no, reporte: no, equipoId: eid, fecha: dateStr, tipo: type,
-      tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
+      tecnico: tecName, receptor: recName, trabajo: trabalhoDesc,
       sigTech: massSigTechData, sigRec: massSigRecData
      });
      generatedCount++;
@@ -1408,7 +1408,7 @@ function runMass() {
    const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
    state.mantenimientos.push({
     id: uid(), numero: no, reporte: no, equipoId: eid, fecha: fixedDate, tipo: type,
-    tecnico: tecName, receptor: recName, trabajo: trabajoDesc,
+    tecnico: tecName, receptor: recName, trabajo: trabalhoDesc,
     sigTech: massSigTechData, sigRec: massSigRecData
    });
    generatedCount++;
@@ -1611,13 +1611,21 @@ function openImport() {
 }
 
 let importData = [];
-async function previewExcel(file) {
+function previewExcel(file) {
  if (!file) return;
- const buf = await file.arrayBuffer();
- const wb = XLSX.read(buf, { type: 'array' });
- const sheet = wb.Sheets[wb.SheetNames[0]];
- importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
- document.getElementById('excelInfo').innerHTML = `<div class="notice">✅ <b>${importData.length} registros listos para procesar.</b></div>`;
+ const reader = new FileReader();
+ reader.onload = function(e) {
+  try {
+   const data = new Uint8Array(e.target.result);
+   const wb = XLSX.read(data, { type: 'array' });
+   const sheet = wb.Sheets[wb.SheetNames[0]];
+   importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+   document.getElementById('excelInfo').innerHTML = `<div class="notice">✅ <b>${importData.length} registros listos para procesar.</b></div>`;
+  } catch (err) {
+   document.getElementById('excelInfo').innerHTML = `<div class="notice" style="background:#fdeced;color:#a32d35">❌ Error al leer el archivo Excel.</div>`;
+  }
+ };
+ reader.readAsArrayBuffer(file);
 }
 
 function parseExcelDate(val) {
@@ -1643,7 +1651,27 @@ function getVal(row, keys) {
 }
 
 function doImportExcel() {
- if (!importData.length) return alert('Seleccione un Excel válido.');
+ if (!importData.length) {
+  const fileInput = document.getElementById('importExcel');
+  if (fileInput && fileInput.files[0]) {
+   // Forzar lectura síncrona/inmediata si el usuario dio clic sin esperar previsualización
+   const reader = new FileReader();
+   reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    processImportRows();
+   };
+   reader.readAsArrayBuffer(fileInput.files[0]);
+   return;
+  }
+  return alert('Por favor seleccione un archivo Excel válido primero.');
+ }
+ processImportRows();
+}
+
+function processImportRows() {
  importData.forEach(r => {
   let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
   let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
@@ -1803,16 +1831,11 @@ function checkUrlParams() {
  if (hash.includes('qr=')) {
   const eqId = hash.split('qr=')[1];
   if (eqId) {
-   // Ocultar login por completo
    document.getElementById('login').style.display = 'none';
    document.getElementById('app').style.display = 'none';
-
-   // Cargar datos si están en localStorage
    load();
-
    const e = state.equipos.find(x => x.id === eqId);
    
-   // Crear una pantalla limpia de solo lectura para auditoría
    const publicContainer = document.createElement('div');
    publicContainer.style.cssText = 'position:fixed;inset:0;background:#f4f7fb;z-index:9999;overflow:auto;padding:20px;font-family:Segoe UI,sans-serif';
    
@@ -1850,7 +1873,7 @@ function checkUrlParams() {
 
 function init() {
  load();
- if (checkUrlParams()) return; // Si es acceso por QR, detener ejecución normal
+ if (checkUrlParams()) return;
 
  fillYearSelect();
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
