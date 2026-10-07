@@ -270,7 +270,8 @@
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
   <h3>Control Metrológico y Calibraciones</h3>
   <div class="toolbar">
-   <button class="btn blue admin-only" onclick="downloadAllCalibrations()">⬇ Descargar ZIP de Calibraciones</button>
+   <!-- Botón público para auditoría y admin -->
+   <button class="btn blue" onclick="downloadAllCalibrations()">⬇ Descargar ZIP de Calibraciones</button>
    <button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar Calibración</button>
   </div>
  </div>
@@ -302,7 +303,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v26_cendiatra';
+const KEY='gestion_biomedica_v27_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -388,23 +389,33 @@ function sedeName(id) { return sedeObj(id).nombre; }
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
+/* MOTOR DE CÁLCULO HISTÓRICO Y PROYECTADO (MÁQUINA DEL TIEMPO) */
+function getEvalDate() {
+    const now = new Date();
+    // Si analizamos el año actual, vemos el avance hasta HOY.
+    if (contextYear === now.getFullYear()) return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
+    // Si analizamos un año pasado, vemos cómo terminó ese año al 31 de Diciembre.
+    if (contextYear < now.getFullYear()) return { y: contextYear, m: 11, d: 31 };
+    // Si analizamos un año futuro, nos paramos el 1 de Enero (mostrará programados pendientes).
+    return { y: contextYear, m: 0, d: 1 };
+}
+
 function isMaintOverdue(e) {
- const now = new Date();
- const year = now.getFullYear();
- const m = now.getMonth();
+ const {y: year, m, d} = getEvalDate();
+ let evalDateObj = new Date(year, m, d, 23, 59, 59);
  
- let evalDate = new Date(year, m, 28);
- if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return false;
+ // Si el equipo ni siquiera había sido instalado en esa fecha, ignorar
+ if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDateObj) return false;
  
  let pastMaints = state.mantenimientos
-     .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
+     .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDateObj)
      .map(x => x.fecha)
      .sort();
  
  if (pastMaints.length > 0) {
-     let lastDate = pastMaints[pastMaints.length - 1];
-     let d = new Date(lastDate+'T12:00:00');
-     if (d.getFullYear() === year && d.getMonth() === m) return false;
+     let ld = new Date(pastMaints[pastMaints.length - 1]+'T12:00:00');
+     // Si el último mantenimiento fue hecho este mismo mes evaluado, no está vencido
+     if (ld.getFullYear() === year && ld.getMonth() === m) return false;
  }
  
  let lastDate = e.fechaInicio || `${year}-01-01`;
@@ -418,18 +429,28 @@ function isMaintOverdue(e) {
 
 function calState(e) {
  if (norm(e.cal) !== 'SI') return ['N/A', 'gray', null];
- const cs = state.calibraciones.filter(c => c.equipoId === e.id).sort((a, b) => (b.vencimiento || b.fecha).localeCompare(a.vencimiento || a.fecha))[0];
+ const {y: year, m, d} = getEvalDate();
+ const evalDateObj = new Date(year, m, d, 23, 59, 59);
+
+ // Buscar la calibración válida MÁS RECIENTE ANTES de la fecha de evaluación histórica
+ const cs = state.calibraciones
+     .filter(c => c.fecha && new Date(c.fecha+'T12:00:00') <= evalDateObj && c.equipoId === e.id)
+     .sort((a, b) => (b.vencimiento || b.fecha).localeCompare(a.vencimiento || a.fecha))[0];
+
  if (!cs) {
   if (e.fechaInicio) {
-   const d = new Date(e.fechaInicio+'T12:00:00');
-   const now = new Date();
-   let diff = (now.getFullYear() - d.getFullYear())*12 + (now.getMonth() - d.getMonth());
+   const fd = new Date(e.fechaInicio+'T12:00:00');
+   // Si en la fecha de evaluación el equipo no había iniciado operación
+   if (fd > evalDateObj) return ['SIN REGISTRO', 'yellow', null];
+   let diff = (year - fd.getFullYear())*12 + (m - fd.getMonth());
    if (diff >= 12) return ['VENCIDA', 'red', null];
    if (diff === 11) return ['PRÓXIMA', 'yellow', null];
   }
   return ['SIN REGISTRO', 'yellow', null];
  }
- const n = Math.ceil((new Date(cs.vencimiento + 'T12:00:00') - new Date(today() + 'T12:00:00')) / 86400000);
+ 
+ const vDate = new Date(cs.vencimiento + 'T12:00:00');
+ const n = Math.ceil((vDate - evalDateObj) / 86400000);
  return n < 0 ? ['VENCIDA', 'red', cs] : n <= 30 ? ['PRÓXIMA', 'yellow', cs] : ['VIGENTE', 'green', cs];
 }
 
@@ -450,7 +471,12 @@ function renderPage(page) {
  if (page === 'documentos') renderDocs();
 }
 
-function refreshAll() { fillSelects(); filterEquipos(); renderDashboard(); }
+function refreshAll() { 
+ fillSelects(); 
+ filterEquipos(); 
+ renderDashboard(); 
+ renderCalibraciones();
+}
 
 function fillSelects() {
  const opts = state.sedes.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
@@ -470,7 +496,7 @@ function calculateExpectedMaintsForYear(eqList, year) {
  eqList.forEach(e => {
   for (let m = 0; m < 12; m++) {
    let evalDate = new Date(year, m, 28);
-   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) continue;
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) continue; // Si no estaba instalado en ese mes, no lo cuenta
    
    let hasMaint = state.mantenimientos.some(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00').getFullYear() === year && new Date(x.fecha+'T12:00:00').getMonth() === m);
    if (hasMaint) {
@@ -508,18 +534,24 @@ function renderDashboard() {
  const targetSedes = sid ? state.sedes.filter(s => s.id === sid) : state.sedes;
  const eqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
 
- const totalEquipos = eqs.length;
- const expectedMaints = calculateExpectedMaintsForYear(eqs, contextYear);
- const eqIds = new Set(eqs.map(e => e.id));
+ const {y: evY, m: evM, d: evD} = getEvalDate();
+ const evalDateObjDash = new Date(evY, evM, evD, 23, 59, 59);
+
+ // EXCLUIR equipos que aún no se habían comprado/instalado en la fecha del año evaluado
+ const activeEqs = eqs.filter(e => !(e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDateObjDash));
+
+ const totalEquipos = activeEqs.length;
+ const expectedMaints = calculateExpectedMaintsForYear(activeEqs, contextYear);
+ const activeEqIds = new Set(activeEqs.map(e => e.id));
  const actualMaints = state.mantenimientos.filter(m => {
-  if (!m.fecha || !eqIds.has(m.equipoId)) return false;
+  if (!m.fecha || !activeEqIds.has(m.equipoId)) return false;
   return new Date(m.fecha + 'T12:00:00').getFullYear() === contextYear;
  }).length;
 
  const pctM = expectedMaints ? Math.min(100, Math.round((actualMaints / expectedMaints) * 100)) : (actualMaints > 0 ? 100 : 0);
 
  let cTotal = 0, cAlDia = 0, cVencidos = 0, mVencidos = 0;
- eqs.forEach(e => {
+ activeEqs.forEach(e => {
   if (isMaintOverdue(e)) mVencidos++;
   if (norm(e.cal) === 'SI') {
    cTotal++;
@@ -533,15 +565,15 @@ function renderDashboard() {
  const colorC = pctC >= 90 ? 'green' : (pctC >= 70 ? 'yellow' : 'red');
 
  let sedesVencidas = targetSedes.filter(s => {
-  const eqSede = state.equipos.filter(e => e.sedeId === s.id);
+  const eqSede = activeEqs.filter(e => e.sedeId === s.id);
   return eqSede.some(e => isMaintOverdue(e) || calState(e)[0] === 'VENCIDA');
  });
 
  document.getElementById('stats').innerHTML = [
-  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? 'En sede seleccionada' : 'Inventario global total'],
+  [totalEquipos, 'EQUIPOS REGISTRADOS', sid ? `En sede seleccionada a final de ${contextYear}` : `Inventario global evaluado en ${contextYear}`],
   [`${actualMaints} / ${expectedMaints}`, `MANTENIMIENTOS EN ${contextYear}`, 'Ejecutados / Programados'],
-  [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', 'Metrología vigente (General)'],
-  [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? 'Mantenimiento o calibración' : 'Requieren atención médica']
+  [`${cAlDia} / ${cTotal}`, 'CALIBRACIONES AL DÍA', `Metrología vigente en base a ${contextYear}`],
+  [sid ? (mVencidos + cVencidos) : sedesVencidas.length, sid ? 'EQUIPOS VENCIDOS' : 'SEDES VENCIDAS', sid ? `Mantenimiento o calibración en ${contextYear}` : `Con equipos vencidos en ${contextYear}`]
  ].map(x => `<div class="card stat"><div class="label">${x[1]}</div><div class="value" style="${(String(x[1]).includes('VENCID') && x[0]>0)?'color:var(--red)':''}">${x[0]}</div><small>${x[2]}</small></div>`).join('');
 
  document.getElementById('indicators').innerHTML = `
@@ -557,7 +589,7 @@ function renderDashboard() {
    ${getGaugeSvg(pctC, colorC)}
    <div class="gauge-info">
     <b style="color:var(--navy);font-size:14px;display:block">Cumplimiento de Calibración Metrológica</b>
-    <small class="muted" style="margin-top:8px;display:block"><b>${cAlDia}</b> equipos al día y calibrados, de un total de <b>${cTotal}</b> que requieren metrología obligatoria.</small>
+    <small class="muted" style="margin-top:8px;display:block"><b>${cAlDia}</b> equipos al día y calibrados, de un total de <b>${cTotal}</b> que requerían metrología obligatoria en ${contextYear}.</small>
    </div>
   </div>
  `;
@@ -568,15 +600,15 @@ function renderDashboard() {
  let alertHtml = '';
  if (sedesVencidas.length > 0) {
   alertHtml = sedesVencidas.map(s => {
-   const eqSede = state.equipos.filter(e => e.sedeId === s.id);
+   const eqSede = activeEqs.filter(e => e.sedeId === s.id);
    const mV = eqSede.filter(e => isMaintOverdue(e)).length;
    const cV = eqSede.filter(e => calState(e)[0] === 'VENCIDA').length;
    if (mV === 0 && cV === 0) return '';
    return `<div class="notice" style="background:#fdeced;border-color:#f2c9cc;color:#a32d35;margin-bottom:8px">
-    <b>📍 Sede: ${esc(s.nombre)}</b> — Presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas en estado actual.
+    <b>📍 Sede: ${esc(s.nombre)}</b> — En el año ${contextYear} presenta <b>${mV}</b> mantenimientos vencidos y <b>${cV}</b> calibraciones vencidas en estado de evaluación.
    </div>`;
   }).join('');
- } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día.' : 'Todas las sedes están al día en sus cronogramas.'}</div>`;
+ } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día para el periodo seleccionado.' : 'Todas las sedes reflejan estado al día para el año evaluado.'}</div>`;
  document.getElementById('alerts').innerHTML = alertHtml;
 }
 
@@ -755,7 +787,7 @@ function renderEquiposPage() {
    if (hasMaint) return `<div class="cron-cell done">${mName}</div>`;
    
    let evalDate = new Date(contextYear, m, 28);
-   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`;
+   if (e.fechaInicio && new Date(e.fechaInicio+'T12:00:00') > evalDate) return `<div class="cron-cell">${mName}</div>`; // Aún no comprado/instalado
    
    let pastMaints = state.mantenimientos
        .filter(x => x.equipoId === e.id && x.fecha && new Date(x.fecha+'T12:00:00') <= evalDate)
@@ -1283,7 +1315,7 @@ function runMass() {
  save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
 }
 
-/* LÓGICA DESCARGA MASIVA CALIBRACIONES */
+/* LÓGICA DESCARGA MASIVA CALIBRACIONES (DISPONIBLE PARA AUDITORÍA) */
 function downloadAllCalibrations() {
  if (typeof JSZip === 'undefined') {
   return alert('La librería para comprimir archivos no se ha cargado. Verifique su conexión a internet.');
@@ -1331,7 +1363,7 @@ function downloadAllCalibrations() {
   }
  });
 
- if (validCount === 0) return alert('No se encontraron archivos válidos.');
+ if (validCount === 0) return alert('No se encontraron archivos válidos para generar el ZIP.');
 
  const zipName = sid ? `Calibraciones_${norm(sedeObj(sid).nombre).replace(/[^a-z0-9]/gi, '_')}.zip` : 'Todas_Las_Calibraciones.zip';
  
@@ -1402,6 +1434,8 @@ function renderCalibraciones() {
   if (search && !norm(e.equipo).includes(search) && !norm(e.serie).includes(search)) return false;
   
   const c = calState(e);
+  // Si estamos evaluando un año anterior y el equipo no existía ese año, no mostrarlo en estado
+  if (c[0] === 'SIN REGISTRO' && stateFilt && stateFilt !== 'SIN REGISTRO') return false;
   if (stateFilt && c[0] !== stateFilt) return false;
   
   return true;
