@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v32_cendiatra';
+const KEY='gestion_biomedica_v33_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -328,7 +328,6 @@ let eqCurrentPage = 1;
 const PAGE_SIZE = 50;
 let trendChartInstance = null;
 
-// GESTIÓN DE AÑO Y MES SELECCIONADO
 let contextYear = new Date().getFullYear();
 let selectedMonthIdx = new Date().getMonth();
 
@@ -402,7 +401,6 @@ function sedeName(id) { return sedeObj(id).nombre; }
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
-/* MOTOR DE CÁLCULO HISTÓRICO Y PROYECTADO */
 function getEvalDate() {
     const now = new Date();
     if (contextYear === now.getFullYear()) return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
@@ -936,7 +934,6 @@ function clearEqFilters() {
  filterEquipos();
 }
 
-/* EXPORTAR CRONOGRAMA A EXCEL DINAMICO */
 function exportCronogramaExcel() {
  const monthsArr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
  const now = new Date();
@@ -1018,7 +1015,6 @@ function openEquipmentProfile(id) {
  `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
 }
 
-/* MODAL DE ETIQUETA QR CON ACCESO PÚBLICO */
 function openQrLabel(id) {
  const e = state.equipos.find(x => x.id === id); if(!e) return;
  const sObj = sedeObj(e.sedeId);
@@ -1113,7 +1109,7 @@ function docsTabHtml(e) {
 
 function lifeHtmlFormat(e) {
  const r = norm(e.riesgo || 'N/A');
- const calib = norm(e.cal || 'NO') === 'SI';
+ const calib = norm(e.cal) === 'SI';
  const volt = esc(e.voltaje || '110V');
  const amp = esc(e.amperios || 'N/A');
  const peso = esc(e.peso || 'N/A');
@@ -1240,7 +1236,7 @@ function openReport(id) {
 }
 
 function getDynamicChecklist(eq) {
- if (eq && Array.isArray(eq.checklist) && eq.checklist.length >= 20) {
+ if (eq && Array.isArray(eq.checklist) && eq.checklist.length >= 5) {
   return eq.checklist;
  }
  const defaultItems = [
@@ -1397,7 +1393,7 @@ function runMass() {
      const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
      state.mantenimientos.push({
       id: uid(), numero: no, reporte: no, equipoId: eid, fecha: dateStr, tipo: type,
-      tecnico: tecName, receptor: recName, trabajo: trabalhoDesc,
+      tecnico: tecName, receptor: recName, trabalho: trabalhoDesc,
       sigTech: massSigTechData, sigRec: massSigRecData
      });
      generatedCount++;
@@ -1408,7 +1404,7 @@ function runMass() {
    const no = String(Math.max(1014, ...state.mantenimientos.map(x => Number(x.numero || 0)), 1014) + 1);
    state.mantenimientos.push({
     id: uid(), numero: no, reporte: no, equipoId: eid, fecha: fixedDate, tipo: type,
-    tecnico: tecName, receptor: recName, trabajo: trabalhoDesc,
+    tecnico: tecName, receptor: recName, trabalho: trabalhoDesc,
     sigTech: massSigTechData, sigRec: massSigRecData
    });
    generatedCount++;
@@ -1418,7 +1414,6 @@ function runMass() {
  save(); refreshAll(); alert(`¡Operación exitosa! Se generaron ${generatedCount} reportes EV-INTER-03 de manera masiva.`);
 }
 
-/* LÓGICA DESCARGA MASIVA CALIBRACIONES */
 function downloadAllCalibrations() {
  if (typeof JSZip === 'undefined') {
   return alert('La librería para comprimir archivos no se ha cargado. Verifique su conexión a internet.');
@@ -1651,103 +1646,99 @@ function getVal(row, keys) {
 }
 
 function doImportExcel() {
- if (!importData.length) {
-  const fileInput = document.getElementById('importExcel');
-  if (fileInput && fileInput.files[0]) {
-   // Forzar lectura síncrona/inmediata si el usuario dio clic sin esperar previsualización
-   const reader = new FileReader();
-   reader.onload = function(e) {
+ const fileInput = document.getElementById('importExcel');
+ if (!importData.length && fileInput && fileInput.files[0]) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+   try {
     const data = new Uint8Array(e.target.result);
     const wb = XLSX.read(data, { type: 'array' });
     const sheet = wb.Sheets[wb.SheetNames[0]];
     importData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     processImportRows();
-   };
-   reader.readAsArrayBuffer(fileInput.files[0]);
-   return;
-  }
-  return alert('Por favor seleccione un archivo Excel válido primero.');
+   } catch(err) {
+    alert('Error al procesar el archivo Excel.');
+   }
+  };
+  reader.readAsArrayBuffer(fileInput.files[0]);
+ } else if (importData.length > 0) {
+  processImportRows();
+ } else {
+  alert('Por favor seleccione un archivo Excel válido primero.');
  }
- processImportRows();
 }
 
 function processImportRows() {
- importData.forEach(r => {
-  let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
-  let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
-  
-  let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
-  if (!s) { 
-   s = { id: uid(), nombre: sName, direccion: sDir, ciudad: 'BOGOTA D.C.' }; 
-   state.sedes.push(s); 
-  } else if (sDir !== 'N/R') {
-   s.direccion = sDir;
-  }
+ try {
+  importData.forEach(r => {
+   let sName = String(getVal(r, ['SEDE']) || 'CORPORATIVA').trim();
+   let sDir = String(getVal(r, ['DIRECCION', 'DIRECCIÓN']) || 'N/R').trim();
+   
+   let s = state.sedes.find(x => norm(x.nombre) === norm(sName));
+   if (!s) { 
+    s = { id: uid(), nombre: sName, direccion: sDir, ciudad: 'BOGOTA D.C.' }; 
+    state.sedes.push(s); 
+   } else if (sDir !== 'N/R') {
+    s.direccion = sDir;
+   }
 
-  let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
-  let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
+   let eqName = String(getVal(r, ['EQUIPO', 'NOMBRE']) || 'EQUIPO BIOMÉDICO').trim();
+   let rawDate = getVal(r, ['FECHA DE INICO', 'FECHA DE INICIO', 'FECHA INICIO', 'INICIO']);
 
-  let eqChecklist = [
-    { label: "LIMPIEZA GENERAL", keys: ['limpieza gen'] },
-    { label: "REV. DEL SISTEMA DE REFRIGERACIÓN", keys: ['refrigeraci'] },
-    { label: "REVISIÓN DE MÓDULOS", keys: ['modulos', 'módulos'] },
-    { label: "REVISIÓN DE PARTES FÍSICAS", keys: ['partes fisicas', 'partes físicas'] },
-    { label: "REV. DE TEMPERATURA Y HUMEDAD", keys: ['temperatura y humedad', 'temperatura'] },
-    { label: "REVISIÓN DE EMPAQUES", keys: ['empaques'] },
-    { label: "REVISIÓN DE SISTEMA ELECTRÓNICO", keys: ['sistema electronico', 'sistema electrónico'] },
-    { label: "VERIFICACIÓN DE VOLTAJE", keys: ['verificacion de voltaje', 'verificación de voltaje'] },
-    { label: "VERIFICACIÓN DE ALARMAS", keys: ['alarmas'] },
-    { label: "REVISIÓN DE SISTEMA ELÉCTRICO", keys: ['sistema electrico', 'sistema eléctrico'] },
-    { label: "VERIFICACIÓN DE CORRIENTE", keys: ['verificacion de corriente', 'verificación de corriente'] },
-    { label: "REVISIÓN DE SOFTWARE", keys: ['software'] },
-    { label: "REVISIÓN DE SISTEMA NEUMÁTICO", keys: ['sistema neumatico', 'sistema neumático'] },
-    { label: "VERIFICACIÓN DE PRESIÓN", keys: ['verificacion de presion', 'verificación de presión'] },
-    { label: "CONFIGURACIÓN DEL EQUIPO", keys: ['configuracion del', 'configuración del'] },
-    { label: "REVISIÓN DE SISTEMA HIDRÁULICO", keys: ['sistema hidraulico', 'sistema hidráulico'] },
-    { label: "REV. DEL SISTEMA ÓPTICO", keys: ['sistema optico', 'sistema óptico'] },
-    { label: "VERIFICACIÓN DE VELOCIDAD", keys: ['verificacion de velocidad', 'verificación de velocidad'] },
-    { label: "REVISIÓN DEL SISTEMA MECÁNICO", keys: ['sistema mecanico', 'sistema mecánico'] },
-    { label: "REV. DE LUCES E INDICADORES", keys: ['luces', 'indicacores', 'indicadores'] },
-    { label: "OTROS", keys: ['otros'] }
-  ].map(item => {
-    let checked = false;
-    for (let k of Object.keys(r)) {
-      let nk = norm(k);
-      for (let sk of item.keys) {
-        if (nk.includes(norm(sk))) {
-          let v = norm(String(r[k]));
-          if (v === 'X' || v === 'SI' || v === 'V') checked = true;
-        }
-      }
-    }
-    return { label: item.label, checked };
+   let defaultItems = [
+     "LIMPIEZA GENERAL", "REV. DEL SISTEMA DE REFRIGERACIÓN", "REVISIÓN DE MÓDULOS",
+     "REVISIÓN DE PARTES FÍSICAS", "REV. DE TEMPERATURA Y HUMEDAD", "REVISIÓN DE EMPAQUES",
+     "REVISIÓN DE SISTEMA ELECTRÓNICO", "VERIFICACIÓN DE VOLTAJE", "VERIFICACIÓN DE ALARMAS",
+     "REVISIÓN DE SISTEMA ELÉCTRICO", "VERIFICACIÓN DE CORRIENTE", "REVISIÓN DE SOFTWARE",
+     "REVISIÓN DE SISTEMA NEUMÁTICO", "VERIFICACIÓN DE PRESIÓN", "CONFIGURACIÓN DEL EQUIPO",
+     "REVISIÓN DE SISTEMA HIDRÁULICO", "REV. DEL SISTEMA ÓPTICO", "VERIFICACIÓN DE VELOCIDAD",
+     "REVISIÓN DEL SISTEMA MECÁNICO", "REV. DE LUCES E INDICADORES", "OTROS"
+   ];
+
+   let eqChecklist = defaultItems.map(item => {
+     let checked = false;
+     for (let k of Object.keys(r)) {
+       let nk = norm(k);
+       let sk = norm(item);
+       if (nk.includes(sk) || sk.includes(nk)) {
+         let v = norm(String(r[k]));
+         if (v === 'X' || v === 'SI' || v === 'V') checked = true;
+       }
+     }
+     return { label: item, checked };
+   });
+
+   state.equipos.push({
+    id: uid(), 
+    equipo: eqName,
+    marca: String(getVal(r, ['MARCA']) || 'N/R').trim(),
+    modelo: String(getVal(r, ['MODELO']) || 'N/R').trim(),
+    serie: String(getVal(r, ['SERIE']) || 'N/R').trim(),
+    activo: String(getVal(r, ['ACTIVO']) || 'SA1564').trim(),
+    sedeId: s.id,
+    servicio: String(getVal(r, ['SERVICIO', 'AREA', 'ÁREA']) || 'FONOAUDIOLOGIA').trim(),
+    invima: String(getVal(r, ['INVIMA']) || 'DM202222').trim(),
+    riesgo: String(getVal(r, ['CLASIFICACION DE RIESGO', 'RIESGO']) || 'IIA').trim(),
+    voltaje: String(getVal(r, ['VOLTAJE']) || '110').trim(),
+    amperios: String(getVal(r, ['CORRIENTE', 'AMPERIOS']) || '1A').trim(),
+    peso: String(getVal(r, ['PESO DEL EQUIPO', 'PESO']) || '2KG').trim(),
+    fuenteAlimentacion: String(getVal(r, ['FUENTE DE ALIMENTACION', 'FUENTE']) || 'ELECTRICA').trim(),
+    cal: String(getVal(r, ['REQUIERE CALIBRACION', 'CALIBRACION']) || 'SI').trim().toUpperCase(),
+    manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
+    guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
+    info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
+    checklist: eqChecklist,
+    fechaInicio: parseExcelDate(rawDate),
+    estado: 'ACTIVO'
+   });
   });
-
-  state.equipos.push({
-   id: uid(), 
-   equipo: eqName,
-   marca: String(getVal(r, ['MARCA']) || 'N/R').trim(),
-   modelo: String(getVal(r, ['MODELO']) || 'N/R').trim(),
-   serie: String(getVal(r, ['SERIE']) || 'N/R').trim(),
-   activo: String(getVal(r, ['ACTIVO']) || 'SA1564').trim(),
-   sedeId: s.id,
-   servicio: String(getVal(r, ['SERVICIO', 'AREA', 'ÁREA']) || 'FONOAUDIOLOGIA').trim(),
-   invima: String(getVal(r, ['INVIMA']) || 'DM202222').trim(),
-   riesgo: String(getVal(r, ['CLASIFICACION DE RIESGO', 'RIESGO']) || 'IIA').trim(),
-   voltaje: String(getVal(r, ['VOLTAJE']) || '110').trim(),
-   amperios: String(getVal(r, ['CORRIENTE', 'AMPERIOS']) || '1A').trim(),
-   peso: String(getVal(r, ['PESO DEL EQUIPO', 'PESO']) || '2KG').trim(),
-   fuenteAlimentacion: String(getVal(r, ['FUENTE DE ALIMENTACION', 'FUENTE']) || 'ELECTRICA').trim(),
-   cal: String(getVal(r, ['REQUIERE CALIBRACION', 'CALIBRACION']) || 'SI').trim().toUpperCase(),
-   manuales: String(getVal(r, ['MANUAL']) || 'SI').trim(),
-   guiaRapida: String(getVal(r, ['GUIA RAPIDA', 'GUIA']) || 'SI').trim(),
-   info: String(getVal(r, ['INFORMACION DEL EQUIPO', 'INFORMACION']) || '').trim(),
-   checklist: eqChecklist,
-   fechaInicio: parseExcelDate(rawDate),
-   estado: 'ACTIVO'
-  });
- });
- save(); closeModal(); refreshAll(); alert(`¡Carga exitosa! Se procesaron ${importData.length} equipos para CENDIATRA SAS.`);
+  save(); 
+  closeModal(); 
+  refreshAll(); 
+  alert(`¡Carga exitosa! Se procesaron ${importData.length} equipos para CENDIATRA SAS.`);
+ } catch (err) {
+  alert('Ocurrió un error al procesar las filas del Excel. Verifique la consola.');
+ }
 }
 
 function openSedeModal() {
@@ -1795,7 +1786,6 @@ function openModal(title, body, foot) {
 }
 function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
 
-/* Funciones Seguras de Impresión */
 function printEqProfile(id) {
  const e = state.equipos.find(x => x.id === id);
  if(e) printHtmlDoc(lifeHtmlFormat(e), 'Hoja_De_Vida_' + norm(e.serie));
@@ -1825,7 +1815,6 @@ async function importBackup(file) {
  save(); refreshAll(); alert('Respaldo cargado correctamente.');
 }
 
-/* LECTOR PÚBLICO DE QR (OMITE LOGIN Y MUESTRA SOLO EL EQUIPO) */
 function checkUrlParams() {
  const hash = window.location.hash;
  if (hash.includes('qr=')) {
