@@ -315,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v29_cendiatra';
+const KEY='gestion_biomedica_v30_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -386,6 +386,7 @@ function login() {
   document.getElementById('topRole').textContent = currentUser.role === 'ADMIN' ? 'Admin' : 'Auditor';
   applyPermissions();
   go('dashboard');
+  checkUrlParams(); // Verificar si viene de un QR tras hacer login
  } else document.getElementById('loginError').classList.remove('hidden');
 }
 
@@ -619,7 +620,6 @@ function renderDashboard() {
  document.getElementById('alerts').innerHTML = alertHtml;
 }
 
-/* RENDERIZAR GRÁFICA DE TENDENCIA (CHART.JS) */
 function renderTrendChart(sid) {
  const years = [2023, 2024, 2025, 2026, 2027];
  const percentages = years.map(yr => {
@@ -1019,10 +1019,14 @@ function openEquipmentProfile(id) {
  `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
 }
 
-/* MODAL DE ETIQUETA QR PARA AUDITORÍAS */
+/* MODAL DE ETIQUETA QR CON ENLACE DIRECTO AL EQUIPO */
 function openQrLabel(id) {
  const e = state.equipos.find(x => x.id === id); if(!e) return;
  const sObj = sedeObj(e.sedeId);
+
+ // Construir URL directa incluyendo la ruta exacta hacia la vista de inventario y el ID del equipo
+ const baseUrl = window.location.href.split('#')[0];
+ const qrTargetUrl = `${baseUrl}#page=sedes&eq=${id}`;
 
  openModal(`Etiqueta QR Auditoría · ${esc(e.equipo)}`, `
   <div style="text-align:center;padding:20px;background:#fff;border:2px dashed var(--line);border-radius:12px;max-width:380px;margin:0 auto">
@@ -1045,7 +1049,7 @@ function openQrLabel(id) {
   if (container) {
    container.innerHTML = '';
    new QRCode(container, {
-    text: window.location.href.split('#')[0] + '#eq=' + id,
+    text: qrTargetUrl,
     width: 140,
     height: 140,
     colorDark: "#0b2f52",
@@ -1168,7 +1172,6 @@ function lifeHtmlFormat(e) {
  </div>`;
 }
 
-// Variables para almacenar las imágenes subidas en el modal individual
 let singleSigTechData = '';
 let singleSigRecData = '';
 
@@ -1320,7 +1323,6 @@ function reportHtmlFormat(r) {
  </div>`;
 }
 
-// Variables globales de imágenes para la Ejecución Masiva
 let massSigTechData = '';
 let massSigRecData = '';
 
@@ -1797,14 +1799,24 @@ async function importBackup(file) {
  save(); refreshAll(); alert('Respaldo cargado correctamente.');
 }
 
+/* LECTOR AUTOMÁTICO DE PARÁMETROS QR EN URL */
 function checkUrlParams() {
  const hash = window.location.hash;
- if (hash.includes('#eq=')) {
-  const eqId = hash.split('#eq=')[1];
+ if (hash.includes('eq=')) {
+  const parts = hash.split('&');
+  let eqId = '';
+  let targetPage = 'sedes';
+  
+  parts.forEach(p => {
+   if (p.includes('eq=')) eqId = p.split('eq=')[1];
+   if (p.includes('page=')) targetPage = p.split('page=')[1];
+  });
+
   if (eqId) {
    setTimeout(() => {
+    go(targetPage);
     openEquipmentProfile(eqId);
-   }, 500);
+   }, 600);
   }
  }
 }
