@@ -7,6 +7,10 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <!-- Librería para crear archivos ZIP -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Librería para generar Códigos QR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Librería para Gráficas (Chart.js) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--navy:#0b2f52;--blue:#1769aa;--cyan:#2d8ec5;--bg:#f4f7fb;--card:#fff;--line:#dbe5ef;--text:#16263a;--muted:#64748b;--green:#168457;--yellow:#d99b00;--red:#c13b43;--shadow:0 10px 30px rgba(11,47,82,.08);--radius:14px}
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:12.5px}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
@@ -135,7 +139,6 @@
   <button data-page="sedes" id="btnNavSedes">▦ <span>Sedes e Inventario</span></button>
   <div class="nav-group admin-only">Mantenimiento</div>
   <button class="admin-only" data-page="masiva">⚡ <span>Ejecución masiva</span></button>
-  <!-- Calibraciones ahora es accesible para consulta para ver y descargar los ZIP -->
   <button data-page="calibraciones">◌ <span>Calibraciones</span></button>
   <div class="nav-group">Documentación</div>
   <button data-page="documentos">▤ <span>Manuales por Tipo/Marca</span></button>
@@ -170,6 +173,15 @@
  
  <div id="stats" class="grid g4" style="margin-top:16px"></div>
  <div id="indicators" class="grid g2" style="margin-top:16px"></div>
+
+ <!-- GRÁFICA DE TENDENCIA HISTÓRICA (CHART.JS) -->
+ <div class="card panel" style="margin-top:16px">
+  <h3 style="color:var(--navy);margin-bottom:4px">Tendencia Histórica de Cumplimiento Preventivo</h3>
+  <p class="muted" style="margin-bottom:12px">Comparativa de porcentaje de cumplimiento en los últimos años.</p>
+  <div style="position:relative;height:250px;width:100%">
+   <canvas id="trendChart"></canvas>
+  </div>
+ </div>
 
  <div class="card panel" style="margin-top:16px">
   <div style="display:flex;justify-content:space-between;align-items:center">
@@ -271,7 +283,6 @@
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
   <h3>Control Metrológico y Calibraciones</h3>
   <div class="toolbar">
-   <!-- Botón público para auditoría y admin -->
    <button class="btn blue" onclick="downloadAllCalibrations()">⬇ Descargar ZIP de Calibraciones</button>
    <button class="btn primary admin-only" onclick="openCalibrationModal()">+ Registrar Calibración</button>
   </div>
@@ -304,7 +315,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><h3 id="modalTitle"></h3><button class="btn small" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 
 <script>
-const KEY='gestion_biomedica_v28_cendiatra';
+const KEY='gestion_biomedica_v29_cendiatra';
 
 let state = {
  sedes: [], equipos: [], mantenimientos: [], calibraciones: [], documentos: [], analyses: {},
@@ -315,6 +326,7 @@ let currentUser = null;
 let filteredEquiposCache = [];
 let eqCurrentPage = 1;
 const PAGE_SIZE = 50;
+let trendChartInstance = null;
 
 // GESTIÓN DE AÑO Y MES SELECCIONADO
 let contextYear = new Date().getFullYear();
@@ -390,7 +402,7 @@ function sedeName(id) { return sedeObj(id).nombre; }
 
 function lastMaint(eid) { return [...state.mantenimientos].filter(m => m.equipoId === eid).sort((a, b) => b.fecha.localeCompare(a.fecha))[0]; }
 
-/* MOTOR DE CÁLCULO HISTÓRICO Y PROYECTADO (MÁQUINA DEL TIEMPO) */
+/* MOTOR DE CÁLCULO HISTÓRICO Y PROYECTADO */
 function getEvalDate() {
     const now = new Date();
     if (contextYear === now.getFullYear()) return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
@@ -587,6 +599,8 @@ function renderDashboard() {
   </div>
  `;
 
+ renderTrendChart(sid);
+
  document.getElementById('lblMonthYear').textContent = `Año Evaluado: ${contextYear}`;
  renderMonthGrid();
 
@@ -603,6 +617,53 @@ function renderDashboard() {
   }).join('');
  } else alertHtml = `<div class="notice">✅ <b>Excelente:</b> ${sid ? 'Esta sede está completamente al día para el periodo seleccionado.' : 'Todas las sedes reflejan estado al día para el año evaluado.'}</div>`;
  document.getElementById('alerts').innerHTML = alertHtml;
+}
+
+/* RENDERIZAR GRÁFICA DE TENDENCIA (CHART.JS) */
+function renderTrendChart(sid) {
+ const years = [2023, 2024, 2025, 2026, 2027];
+ const percentages = years.map(yr => {
+  const targetEqs = sid ? state.equipos.filter(e => e.sedeId === sid) : state.equipos;
+  const exp = calculateExpectedMaintsForYear(targetEqs, yr);
+  const eqIds = new Set(targetEqs.map(e => e.id));
+  const act = state.mantenimientos.filter(m => m.fecha && eqIds.has(m.equipoId) && new Date(m.fecha+'T12:00:00').getFullYear() === yr).length;
+  return exp > 0 ? Math.min(100, Math.round((act / exp) * 100)) : (act > 0 ? 100 : 0);
+ });
+
+ const ctx = document.getElementById('trendChart').getContext('2d');
+ if (trendChartInstance) trendChartInstance.destroy();
+
+ trendChartInstance = new Chart(ctx, {
+  type: 'line',
+  data: {
+   labels: years.map(String),
+   datasets: [{
+    label: '% Cumplimiento Preventivo',
+    data: percentages,
+    borderColor: '#1769aa',
+    backgroundColor: 'rgba(23, 105, 170, 0.1)',
+    borderWidth: 3,
+    fill: true,
+    tension: 0.3,
+    pointBackgroundColor: '#0b2f52',
+    pointRadius: 5
+   }]
+  },
+  options: {
+   responsive: true,
+   maintainAspectRatio: false,
+   scales: {
+    y: {
+     beginAtZero: true,
+     max: 100,
+     ticks: { callback: v => v + '%' }
+    }
+   },
+   plugins: {
+    legend: { display: false }
+   }
+  }
+ });
 }
 
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -938,7 +999,10 @@ function openEquipmentProfile(id) {
  openModal(`Perfil de Equipo · ${esc(e.equipo)}`, `
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
    <div><h2 style="color:var(--navy);margin:0">${esc(e.equipo)}</h2><p class="muted">${esc(e.marca)} · ${esc(e.modelo)} · Serie: ${esc(e.serie)}</p></div>
-   <span class="badge blue" style="font-size:11px;padding:5px 10px">${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</span>
+   <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn blue small" onclick="openQrLabel('${id}')">📱 Generar Etiqueta QR</button>
+    <span class="badge blue" style="font-size:11px;padding:5px 10px">${esc(sedeName(e.sedeId))} - ${esc(e.servicio)}</span>
+   </div>
   </div>
 
   <div class="tabs">
@@ -953,6 +1017,43 @@ function openEquipmentProfile(id) {
   <div id="tab-cal" class="eq-tab-content hidden">${calTabHtml(e)}</div>
   <div id="tab-docs" class="eq-tab-content hidden">${docsTabHtml(e)}</div>
  `, `<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="printEqProfile('${id}')">🖨 Imprimir Hoja de Vida</button>`);
+}
+
+/* MODAL DE ETIQUETA QR PARA AUDITORÍAS */
+function openQrLabel(id) {
+ const e = state.equipos.find(x => x.id === id); if(!e) return;
+ const sObj = sedeObj(e.sedeId);
+
+ openModal(`Etiqueta QR Auditoría · ${esc(e.equipo)}`, `
+  <div style="text-align:center;padding:20px;background:#fff;border:2px dashed var(--line);border-radius:12px;max-width:380px;margin:0 auto">
+   <b style="font-size:14px;color:var(--navy)">CENDIATRA SAS</b><br>
+   <small class="muted">CONTROL BIOMÉDICO INSTITUCIONAL</small>
+   <hr style="margin:10px 0;border-color:var(--line)">
+   <div id="qrCodeContainer" style="display:inline-block;padding:10px;background:#fff"></div>
+   <div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.5">
+    <b>Equipo:</b> ${esc(e.equipo)}<br>
+    <b>Marca / Modelo:</b> ${esc(e.marca)} / ${esc(e.modelo)}<br>
+    <b>N° Serie:</b> ${esc(e.serie)}<br>
+    <b>Activo Fijo:</b> ${esc(e.activo || 'SA1564')}<br>
+    <b>Sede / Área:</b> ${esc(sObj.nombre)} (${esc(e.servicio)})
+   </div>
+  </div>
+ `, `<button class="btn" onclick="openEquipmentProfile('${id}')">Volver</button><button class="btn primary" onclick="window.print()">🖨 Imprimir Etiqueta</button>`);
+
+ setTimeout(() => {
+  const container = document.getElementById('qrCodeContainer');
+  if (container) {
+   container.innerHTML = '';
+   new QRCode(container, {
+    text: window.location.href.split('#')[0] + '#eq=' + id,
+    width: 140,
+    height: 140,
+    colorDark: "#0b2f52",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+   });
+  }
+ }, 200);
 }
 
 function switchEqTab(tabId, btn) {
@@ -1696,12 +1797,25 @@ async function importBackup(file) {
  save(); refreshAll(); alert('Respaldo cargado correctamente.');
 }
 
+function checkUrlParams() {
+ const hash = window.location.hash;
+ if (hash.includes('#eq=')) {
+  const eqId = hash.split('#eq=')[1];
+  if (eqId) {
+   setTimeout(() => {
+    openEquipmentProfile(eqId);
+   }, 500);
+  }
+ }
+}
+
 function init() {
  load();
  fillYearSelect();
  document.querySelectorAll('#nav button[data-page]').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
  document.getElementById('massDate').value = today();
  filterEquipos();
+ checkUrlParams();
 }
 init();
 </script>
